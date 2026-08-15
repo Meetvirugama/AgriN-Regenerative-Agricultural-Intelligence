@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { MockVoiceAdapter } from '../adapters/voice/VoiceAdapter';
+import { MockVoiceAdapter } from './VoiceAdapter';
 
 const router = Router();
 const voiceAdapter = new MockVoiceAdapter();

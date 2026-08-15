@@ -1,7 +1,7 @@
-import { db, RegenPlan } from '../models/Database';
-import { layer1Service } from './Layer1Service';
-import { layer4Service } from './Layer4Service';
-import { regenAI } from './regen/RegenAI';
+import { db, RegenPlan } from '../../models/Database';
+import { layer1Service } from '../field/field.service';
+import { layer4Service } from '../soil/soil.service';
+import { regenAI } from './RegenAI';
 
 export class Layer10Service {
   /**

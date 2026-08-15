@@ -1,7 +1,7 @@
-import { db, FieldWeatherSnapshot, WeatherEventFlag } from '../models/Database';
-import { IWeatherProvider, MockWeatherProvider } from './weather/WeatherProvider';
-import { WeatherRuleEngine } from './weather/WeatherRuleEngine';
-import { layer1Service } from './Layer1Service';
+import { db, FieldWeatherSnapshot, WeatherEventFlag } from '../../models/Database';
+import { IWeatherProvider, MockWeatherProvider } from './WeatherProvider';
+import { WeatherRuleEngine } from './WeatherRuleEngine';
+import { layer1Service } from '../field/field.service';
 
 class Layer3Service {
   private provider: IWeatherProvider;

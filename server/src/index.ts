@@ -1,19 +1,19 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { cropRoutes } from './routes/cropRoutes';
-import weatherRoutes from './routes/weatherRoutes';
-import soilRoutes from './routes/soilRoutes';
-import diagnosisRoutes from './routes/diagnosisRoutes';
-import regenRoutes from './routes/regenRoutes';
-import climateRiskRouter from './routes/climateRisk';
-import advisoryRouter from './routes/advisory';
-import voiceRouter from './routes/voice';
-import feedbackRouter from './routes/feedback';
-import satelliteRoutes from './satellite/satellite.routes';
-import healthScoreRoutes from './health-score/health-score.routes';
-import escalationRoutes from './escalation/escalation.routes';
-import crossBorderRoutes from './cross-border/crossBorder.routes';
+import { cropRoutes } from './modules/crop/crop.routes';
+import weatherRoutes from './modules/weather/weather.routes';
+import soilRoutes from './modules/soil/soil.routes';
+import diagnosisRoutes from './modules/disease/disease.routes';
+import regenRoutes from './modules/regen/regen.routes';
+import climateRiskRouter from './modules/climate-risk/climate-risk.routes';
+import advisoryRouter from './modules/advisory/advisory.routes';
+import voiceRouter from './modules/voice/voice.routes';
+import feedbackRouter from './modules/feedback/feedback.routes';
+import satelliteRoutes from './modules/satellite/satellite.routes';
+import healthScoreRoutes from './modules/health-score/health-score.routes';
+import escalationRoutes from './modules/escalation/escalation.routes';
+import crossBorderRoutes from './modules/cross-border/crossBorder.routes';
 
 dotenv.config();
 

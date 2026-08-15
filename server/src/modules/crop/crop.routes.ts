@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { layer2Service } from '../services/Layer2Service';
-import { layer1Service } from '../services/Layer1Service';
+import { layer2Service } from '../crop/crop.service';
+import { layer1Service } from '../field/field.service';
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { FieldTimelineEntry } from '../models/Feedback';
+import { FieldTimelineEntry } from '../../models/Feedback';
 
 const router = Router();
 

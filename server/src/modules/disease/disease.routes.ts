@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { layer7Service } from '../services/Layer7Service';
+import { layer7Service } from '../disease/disease.service';
 
 const router = Router();
 
