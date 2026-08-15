@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import climateRiskRouter from './routes/climateRisk';
+import advisoryRouter from './routes/advisory';
 
 dotenv.config();
 
@@ -27,6 +28,8 @@ app.get('/health', (req: Request, res: Response) => {
 
 // Mount the Climate Risk API (Layer 08)
 app.use('/api', climateRiskRouter);
+// Mount the Advisory API
+app.use('/api', advisoryRouter);
 
 app.listen(PORT, () => {
   console.log(`AgriMesh Server running on port ${PORT}`);
