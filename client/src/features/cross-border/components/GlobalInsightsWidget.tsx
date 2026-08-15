@@ -9,14 +9,17 @@ interface GlobalInsightsWidgetProps {
 export const GlobalInsightsWidget: React.FC<GlobalInsightsWidgetProps> = ({ fieldId }) => {
   const [insights, setInsights] = useState<GlobalInsight[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchInsights = async () => {
       try {
         const data = await crossBorderApi.getInsights(fieldId);
         setInsights(data);
-      } catch (err) {
+        setError(null);
+      } catch (err: any) {
         console.error('Failed to fetch cross-border insights', err);
+        setError(err.message || 'Failed to load global insights.');
       } finally {
         setLoading(false);
       }
@@ -29,6 +32,20 @@ export const GlobalInsightsWidget: React.FC<GlobalInsightsWidgetProps> = ({ fiel
       <div className="bg-surface border border-neutral p-6 rounded-2xl shadow-sm animate-pulse">
         <div className="h-6 bg-neutral/20 rounded w-1/2 mb-4"></div>
         <div className="h-24 bg-neutral/20 rounded w-full"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-surface border border-danger p-6 rounded-2xl shadow-sm relative overflow-hidden">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="bg-danger text-background p-2 rounded-lg">
+            <Globe2 size={20} />
+          </div>
+          <h2 className="font-black text-xl text-text tracking-tight">Global Insights</h2>
+        </div>
+        <p className="text-danger font-medium text-sm">{error}</p>
       </div>
     );
   }
@@ -76,7 +93,7 @@ export const GlobalInsightsWidget: React.FC<GlobalInsightsWidgetProps> = ({ fiel
                   {insight.insightType === 'practice' ? (
                     <Lightbulb size={20} className="text-warning" />
                   ) : (
-                    <Activity size={20} className="text-error" />
+                    <Activity size={20} className="text-danger" />
                   )}
                 </div>
                 <p className="font-semibold text-text leading-relaxed">

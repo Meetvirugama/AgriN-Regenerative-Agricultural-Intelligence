@@ -25,13 +25,14 @@ import { FieldTimeline } from '../features/field-memory/components/FieldTimeline
 import { GlobalInsightsWidget } from '../features/cross-border';
 import { cropApi } from '../features/crop-context/api/cropApi';
 import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf } from 'lucide-react';
+import { ErrorState } from '../components/ui/ErrorState';
 
 const FieldSatelliteWrapper = ({ fieldId }: { fieldId: string }) => {
   const [showDetail, setShowDetail] = useState(false);
   const { data, loading, error } = useSatelliteHealth(fieldId);
 
   if (error) {
-    return <div className="border border-error p-4 text-error text-sm rounded-xl">Failed to load satellite data.</div>;
+    return <ErrorState title="Satellite Data Failed" message="Failed to load satellite data." />;
   }
 
   return (
@@ -61,7 +62,7 @@ const FieldHealthScoreWrapper = ({ fieldId }: { fieldId: string }) => {
   const { data: score, loading, error } = useHealthScore(fieldId);
 
   if (error) {
-    return <div className="border border-error p-4 text-error text-sm rounded-xl">Failed to load field health score.</div>;
+    return <ErrorState title="Health Score Failed" message="Failed to load field health score." />;
   }
 
   return (
@@ -149,9 +150,7 @@ export const Field: React.FC = () => {
 
   if (initError) {
     return (
-      <div className="bg-error/10 border border-error p-4 rounded-xl text-error text-center font-bold">
-        {initError}
-      </div>
+      <ErrorState title="Initialization Failed" message={initError} />
     );
   }
 
