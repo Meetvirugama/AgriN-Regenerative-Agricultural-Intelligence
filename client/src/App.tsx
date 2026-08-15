@@ -13,8 +13,9 @@ import { SoilUploadFlow } from './features/soil-intelligence/components/SoilUplo
 import { SatelliteHealthCard, SatelliteDetailView, useSatelliteHealth } from './features/satellite-health';
 import { DiseaseDiagnosisFlow } from './features/disease-diagnosis/components/DiseaseDiagnosisFlow';
 import { RegenPlanningCard } from './features/regen-ag/components/RegenPlanningCard';
+import { FieldHealthHero, HealthDimensionCard, useHealthScore } from './features/health-score';
 import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRiskWidget';
-import { Camera } from 'lucide-react';
+import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf } from 'lucide-react';
 
 function App() {
   const [fieldId, setFieldId] = useState<string | null>(null);
@@ -103,6 +104,13 @@ function App() {
           <h1 className="text-3xl font-black text-text tracking-tight">AgriMesh</h1>
           <p className="text-text-muted">Field Intelligence Dashboard</p>
         </header>
+
+        {/* Layer 06: Field Health Score Synthesis */}
+        {fieldId && (
+          <section className="flex flex-col gap-4">
+            <FieldHealthScoreWrapper fieldId={fieldId} />
+          </section>
+        )}
 
         {/* Layer 03 Alert Banner (Top Priority) */}
         {!isWeatherLoading && weatherData && (
@@ -240,6 +248,32 @@ const FieldSatelliteWrapper = ({ fieldId }: { fieldId: string }) => {
         />
       )}
     </>
+  );
+}
+
+// Wrapper for Layer 06
+const FieldHealthScoreWrapper = ({ fieldId }: { fieldId: string }) => {
+  const { data: score, loading, error } = useHealthScore(fieldId);
+
+  if (error) {
+    return <div className="border border-danger p-4 text-danger text-sm">Failed to load field health score.</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+       <FieldHealthHero score={score} loading={loading} />
+       
+       {score && !loading && (
+         <div className="grid grid-cols-2 gap-2">
+           <HealthDimensionCard title="Water" dimension={score.water_condition} icon={<Droplets size={16} />} />
+           <HealthDimensionCard title="Soil" dimension={score.soil_condition} icon={<Mountain size={16} />} />
+           <HealthDimensionCard title="Weather" dimension={score.weather_risk} icon={<CloudLightning size={16} />} />
+           <HealthDimensionCard title="Disease" dimension={score.disease_risk} icon={<Bug size={16} />} />
+           <HealthDimensionCard title="Climate" dimension={score.climate_stress} icon={<ThermometerSun size={16} />} />
+           <HealthDimensionCard title="Vegetation" dimension={score.vegetation_trend} icon={<Leaf size={16} />} />
+         </div>
+       )}
+    </div>
   );
 }
 
