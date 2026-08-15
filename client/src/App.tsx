@@ -16,9 +16,11 @@ import { RegenPlanningCard } from './features/regen-ag/components/RegenPlanningC
 import { FieldHealthHero, HealthDimensionCard, useHealthScore } from './features/health-score';
 import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRiskWidget';
 import { AdvisoryCard } from './features/agro-advisory/components/AdvisoryCard';
-import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf } from 'lucide-react';
+import { ExtensionDashboard } from './features/escalation-dashboard';
+import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf, ArrowRightLeft } from 'lucide-react';
 
 function App() {
+  const [persona, setPersona] = useState<'farmer' | 'extension'>('farmer');
   const [fieldId, setFieldId] = useState<string | null>(null);
   const [cropState, setCropState] = useState<FieldCropState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -98,8 +100,31 @@ function App() {
     }
   };
 
+  if (persona === 'extension') {
+    return (
+      <div className="relative">
+        <button 
+          onClick={() => setPersona('farmer')}
+          className="fixed top-4 right-4 z-50 bg-neutral/80 backdrop-blur text-text font-bold px-4 py-2 rounded-full shadow border border-neutral flex items-center gap-2 hover:bg-neutral transition-colors"
+        >
+          <ArrowRightLeft size={16} />
+          Switch to Farmer
+        </button>
+        <ExtensionDashboard />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-surface flex justify-center p-4">
+    <div className="min-h-screen bg-surface flex justify-center p-4 relative">
+      <button 
+        onClick={() => setPersona('extension')}
+        className="absolute top-4 right-4 z-50 bg-neutral/80 backdrop-blur text-text font-bold px-4 py-2 rounded-full shadow border border-neutral flex items-center gap-2 hover:bg-neutral transition-colors"
+      >
+        <ArrowRightLeft size={16} />
+        Switch to Extension Officer
+      </button>
+
       <div className="w-full max-w-md flex flex-col gap-6 mt-8">
         <header className="mb-2">
           <h1 className="text-3xl font-black text-text tracking-tight">AgriMesh</h1>

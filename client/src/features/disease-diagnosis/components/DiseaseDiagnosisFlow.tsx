@@ -10,6 +10,7 @@ interface DiseaseDiagnosisFlowProps {
 export function DiseaseDiagnosisFlow({ fieldId, onClose }: DiseaseDiagnosisFlowProps) {
   const [step, setStep] = useState<'capture' | 'analyzing' | 'result' | 'escalation'>('capture');
   const [result, setResult] = useState<DiagnosisEvent | null>(null);
+  const [consentGiven, setConsentGiven] = useState(false);
 
   const simulateCapture = async (isBlurry: boolean = false) => {
     setStep('analyzing');
@@ -156,9 +157,43 @@ export function DiseaseDiagnosisFlow({ fieldId, onClose }: DiseaseDiagnosisFlowP
 
                 <div className="bg-surface border-2 border-neutral rounded-xl p-6 mb-8 mt-4 text-center">
                   <h3 className="font-bold text-lg mb-2">Let's get a human to look.</h3>
-                  <p className="text-sm text-text-muted mb-6">We'll send your photo and field history directly to your local extension officer.</p>
+                  <p className="text-sm text-text-muted mb-4">We'll send your photo and field history directly to your local extension officer.</p>
                   
-                  <button className="w-full py-4 bg-secondary text-secondary-content font-bold rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary focus-visible:outline-offset-2">
+                  <div className="flex items-start gap-3 text-left bg-neutral/10 p-3 rounded-lg mb-6 border border-neutral">
+                    <input 
+                      type="checkbox" 
+                      id="escalation-consent"
+                      checked={consentGiven}
+                      onChange={(e) => setConsentGiven(e.target.checked)}
+                      className="mt-1 w-4 h-4 text-primary rounded focus:ring-primary accent-primary"
+                    />
+                    <label htmlFor="escalation-consent" className="text-xs text-text-muted font-medium cursor-pointer leading-tight">
+                      By checking this box, I explicitly consent to sharing this field's diagnosis history and recent satellite metrics with my local extension network.
+                    </label>
+                  </div>
+                  
+                  <button 
+                    disabled={!consentGiven}
+                    onClick={async () => {
+                      try {
+                        await fetch('http://localhost:8000/api/escalations/trigger', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            fieldId,
+                            reason: result.predicted_category === 'unknown' ? 'low_confidence' : 'high_severity',
+                            source: 'Layer07',
+                            contextData: { issue: result.predicted_label, confidence: result.confidence, consentVerified: true }
+                          })
+                        });
+                        alert('Escalation sent successfully! An expert will reach out soon.');
+                        onClose();
+                      } catch (e) {
+                        alert('Failed to send escalation.');
+                      }
+                    }}
+                    className="w-full py-4 bg-secondary text-secondary-content font-bold rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-secondary focus-visible:outline-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+                  >
                     <PhoneCall size={20} />
                     Connect to Agronomist
                   </button>
