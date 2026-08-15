@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
 @theme {
   --color-primary: var(--primary);
@@ -157,67 +157,9 @@ a {
   background-color: var(--surface);
 }
 
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
-  border-radius: 0;
-  font-weight: 600;
-  font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid var(--border);
-  width: 100%;
-  font-family: inherit;
-}
 
-.btn-primary {
-  background-color: var(--text-main);
-  color: var(--background);
-}
 
-.btn-primary:hover {
-  background-color: var(--background);
-  color: var(--text-main);
-}
-
-.btn-secondary {
-  background-color: var(--background);
-  color: var(--text-main);
-}
-
-.btn-secondary:hover {
-  background-color: var(--surface);
-}
-
-/* Map Container */
-.map-container {
-  height: 400px;
-  width: 100%;
-  border-radius: 0;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  margin-bottom: 1.5rem;
-}
-
-/* Utilities */
-.text-center { text-align: center; }
-.mt-4 { margin-top: 1rem; }
-.mt-8 { margin-top: 2rem; }
-.mb-4 { margin-bottom: 1rem; }
-.mb-8 { margin-bottom: 2rem; }
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.gap-4 { gap: 1rem; }
-.gap-2 { gap: 0.5rem; }
+/* Utilities (Removed legacy classes) */
 
 /* Micro-animations */
 @keyframes fadeIn {

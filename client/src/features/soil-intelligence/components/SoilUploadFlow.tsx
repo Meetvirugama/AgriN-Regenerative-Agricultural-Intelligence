@@ -36,7 +36,7 @@ export function SoilUploadFlow({ fieldId, onClose, onSave }: SoilUploadFlowProps
       setStep('review');
     } catch (err) {
       console.error(err);
-      alert('Failed to parse document. Please try again.');
+      console.error('Failed to parse document. Please try again.');
       setStep('upload');
     }
   };
@@ -49,7 +49,7 @@ export function SoilUploadFlow({ fieldId, onClose, onSave }: SoilUploadFlowProps
       onClose();
     } catch (err) {
       console.error(err);
-      alert('Failed to save soil profile');
+      console.error('Failed to save soil profile');
     } finally {
       setIsSaving(false);
     }

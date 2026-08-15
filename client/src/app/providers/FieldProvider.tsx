@@ -19,6 +19,7 @@ const FieldContext = createContext<FieldContextValue>({
   setCropState: () => {},
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useActiveField = () => useContext(FieldContext);
 
 export const FieldProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

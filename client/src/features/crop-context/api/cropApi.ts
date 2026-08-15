@@ -18,7 +18,7 @@ export interface FieldCropState {
 export const cropApi = {
   initStub: async () => request<{ field: { id: string } }>('fields/stub-init', { method: 'POST' }),
   fetchCropState: async (fieldId: string): Promise<FieldCropState> => request(`fields/${fieldId}/crop-state`),
-  identifyCrop: async (fieldId: string, imageBlob: Blob) => {
+  identifyCrop: async (fieldId: string, _imageBlob: Blob) => {
     return request(`fields/${fieldId}/identify-crop`, {
       method: 'POST',
       body: JSON.stringify({ image: 'mock_base64' }),

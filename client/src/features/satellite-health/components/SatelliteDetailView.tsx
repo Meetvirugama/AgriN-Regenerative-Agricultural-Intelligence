@@ -3,6 +3,7 @@ import { useSatelliteHealth } from '../hooks/useSatelliteHealth';
 import { SatelliteFieldMap } from './SatelliteFieldMap';
 import { SatelliteTrendChart } from './SatelliteTrendChart';
 import { X, AlertTriangle, Camera } from 'lucide-react';
+import { Button } from '../../../components/ui/Button';
 
 interface SatelliteDetailViewProps {
   fieldId: string;
@@ -62,9 +63,9 @@ export const SatelliteDetailView: React.FC<SatelliteDetailViewProps> = ({ fieldI
                   </p>
                 </div>
               </div>
-              <button className="btn btn-primary whitespace-nowrap text-sm px-4 py-2" onClick={() => alert('Deep link to Layer 07 Diagnosis flow')}>
+              <Button size="sm" className="whitespace-nowrap" onClick={() => console.log('Deep link to Layer 07 Diagnosis flow')}>
                 <Camera size={16} /> INSPECT ON GROUND
-              </button>
+              </Button>
             </div>
           )}
         </section>
