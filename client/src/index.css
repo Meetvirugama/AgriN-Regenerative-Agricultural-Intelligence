@@ -3,14 +3,18 @@
 
 @theme {
   --color-primary: var(--primary);
+  --color-primary-content: var(--background);
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-text-main: var(--text-main);
+  --color-text: var(--text-main);
   --color-text-muted: var(--text-muted);
   --color-border: var(--border);
+  --color-neutral: var(--neutral);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-error: var(--danger);
 }
 
 :root {
@@ -20,6 +24,7 @@
   --text-main: #000000;
   --text-muted: #555555;
   --border: #000000;
+  --neutral: #d4d4d4;
   
   --success: #16a34a;
   --warning: #f59e0b;
@@ -34,6 +39,7 @@
     --text-main: #ffffff;
     --text-muted: #a0a0a0;
     --border: #ffffff;
+    --neutral: #404040;
     
     --success: #16a34a;
     --warning: #f59e0b;

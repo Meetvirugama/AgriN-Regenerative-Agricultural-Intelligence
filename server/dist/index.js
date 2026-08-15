@@ -11,6 +11,8 @@ const app = (0, express_1.default)();
 const PORT = process.env.PORT || 8000;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+const cropRoutes_1 = require("./routes/cropRoutes");
+app.use('/api/fields', cropRoutes_1.cropRoutes);
 app.get('/health', (req, res) => {
     res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
