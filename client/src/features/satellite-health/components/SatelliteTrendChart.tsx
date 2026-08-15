@@ -12,7 +12,7 @@ export const SatelliteTrendChart: React.FC<SatelliteTrendChartProps> = ({ timeli
 
   // Simple SVG line chart
   const height = 150;
-  const width = 100; // Will use % for responsive width
+  const _width = 100; // Will use % for responsive width
   
   // Find min/max for scaling
   const values = timeline.map(t => t.ndviValue);

@@ -1,4 +1,4 @@
-import { db, Farmer, Field } from '../models/Database';
+import { db, Farmer, Field } from '../../models/Database';
 
 export class Layer1Service {
   /**

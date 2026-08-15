@@ -1,9 +1,9 @@
-import { db, DiagnosisEvent } from '../models/Database';
-import { layer1Service } from './Layer1Service';
-import { layer2Service } from './Layer2Service';
-import { layer3Service } from './Layer3Service';
-import { layer6Service } from './Layer6Service';
-import { diseaseAI } from './disease/DiseaseDiagnosticAI';
+import { db, DiagnosisEvent } from '../../models/Database';
+import { layer1Service } from '../field/field.service';
+import { layer2Service } from '../crop/crop.service';
+import { layer3Service } from '../weather/weather.service';
+import { healthScoreService } from '../health-score/health-score.service';
+import { diseaseAI } from './DiseaseDiagnosticAI';
 import { v4 as uuidv4 } from 'uuid';
 
 export class Layer7Service {
@@ -17,7 +17,7 @@ export class Layer7Service {
 
     const cropState = await layer2Service.getFieldCropState(fieldId);
     const weather = await layer3Service.getLocalizedForecast(fieldId);
-    const fieldHealth = await layer6Service.getMockedFieldHealth(fieldId);
+    const fieldHealth = await healthScoreService.computeScore(fieldId);
 
     // 2. Call AI with context
     const aiResult = await diseaseAI.analyzeImage(imageBlobSize, {

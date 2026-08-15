@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { layer10Service } from '../services/Layer10Service';
+import { layer10Service } from '../regen/regen.service';
 
 const router = Router();
 

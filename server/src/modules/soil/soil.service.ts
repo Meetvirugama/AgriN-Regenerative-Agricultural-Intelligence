@@ -1,7 +1,7 @@
-import { db, SoilProfile, RegionalSoilBaseline } from '../models/Database';
-import { layer1Service } from './Layer1Service';
+import { db, SoilProfile, RegionalSoilBaseline } from '../../models/Database';
+import { layer1Service } from '../field/field.service';
 import { v4 as uuidv4 } from 'uuid';
-import { DocumentParser, ParsedSoilData } from './soil/DocumentParser';
+import { DocumentParser, ParsedSoilData } from './DocumentParser';
 
 class Layer4Service {
   

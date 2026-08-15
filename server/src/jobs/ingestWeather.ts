@@ -1,5 +1,5 @@
 import { db } from '../models/Database';
-import { layer3Service } from '../services/Layer3Service';
+import { layer3Service } from '../modules/weather/weather.service';
 
 /**
  * Ingestion Job

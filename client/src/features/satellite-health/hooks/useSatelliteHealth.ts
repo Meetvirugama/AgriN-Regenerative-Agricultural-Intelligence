@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { SatelliteHealthData, FieldHealthTrend, AnomalyFlag } from '../types/satellite.types';
-
-const API_URL = 'http://localhost:8000/api';
+import { SatelliteHealthData, FieldHealthTrend } from '../types/satellite.types';
+import { API_BASE as API_URL } from '../../../lib/apiClient';
 
 export function useSatelliteHealth(fieldId: string | undefined) {
   const [data, setData] = useState<SatelliteHealthData | null>(null);

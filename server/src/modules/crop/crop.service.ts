@@ -1,5 +1,5 @@
-import { db, FieldCropState, StageEnum, CropCalendar } from '../models/Database';
-import { layer1Service } from './Layer1Service';
+import { db, FieldCropState, StageEnum, CropCalendar } from '../../models/Database';
+import { layer1Service } from '../field/field.service';
 
 export class Layer2Service {
   /**

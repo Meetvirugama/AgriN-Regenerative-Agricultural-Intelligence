@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+import { API_BASE as API_URL } from '../../../lib/apiClient';
 
 export interface RegenPractice {
   id: string;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FieldCropState, StageEnum } from '../api/cropApi';
+import { FieldCropState } from '../api/cropApi';
 import { TextToSpeechButton } from '../../voice/components/TextToSpeechButton';
 
 interface GrowthStageBannerProps {

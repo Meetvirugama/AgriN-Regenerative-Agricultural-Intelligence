@@ -1,3 +1,5 @@
+import { API_BASE } from '../../../lib/apiClient';
+
 export interface EscalationTicket {
   id: string;
   fieldId: string;
@@ -25,7 +27,7 @@ export const escalationApi = {
     source: 'Layer07' | 'Layer09', 
     contextData: any
   ): Promise<EscalationTicket> => {
-    const res = await fetch('http://localhost:8000/api/escalations/trigger', {
+    const res = await fetch(`${API_BASE}/escalations/trigger`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fieldId, reason, source, contextData })
@@ -35,14 +37,14 @@ export const escalationApi = {
   },
 
   getPendingTickets: async (): Promise<EscalationTicket[]> => {
-    const res = await fetch('http://localhost:8000/api/escalations/tickets');
+    const res = await fetch(`${API_BASE}/escalations/tickets`);
     if (!res.ok) throw new Error('Failed to fetch tickets');
     const data = await res.json();
     return data.tickets;
   },
 
   resolveTicket: async (ticketId: string): Promise<EscalationTicket> => {
-    const res = await fetch(`http://localhost:8000/api/escalations/tickets/${ticketId}/resolve`, {
+    const res = await fetch(`${API_BASE}/escalations/tickets/${ticketId}/resolve`, {
       method: 'POST'
     });
     if (!res.ok) throw new Error('Failed to resolve ticket');
@@ -50,7 +52,7 @@ export const escalationApi = {
   },
 
   getRegionalRisk: async (): Promise<RegionalRisk> => {
-    const res = await fetch('http://localhost:8000/api/escalations/regional-risk');
+    const res = await fetch(`${API_BASE}/escalations/regional-risk`);
     if (!res.ok) throw new Error('Failed to fetch regional risk');
     return res.json();
   }
