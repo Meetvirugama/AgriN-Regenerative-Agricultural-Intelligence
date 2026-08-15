@@ -14,6 +14,7 @@ import { SatelliteHealthCard, SatelliteDetailView, useSatelliteHealth } from './
 import { DiseaseDiagnosisFlow } from './features/disease-diagnosis/components/DiseaseDiagnosisFlow';
 import { RegenPlanningCard } from './features/regen-ag/components/RegenPlanningCard';
 import { FieldHealthHero, HealthDimensionCard, useHealthScore } from './features/health-score';
+import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRiskWidget';
 import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf } from 'lucide-react';
 
 function App() {
@@ -153,6 +154,11 @@ function App() {
           {showWeatherDetails && weatherData && (
             <WeatherDetails forecasts={weatherData.forecasts} />
           )}
+        </section>
+
+        {/* Layer 08 Climate Risk Prediction UI */}
+        <section className="flex flex-col gap-4 mt-6">
+          {fieldId && <ClimateRiskWidget fieldId={fieldId} />}
         </section>
 
         {/* Layer 04 Soil Context UI */}
