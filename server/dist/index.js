@@ -37,6 +37,9 @@ app.use('/api', climateRisk_1.default);
 app.use('/api', advisory_1.default);
 // Mount the Escalation API (Layer 13)
 app.use('/api/escalations', escalation_routes_1.default);
+// Mount the Cross-Border API (Layer 14)
+const crossBorder_routes_1 = __importDefault(require("./cross-border/crossBorder.routes"));
+app.use('/api', crossBorder_routes_1.default);
 app.listen(PORT, () => {
     console.log(`AgriMesh Server running on port ${PORT}`);
 });

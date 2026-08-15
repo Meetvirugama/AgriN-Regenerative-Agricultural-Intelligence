@@ -16,6 +16,7 @@ import { RegenPlanningCard } from './features/regen-ag/components/RegenPlanningC
 import { FieldHealthHero, HealthDimensionCard, useHealthScore } from './features/health-score';
 import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRiskWidget';
 import { AdvisoryCard } from './features/agro-advisory/components/AdvisoryCard';
+import { GlobalInsightsWidget } from './features/cross-border';
 import { ExtensionDashboard } from './features/escalation-dashboard';
 import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf, ArrowRightLeft } from 'lucide-react';
 
@@ -211,6 +212,7 @@ function App() {
         {/* Layer 10 Regen Ag Context UI */}
         <section className="flex flex-col gap-4 mt-6 mb-12">
           {fieldId && <RegenPlanningCard fieldId={fieldId} />}
+          {fieldId && <GlobalInsightsWidget fieldId={fieldId} />}
         </section>
 
         {/* Modals */}
