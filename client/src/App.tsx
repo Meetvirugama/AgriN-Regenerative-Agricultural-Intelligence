@@ -11,6 +11,7 @@ import { soilApi, SoilProfile } from './features/soil-intelligence/api/soilApi';
 import { SoilSummaryCard } from './features/soil-intelligence/components/SoilSummaryCard';
 import { SoilUploadFlow } from './features/soil-intelligence/components/SoilUploadFlow';
 import { SatelliteHealthCard, SatelliteDetailView, useSatelliteHealth } from './features/satellite-health';
+import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRiskWidget';
 
 function App() {
   const [fieldId, setFieldId] = useState<string | null>(null);
@@ -82,7 +83,7 @@ function App() {
     try {
       const newState = await cropApi.overrideCropState(fieldId, { cropType, stage: stage as any });
       setCropState(newState);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -101,6 +102,12 @@ function App() {
         {!isWeatherLoading && weatherData && (
           <WeatherAlertBanner flags={weatherData.flags} />
         )}
+
+        {/* Layer 08 Climate Risk Widget */}
+        <section className="flex flex-col gap-2 mt-2">
+          <h2 className="font-bold tracking-wide text-sm text-text-muted uppercase">Climate Risk</h2>
+          <ClimateRiskWidget fieldId={fieldId || 'mock-field-123'} />
+        </section>
 
         {/* Layer 02 Crop Context UI */}
         <section className="flex flex-col gap-6">
