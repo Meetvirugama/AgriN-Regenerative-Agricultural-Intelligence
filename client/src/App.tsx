@@ -11,6 +11,9 @@ import { soilApi, SoilProfile } from './features/soil-intelligence/api/soilApi';
 import { SoilSummaryCard } from './features/soil-intelligence/components/SoilSummaryCard';
 import { SoilUploadFlow } from './features/soil-intelligence/components/SoilUploadFlow';
 import { SatelliteHealthCard, SatelliteDetailView, useSatelliteHealth } from './features/satellite-health';
+import { DiseaseDiagnosisFlow } from './features/disease-diagnosis/components/DiseaseDiagnosisFlow';
+import { RegenPlanningCard } from './features/regen-ag/components/RegenPlanningCard';
+import { Camera } from 'lucide-react';
 
 function App() {
   const [fieldId, setFieldId] = useState<string | null>(null);
@@ -28,6 +31,9 @@ function App() {
   const [soilProfile, setSoilProfile] = useState<SoilProfile | null>(null);
   const [isSoilLoading, setIsSoilLoading] = useState(true);
   const [showSoilUpload, setShowSoilUpload] = useState(false);
+
+  // Layer 07 State
+  const [showDiagnosisFlow, setShowDiagnosisFlow] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -151,8 +157,13 @@ function App() {
         </section>
 
         {/* Layer 05 Satellite Context UI */}
-        <section className="flex flex-col gap-4 mt-6 mb-12">
+        <section className="flex flex-col gap-4 mt-6">
           {fieldId && <FieldSatelliteWrapper fieldId={fieldId} />}
+        </section>
+
+        {/* Layer 10 Regen Ag Context UI */}
+        <section className="flex flex-col gap-4 mt-6 mb-12">
+          {fieldId && <RegenPlanningCard fieldId={fieldId} />}
         </section>
 
         {/* Modals */}
@@ -171,7 +182,25 @@ function App() {
             onSave={(profile) => setSoilProfile(profile)}
           />
         )}
+
+        {showDiagnosisFlow && fieldId && (
+          <DiseaseDiagnosisFlow
+            fieldId={fieldId}
+            onClose={() => setShowDiagnosisFlow(false)}
+          />
+        )}
       </div>
+
+      {/* Floating Action Button for Layer 07 */}
+      {fieldId && !showDiagnosisFlow && (
+        <button 
+          onClick={() => setShowDiagnosisFlow(true)}
+          className="fixed bottom-6 right-6 w-16 h-16 bg-primary text-primary-content rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary z-40"
+          aria-label="Inspect Crop"
+        >
+          <Camera size={32} />
+        </button>
+      )}
     </div>
   );
 }
