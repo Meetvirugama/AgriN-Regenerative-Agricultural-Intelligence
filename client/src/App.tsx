@@ -15,6 +15,7 @@ import { DiseaseDiagnosisFlow } from './features/disease-diagnosis/components/Di
 import { RegenPlanningCard } from './features/regen-ag/components/RegenPlanningCard';
 import { FieldHealthHero, HealthDimensionCard, useHealthScore } from './features/health-score';
 import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRiskWidget';
+import { AdvisoryCard } from './features/agro-advisory/components/AdvisoryCard';
 import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf } from 'lucide-react';
 
 function App() {
@@ -115,6 +116,13 @@ function App() {
         {/* Layer 03 Alert Banner (Top Priority) */}
         {!isWeatherLoading && weatherData && (
           <WeatherAlertBanner flags={weatherData.flags} />
+        )}
+
+        {/* Layer 09 AI Agro-Advisory */}
+        {fieldId && (
+          <section className="flex flex-col gap-4 mt-2">
+            <AdvisoryCard fieldId={fieldId} />
+          </section>
         )}
 
         {/* Layer 02 Crop Context UI */}
