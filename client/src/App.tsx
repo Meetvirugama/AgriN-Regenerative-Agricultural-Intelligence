@@ -10,6 +10,7 @@ import { WeatherDetails } from './features/weather-intelligence/components/Weath
 import { soilApi, SoilProfile } from './features/soil-intelligence/api/soilApi';
 import { SoilSummaryCard } from './features/soil-intelligence/components/SoilSummaryCard';
 import { SoilUploadFlow } from './features/soil-intelligence/components/SoilUploadFlow';
+import { SatelliteHealthCard, SatelliteDetailView, useSatelliteHealth } from './features/satellite-health';
 
 function App() {
   const [fieldId, setFieldId] = useState<string | null>(null);
@@ -141,12 +142,17 @@ function App() {
         </section>
 
         {/* Layer 04 Soil Context UI */}
-        <section className="flex flex-col gap-4 mt-6 mb-12">
+        <section className="flex flex-col gap-4 mt-6">
           <SoilSummaryCard 
             profile={soilProfile} 
             isLoading={isSoilLoading} 
             onUploadClick={() => setShowSoilUpload(true)} 
           />
+        </section>
+
+        {/* Layer 05 Satellite Context UI */}
+        <section className="flex flex-col gap-4 mt-6 mb-12">
+          {fieldId && <FieldSatelliteWrapper fieldId={fieldId} />}
         </section>
 
         {/* Modals */}
@@ -167,6 +173,38 @@ function App() {
         )}
       </div>
     </div>
+  );
+}
+
+// Wrapper to handle data fetching for the card and modal state
+const FieldSatelliteWrapper = ({ fieldId }: { fieldId: string }) => {
+  const [showDetail, setShowDetail] = useState(false);
+  const { data, loading, error } = useSatelliteHealth(fieldId);
+  
+  if (error) {
+    return <div className="border border-danger p-4 text-danger text-sm">Failed to load satellite data.</div>;
+  }
+  
+  return (
+    <>
+      <SatelliteHealthCard 
+        data={data} 
+        loading={loading} 
+        onClick={() => setShowDetail(true)} 
+      />
+      {showDetail && (
+        <SatelliteDetailView 
+          fieldId={fieldId} 
+          fieldBoundary={[
+            { lat: 20.593, lng: 78.962 },
+            { lat: 20.594, lng: 78.962 },
+            { lat: 20.594, lng: 78.963 },
+            { lat: 20.593, lng: 78.963 },
+          ]}
+          onClose={() => setShowDetail(false)} 
+        />
+      )}
+    </>
   );
 }
 

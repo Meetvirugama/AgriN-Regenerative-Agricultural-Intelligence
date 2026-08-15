@@ -10,10 +10,12 @@ const PORT = process.env.PORT || 8000;
 app.use(cors());
 app.use(express.json());
 
+import satelliteRoutes from './satellite/satellite.routes';
 import { cropRoutes } from './routes/cropRoutes';
 import weatherRoutes from './routes/weatherRoutes';
 import soilRoutes from './routes/soilRoutes';
 
+app.use('/api', satelliteRoutes);
 app.use('/api/fields', cropRoutes);
 app.use('/api/fields', weatherRoutes);
 app.use('/api/fields', soilRoutes);
