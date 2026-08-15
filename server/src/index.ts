@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import climateRiskRouter from './routes/climateRisk';
 import advisoryRouter from './routes/advisory';
+import voiceRouter from './routes/voice';
 import escalationRoutes from './escalation/escalation.routes';
 
 dotenv.config();
@@ -37,6 +38,8 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api', climateRiskRouter);
 // Mount the Advisory API
 app.use('/api', advisoryRouter);
+// Mount the Voice API
+app.use('/api', voiceRouter);
 // Mount the Escalation API (Layer 13)
 app.use('/api/escalations', escalationRoutes);
 // Mount the Cross-Border API (Layer 14)

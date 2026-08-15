@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Advisory } from '../types';
 import { advisoryApi } from '../api/advisoryApi';
+import { TextToSpeechButton } from '../../voice/components/TextToSpeechButton';
 
 interface AdvisoryCardProps {
   fieldId: string;
@@ -90,7 +91,13 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
       <div className={`absolute top-0 left-0 w-1 h-full ${severityColor.split(' ')[0].replace('text-', 'bg-')}`}></div>
       
       <div className="flex justify-between items-start mb-4">
-        <h3 className="font-black text-xl tracking-tight text-text">AgriMesh Advisory</h3>
+        <h3 className="font-black text-xl tracking-tight text-text flex items-center gap-2">
+          AgriMesh Advisory
+          <TextToSpeechButton 
+            textToRead={`AgriMesh Advisory: ${advisory.severity} Priority. ${advisory.action_text} ${advisory.action_deadline}. ${advisory.what_text} ${advisory.why_text}. What to monitor: ${advisory.monitor_text}`} 
+            className="w-8 h-8 p-1"
+          />
+        </h3>
         <span className={`px-2 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${severityColor}`}>
           {advisory.severity} Priority
         </span>

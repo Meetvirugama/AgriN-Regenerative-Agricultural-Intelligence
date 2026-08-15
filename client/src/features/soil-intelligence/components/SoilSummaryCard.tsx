@@ -1,5 +1,6 @@
 import { Leaf, Info, FileText } from 'lucide-react';
 import { SoilProfile } from '../api/soilApi';
+import { TextToSpeechButton } from '../../voice/components/TextToSpeechButton';
 
 interface SoilSummaryCardProps {
   profile: SoilProfile | null;
@@ -59,7 +60,13 @@ export function SoilSummaryCard({ profile, isLoading, onUploadClick }: SoilSumma
 
       <div className="mb-6">
         {profile.summary_text ? (
-          <p className="font-medium text-lg leading-snug">{profile.summary_text}</p>
+          <p className="font-medium text-lg leading-snug flex items-start gap-2">
+            {profile.summary_text}
+            <TextToSpeechButton 
+              textToRead={`Soil Profile: ${profile.summary_text}`} 
+              className="w-8 h-8 p-1 shrink-0" 
+            />
+          </p>
         ) : (
           <p className="font-medium text-lg leading-snug text-text-muted italic">
             Summary generation pending Layer 09 integration.

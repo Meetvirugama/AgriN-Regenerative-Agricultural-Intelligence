@@ -1,5 +1,6 @@
 import { Sun, CloudRain, Cloud } from 'lucide-react';
 import { WeatherSnapshot, WeatherEventFlag } from '../api/weatherApi';
+import { TextToSpeechButton } from '../../voice/components/TextToSpeechButton';
 
 interface WeatherStripProps {
   forecasts: WeatherSnapshot[];
@@ -78,8 +79,12 @@ export function WeatherStrip({ forecasts, flags, isLoading, onExpand }: WeatherS
       </div>
       
       {primaryMessage && (
-        <div className={`text-sm font-bold ${messageColor} text-right`}>
+        <div className={`text-sm font-bold flex items-center gap-2 ${messageColor} text-right`}>
           {primaryMessage}
+          <TextToSpeechButton 
+            textToRead={primaryMessage} 
+            className="w-7 h-7 p-1" 
+          />
         </div>
       )}
     </button>

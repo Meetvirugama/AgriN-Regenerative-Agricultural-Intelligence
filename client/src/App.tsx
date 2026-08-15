@@ -16,9 +16,30 @@ import { RegenPlanningCard } from './features/regen-ag/components/RegenPlanningC
 import { FieldHealthHero, HealthDimensionCard, useHealthScore } from './features/health-score';
 import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRiskWidget';
 import { AdvisoryCard } from './features/agro-advisory/components/AdvisoryCard';
+import { LanguageSwitcher } from './features/voice/components/LanguageSwitcher';
+import { GlobalMicButton } from './features/voice/components/GlobalMicButton';
 import { GlobalInsightsWidget } from './features/cross-border';
 import { ExtensionDashboard } from './features/escalation-dashboard';
 import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf, ArrowRightLeft } from 'lucide-react';
+
+function FieldHealthScoreWrapper({ fieldId }: { fieldId: string }) {
+  const { score, dimensions } = useHealthScore(fieldId);
+  return (
+    <>
+      <FieldHealthHero score={score} />
+      <div className="grid grid-cols-2 gap-2">
+        {dimensions.map((d) => (
+          <HealthDimensionCard key={d.label} {...d} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function FieldSatelliteWrapper({ fieldId }: { fieldId: string }) {
+  const { data } = useSatelliteHealth(fieldId);
+  return <SatelliteHealthCard data={data} />;
+}
 
 function App() {
   const [persona, setPersona] = useState<'farmer' | 'extension'>('farmer');
@@ -118,6 +139,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-surface flex justify-center p-4 relative">
+      <GlobalMicButton />
       <button 
         onClick={() => setPersona('extension')}
         className="absolute top-4 right-4 z-50 bg-neutral/80 backdrop-blur text-text font-bold px-4 py-2 rounded-full shadow border border-neutral flex items-center gap-2 hover:bg-neutral transition-colors"
@@ -127,9 +149,12 @@ function App() {
       </button>
 
       <div className="w-full max-w-md flex flex-col gap-6 mt-8">
-        <header className="mb-2">
-          <h1 className="text-3xl font-black text-text tracking-tight">AgriMesh</h1>
-          <p className="text-text-muted">Field Intelligence Dashboard</p>
+        <header className="mb-2 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-black text-text tracking-tight">AgriMesh</h1>
+            <p className="text-text-muted">Field Intelligence Dashboard</p>
+          </div>
+          <LanguageSwitcher />
         </header>
 
         {/* Layer 06: Field Health Score Synthesis */}
