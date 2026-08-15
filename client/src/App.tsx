@@ -3,6 +3,10 @@ import { cropApi, FieldCropState } from './features/crop-context/api/cropApi';
 import { GrowthStageBanner } from './features/crop-context/components/GrowthStageBanner';
 import { StageProgressIndicator } from './features/crop-context/components/StageProgressIndicator';
 import { CropPhotoCapture } from './features/crop-context/components/CropPhotoCapture';
+import { weatherApi, WeatherData } from './features/weather-intelligence/api/weatherApi';
+import { WeatherAlertBanner } from './features/weather-intelligence/components/WeatherAlertBanner';
+import { WeatherStrip } from './features/weather-intelligence/components/WeatherStrip';
+import { WeatherDetails } from './features/weather-intelligence/components/WeatherDetails';
 
 function App() {
   const [fieldId, setFieldId] = useState<string | null>(null);
@@ -10,12 +14,19 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showOverride, setShowOverride] = useState(false);
+  
+  // Layer 03 State
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [isWeatherLoading, setIsWeatherLoading] = useState(true);
+  const [showWeatherDetails, setShowWeatherDetails] = useState(false);
 
   useEffect(() => {
     async function init() {
       try {
         const { field } = await cropApi.initStub();
         setFieldId(field.id);
+        
+        // Fetch Layer 02 (Crop)
         const state = await cropApi.fetchCropState(field.id);
         setCropState(state);
       } catch (err: any) {
@@ -23,6 +34,18 @@ function App() {
         setError("Failed to load field data. Please try again.");
       } finally {
         setIsLoading(false);
+      }
+
+      // Fetch Layer 03 (Weather) - Non-blocking
+      try {
+        const { field } = await cropApi.initStub();
+        const weather = await weatherApi.getForecast(field.id);
+        setWeatherData(weather);
+      } catch (err: any) {
+        console.error("Weather fetch failed", err);
+        // Fail silently and let UI degrade gracefully (per requirements)
+      } finally {
+        setIsWeatherLoading(false);
       }
     }
     init();
@@ -54,6 +77,11 @@ function App() {
           <p className="text-text-muted">Field Intelligence Dashboard</p>
         </header>
 
+        {/* Layer 03 Alert Banner (Top Priority) */}
+        {!isWeatherLoading && weatherData && (
+          <WeatherAlertBanner flags={weatherData.flags} />
+        )}
+
         {/* Layer 02 Crop Context UI */}
         <section className="flex flex-col gap-6">
           {error ? (
@@ -77,6 +105,19 @@ function App() {
                 )}
               </div>
             </>
+          )}
+        </section>
+
+        {/* Layer 03 Weather Context UI */}
+        <section className="flex flex-col gap-4 mt-6">
+          <WeatherStrip 
+            forecasts={weatherData?.forecasts || []} 
+            flags={weatherData?.flags || []} 
+            isLoading={isWeatherLoading}
+            onExpand={() => setShowWeatherDetails(!showWeatherDetails)}
+          />
+          {showWeatherDetails && weatherData && (
+            <WeatherDetails forecasts={weatherData.forecasts} />
           )}
         </section>
 

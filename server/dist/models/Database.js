@@ -7,6 +7,9 @@ class InMemoryDB {
     fields = new Map();
     cropCalendars = new Map();
     fieldCropStates = new Map();
+    overrideEvents = [];
+    weatherSnapshots = new Map();
+    weatherFlags = new Map();
     constructor() {
         this.seed();
     }

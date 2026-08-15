@@ -12,7 +12,9 @@ const PORT = process.env.PORT || 8000;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 const cropRoutes_1 = require("./routes/cropRoutes");
+const weatherRoutes_1 = __importDefault(require("./routes/weatherRoutes"));
 app.use('/api/fields', cropRoutes_1.cropRoutes);
+app.use('/api/fields', weatherRoutes_1.default);
 app.get('/health', (req, res) => {
     res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });

@@ -53,6 +53,32 @@ export interface OverrideEvent {
   timestamp: string;
 }
 
+export type EventType = 'rain_expected' | 'heat_event' | 'dry_spell' | 'humidity_spike' | 'frost_warning';
+
+export interface FieldWeatherSnapshot {
+  field_id: string;
+  date: string; // YYYY-MM-DD
+  source: string;
+  rainfall_mm: number;
+  temp_min: number;
+  temp_max: number;
+  humidity_pct: number;
+  forecast_confidence: 'high' | 'medium' | 'low';
+  is_forecast: boolean;
+  ingested_at: string;
+}
+
+export interface WeatherEventFlag {
+  id: string;
+  field_id: string;
+  event_type: EventType;
+  start_date: string;
+  end_date: string;
+  severity: 'low' | 'medium' | 'high';
+  message: string;
+  generated_at: string;
+}
+
 // In-Memory Store
 export class InMemoryDB {
   public farmers: Map<string, Farmer> = new Map();
@@ -60,6 +86,8 @@ export class InMemoryDB {
   public cropCalendars: Map<string, CropCalendar> = new Map();
   public fieldCropStates: Map<string, FieldCropState> = new Map();
   public overrideEvents: OverrideEvent[] = [];
+  public weatherSnapshots: Map<string, FieldWeatherSnapshot[]> = new Map();
+  public weatherFlags: Map<string, WeatherEventFlag[]> = new Map();
 
   constructor() {
     this.seed();

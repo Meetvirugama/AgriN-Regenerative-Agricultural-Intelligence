@@ -79,7 +79,7 @@ class Layer2Service {
             current_stage: inferredStage,
             stage_description: this.getStageDescription(inferredStage, field.crop_type),
             stage_confidence: 'high',
-            stage_conflict: false,
+            stage_conflict: existingState ? existingState.stage_conflict : false,
             accumulated_gdd: gdd,
             last_updated_from: 'calendar_estimate',
             updated_at: new Date().toISOString()
@@ -108,6 +108,16 @@ class Layer2Service {
             updated_at: new Date().toISOString()
         };
         Database_1.db.fieldCropStates.set(fieldId, updatedState);
+        // Log the override as a distinct event (for Layer 12)
+        Database_1.db.overrideEvents.push({
+            id: `override_${Date.now()}`,
+            field_id: fieldId,
+            previous_crop: existingState.confirmed_crop,
+            new_crop: updatedState.confirmed_crop,
+            previous_stage: existingState.current_stage,
+            new_stage: updatedState.current_stage,
+            timestamp: new Date().toISOString()
+        });
         // If crop changed, update Layer 1 field
         const field = Layer1Service_1.layer1Service.getField(fieldId);
         if (field && cropType) {
