@@ -13,6 +13,8 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [overrideReason, setOverrideReason] = useState('');
   const [showOverrideInput, setShowOverrideInput] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
+  const [escalationSent, setEscalationSent] = useState(false);
 
   useEffect(() => {
     const fetchAdvisory = async () => {
@@ -183,6 +185,69 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
       <div className="mt-6 pt-4 border-t border-neutral/20 text-[10px] uppercase tracking-widest text-text-muted/60">
         Sources: {advisory.source_layers.join(' • ')}
       </div>
+
+      {(advisory.severity === 'High' || advisory.severity === 'Critical') && !escalationSent && (
+        <div className="mt-6 p-4 bg-error/5 border border-error/20 rounded-xl">
+          <h4 className="font-bold text-error text-sm mb-2 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            High Severity Risk Detected
+          </h4>
+          <p className="text-xs text-text-muted mb-4 leading-relaxed">
+            This issue could significantly impact your yield. We recommend escalating this data to an extension officer for review.
+          </p>
+
+          <div className="flex items-start gap-2 text-left mb-4">
+            <input 
+              type="checkbox" 
+              id="advisory-consent"
+              checked={consentGiven}
+              onChange={(e) => setConsentGiven(e.target.checked)}
+              className="mt-0.5 w-3.5 h-3.5 text-error rounded focus:ring-error accent-error flex-shrink-0"
+            />
+            <label htmlFor="advisory-consent" className="text-[11px] text-text-muted font-medium cursor-pointer leading-tight">
+              I consent to share this advisory, my field history, and satellite context with my local extension network.
+            </label>
+          </div>
+
+          <button 
+            disabled={!consentGiven}
+            onClick={async () => {
+              try {
+                await fetch('http://localhost:8000/api/escalations/trigger', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    fieldId,
+                    reason: 'high_severity',
+                    source: 'Layer09',
+                    contextData: { issue: advisory.what_text, action: advisory.action_text, consentVerified: true }
+                  })
+                });
+                setEscalationSent(true);
+              } catch (e) {
+                console.error('Failed to escalate', e);
+              }
+            }}
+            className="w-full py-2 bg-error text-error-content font-bold rounded-lg text-sm hover:brightness-110 transition-all disabled:opacity-50 disabled:pointer-events-none"
+          >
+            Escalate to Agronomist
+          </button>
+        </div>
+      )}
+
+      {escalationSent && (
+        <div className="mt-6 p-4 bg-success/10 border border-success/30 rounded-xl text-center">
+          <p className="text-sm font-bold text-success flex items-center justify-center gap-2">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Escalation Sent
+          </p>
+          <p className="text-xs text-text-muted mt-1">An expert will review your field data.</p>
+        </div>
+      )}
     </div>
   );
 };

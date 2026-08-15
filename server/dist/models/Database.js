@@ -12,6 +12,8 @@ class InMemoryDB {
     weatherFlags = new Map();
     soilProfiles = new Map(); // history of profiles
     regionalSoilBaselines = new Map();
+    diagnosisEvents = new Map();
+    regenPlans = new Map();
     constructor() {
         this.seed();
     }
