@@ -104,6 +104,46 @@ export interface RegionalSoilBaseline {
   water_holding_capacity: 'low' | 'medium' | 'high';
 }
 
+export interface DiagnosisEvent {
+  id: string;
+  field_id: string;
+  photo_url: string;
+  submitted_at: string;
+  crop_type: string;
+  growth_stage: string;
+  recent_weather_snapshot: any;
+  field_health_context: any;
+  predicted_category: 'disease' | 'pest' | 'nutrient_deficiency' | 'water_stress' | 'heat_stress' | 'unknown';
+  predicted_label: string;
+  confidence: number;
+  severity: 'low' | 'moderate' | 'high';
+  recommended_action_text: string | null;
+  escalation_triggered: boolean;
+}
+
+export interface RegenPractice {
+  id: string;
+  title: string;
+  description: string;
+  effort_level: 'low' | 'medium' | 'high';
+  reasoning: string;
+}
+
+export interface CropRanking {
+  crop_type: string;
+  variety: string | null;
+  suitability_score: number; // 0-100
+  reasoning: string;
+  risk_factors: string[];
+}
+
+export interface RegenPlan {
+  field_id: string;
+  practices: RegenPractice[];
+  next_season_options: CropRanking[];
+  generated_at: string;
+}
+
 // In-Memory Store
 export class InMemoryDB {
   public farmers: Map<string, Farmer> = new Map();
@@ -115,6 +155,8 @@ export class InMemoryDB {
   public weatherFlags: Map<string, WeatherEventFlag[]> = new Map();
   public soilProfiles: Map<string, SoilProfile[]> = new Map(); // history of profiles
   public regionalSoilBaselines: Map<string, RegionalSoilBaseline> = new Map();
+  public diagnosisEvents: Map<string, DiagnosisEvent[]> = new Map();
+  public regenPlans: Map<string, RegenPlan> = new Map();
 
   constructor() {
     this.seed();
