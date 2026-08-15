@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import climateRiskRouter from './routes/climateRisk';
 import advisoryRouter from './routes/advisory';
 import voiceRouter from './routes/voice';
+import feedbackRouter from './routes/feedback';
 import escalationRoutes from './escalation/escalation.routes';
 
 dotenv.config();
@@ -40,6 +41,8 @@ app.use('/api', climateRiskRouter);
 app.use('/api', advisoryRouter);
 // Mount the Voice API
 app.use('/api', voiceRouter);
+// Mount the Feedback & Memory API
+app.use('/api', feedbackRouter);
 // Mount the Escalation API (Layer 13)
 app.use('/api/escalations', escalationRoutes);
 // Mount the Cross-Border API (Layer 14)

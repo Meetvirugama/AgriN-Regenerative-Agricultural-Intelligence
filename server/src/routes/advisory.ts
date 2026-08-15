@@ -21,7 +21,8 @@ router.get('/fields/:fieldId/advisory', (req: Request, res: Response) => {
     monitor_text: 'Watch for rapid spreading of yellowing on the lower leaves. If it spreads, escalate immediately.',
     source_layers: ['Layer 02 (Stage)', 'Layer 03 (Weather)', 'Layer 05 (Satellite)'],
     farmer_response: null,
-    overridden_reason: null
+    overridden_reason: null,
+    historical_parallel_callout: 'Similar to the dry spell in week 5 last season — that time, delaying irrigation resulted in a 10% canopy loss.'
   };
 
   res.json(mockAdvisory);

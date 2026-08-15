@@ -18,6 +18,10 @@ import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRis
 import { AdvisoryCard } from './features/agro-advisory/components/AdvisoryCard';
 import { LanguageSwitcher } from './features/voice/components/LanguageSwitcher';
 import { GlobalMicButton } from './features/voice/components/GlobalMicButton';
+import { memoryApi } from './features/field-memory/api/memoryApi';
+import { PendingPrompt, FieldTimelineEntry } from './features/field-memory/types';
+import { FeedbackPrompt } from './features/field-memory/components/FeedbackPrompt';
+import { FieldTimeline } from './features/field-memory/components/FieldTimeline';
 import { GlobalInsightsWidget } from './features/cross-border';
 import { ExtensionDashboard } from './features/escalation-dashboard';
 import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf, ArrowRightLeft } from 'lucide-react';
@@ -40,6 +44,7 @@ function FieldSatelliteWrapper({ fieldId }: { fieldId: string }) {
   const { data } = useSatelliteHealth(fieldId);
   return <SatelliteHealthCard data={data} />;
 }
+>>>>>>> main
 
 function App() {
   const [persona, setPersona] = useState<'farmer' | 'extension'>('farmer');
@@ -58,6 +63,10 @@ function App() {
   const [soilProfile, setSoilProfile] = useState<SoilProfile | null>(null);
   const [isSoilLoading, setIsSoilLoading] = useState(true);
   const [showSoilUpload, setShowSoilUpload] = useState(false);
+
+  // Layer 12 State
+  const [pendingPrompts, setPendingPrompts] = useState<PendingPrompt[]>([]);
+  const [timeline, setTimeline] = useState<FieldTimelineEntry[]>([]);
 
   // Layer 07 State
   const [showDiagnosisFlow, setShowDiagnosisFlow] = useState(false);
@@ -99,6 +108,17 @@ function App() {
         // NO_DATA is expected for entirely new users/regions
       } finally {
         setIsSoilLoading(false);
+      }
+      
+      // Fetch Layer 12 (Field Memory) - Non-blocking
+      try {
+        const { field } = await cropApi.initStub();
+        const prompts = await memoryApi.getPendingPrompts(field.id);
+        setPendingPrompts(prompts);
+        const tl = await memoryApi.getTimeline(field.id);
+        setTimeline(tl);
+      } catch (err: any) {
+        console.error("Field memory fetch failed", err);
       }
     }
     init();
@@ -156,6 +176,14 @@ function App() {
           </div>
           <LanguageSwitcher />
         </header>
+
+        {/* Layer 12 Feedback Prompt */}
+        {pendingPrompts.length > 0 && (
+          <FeedbackPrompt 
+            prompt={pendingPrompts[0]} 
+            onDismiss={() => setPendingPrompts(prev => prev.slice(1))} 
+          />
+        )}
 
         {/* Layer 06: Field Health Score Synthesis */}
         {fieldId && (
@@ -232,6 +260,11 @@ function App() {
         {/* Layer 05 Satellite Context UI */}
         <section className="flex flex-col gap-4 mt-6">
           {fieldId && <FieldSatelliteWrapper fieldId={fieldId} />}
+        </section>
+
+        {/* Layer 12 Field Timeline */}
+        <section className="mt-8 mb-12 border-t-2 border-neutral/30 pt-4">
+          <FieldTimeline entries={timeline} />
         </section>
 
         {/* Layer 10 Regen Ag Context UI */}

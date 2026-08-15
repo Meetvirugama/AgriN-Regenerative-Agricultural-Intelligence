@@ -112,6 +112,17 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
           {advisory.what_text} {advisory.why_text}
         </p>
 
+        {advisory.historical_parallel_callout && (
+          <div className="bg-primary/10 border border-primary/30 p-3 rounded-lg flex items-start gap-3">
+            <svg className="w-5 h-5 text-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm font-medium text-text">
+              {advisory.historical_parallel_callout}
+            </p>
+          </div>
+        )}
+
         <p className="text-sm font-semibold text-text/80 bg-neutral/10 p-3 rounded-lg border border-neutral/20">
           <span className="uppercase tracking-widest text-xs text-text-muted block mb-1">What to monitor</span>
           {advisory.monitor_text}
