@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Advisory } from '../types';
 import { advisoryApi } from '../api/advisoryApi';
 import { TextToSpeechButton } from '../../voice/components/TextToSpeechButton';
+import { Card } from '../../../components/ui/Card';
+import { Button } from '../../../components/ui/Button';
+import { StatusBadge } from '../../../components/ui/StatusBadge';
+import { mapSeverityToStatus } from '../../../types/status';
 
 interface AdvisoryCardProps {
   fieldId: string;
@@ -44,7 +48,7 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
 
   if (loading) {
     return (
-      <div className="bg-surface border border-neutral p-6 rounded-xl shadow-sm animate-pulse">
+      <Card className="animate-pulse">
         <div className="h-6 bg-neutral/20 rounded w-1/3 mb-4"></div>
         <div className="h-4 bg-neutral/20 rounded w-full mb-2"></div>
         <div className="h-4 bg-neutral/20 rounded w-5/6 mb-6"></div>
@@ -52,7 +56,7 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
           <div className="h-10 bg-neutral/20 rounded w-1/3"></div>
           <div className="h-10 bg-neutral/20 rounded w-1/3"></div>
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -63,7 +67,7 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
   // Handle the "No action needed" state
   if (advisory.action_text.toLowerCase().includes('no action needed') || advisory.severity === 'Low') {
     return (
-      <div className="bg-success/10 border border-success/30 p-6 rounded-xl shadow-sm">
+      <Card className="bg-success/10 border-success/30">
         <h3 className="font-bold text-success mb-2 flex items-center gap-2">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -71,24 +75,22 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
           Conditions are good
         </h3>
         <p className="text-sm text-text-muted">Nothing to do today. We'll keep monitoring your field.</p>
-      </div>
+      </Card>
     );
   }
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'Critical': return 'text-error border-error bg-error/10';
-      case 'High': return 'text-warning border-warning bg-warning/10';
-      case 'Medium': return 'text-primary border-primary bg-primary/10';
-      default: return 'text-success border-success bg-success/10';
-    }
+  const status = mapSeverityToStatus(advisory.severity);
+  const statusColors = {
+    healthy: 'bg-success border-success',
+    neutral: 'bg-neutral border-neutral',
+    info: 'bg-info border-info',
+    attention: 'bg-warning border-warning',
+    urgent: 'bg-danger border-danger',
   };
 
-  const severityColor = getSeverityColor(advisory.severity);
-
   return (
-    <div className={`border-2 p-6 rounded-xl shadow-md ${severityColor.replace('text-', 'border-').split(' ')[1]} bg-surface relative overflow-hidden`}>
-      <div className={`absolute top-0 left-0 w-1 h-full ${severityColor.split(' ')[0].replace('text-', 'bg-')}`}></div>
+    <Card className="relative overflow-hidden pt-6">
+      <div className={`absolute top-0 left-0 w-1 h-full ${statusColors[status].split(' ')[0]}`}></div>
       
       <div className="flex justify-between items-start mb-4">
         <h3 className="font-black text-xl tracking-tight text-text flex items-center gap-2">
@@ -98,9 +100,7 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
             className="w-8 h-8 p-1"
           />
         </h3>
-        <span className={`px-2 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${severityColor}`}>
-          {advisory.severity} Priority
-        </span>
+        <StatusBadge status={status}>{advisory.severity} Priority</StatusBadge>
       </div>
 
       <div className="space-y-4 mb-6">
@@ -133,24 +133,15 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-widest font-bold text-text-muted">Farmer Response</p>
           <div className="flex flex-wrap gap-2">
-            <button 
-              onClick={() => handleFeedback('followed')}
-              className="btn btn-primary text-sm py-2 px-4"
-            >
+            <Button size="sm" onClick={() => handleFeedback('followed')}>
               I'll do this
-            </button>
-            <button 
-              onClick={() => handleFeedback('ignored')}
-              className="btn bg-neutral/20 text-text hover:bg-neutral/30 text-sm py-2 px-4"
-            >
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => handleFeedback('ignored')}>
               Already did
-            </button>
-            <button 
-              onClick={() => handleFeedback('overridden')}
-              className="btn bg-neutral/20 text-text hover:bg-neutral/30 text-sm py-2 px-4"
-            >
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => handleFeedback('overridden')}>
               Doesn't seem right
-            </button>
+            </Button>
           </div>
           
           {showOverrideInput && (
@@ -160,16 +151,12 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
                 value={overrideReason}
                 onChange={(e) => setOverrideReason(e.target.value)}
                 placeholder="Why not? (e.g. Too wet to spray)" 
-                className="input flex-1"
+                className="flex-1 px-4 py-2 bg-background border border-neutral rounded-none outline-none focus:border-text-main"
                 autoFocus
               />
-              <button 
-                onClick={() => handleFeedback('overridden')}
-                className="btn btn-secondary whitespace-nowrap"
-                disabled={!overrideReason.trim()}
-              >
+              <Button size="sm" variant="secondary" onClick={() => handleFeedback('overridden')} disabled={!overrideReason.trim()}>
                 Submit
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -186,9 +173,9 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
         Sources: {advisory.source_layers.join(' • ')}
       </div>
 
-      {(advisory.severity === 'High' || advisory.severity === 'Critical') && !escalationSent && (
-        <div className="mt-6 p-4 bg-error/5 border border-error/20 rounded-xl">
-          <h4 className="font-bold text-error text-sm mb-2 flex items-center gap-2">
+      {status === 'urgent' && !escalationSent && (
+        <div className="mt-6 p-4 bg-danger/5 border border-danger/20 rounded-xl">
+          <h4 className="font-bold text-danger text-sm mb-2 flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -204,36 +191,34 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
               id="advisory-consent"
               checked={consentGiven}
               onChange={(e) => setConsentGiven(e.target.checked)}
-              className="mt-0.5 w-3.5 h-3.5 text-error rounded focus:ring-error accent-error flex-shrink-0"
+              className="mt-0.5 w-3.5 h-3.5 text-danger rounded focus:ring-danger accent-danger flex-shrink-0"
             />
             <label htmlFor="advisory-consent" className="text-[11px] text-text-muted font-medium cursor-pointer leading-tight">
               I consent to share this advisory, my field history, and satellite context with my local extension network.
             </label>
           </div>
 
-          <button 
+          <Button 
             disabled={!consentGiven}
+            variant="destructive"
+            className="w-full"
             onClick={async () => {
               try {
-                await fetch('http://localhost:8000/api/escalations/trigger', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    fieldId,
-                    reason: 'high_severity',
-                    source: 'Layer09',
-                    contextData: { issue: advisory.what_text, action: advisory.action_text, consentVerified: true }
-                  })
-                });
+                const { escalationApi } = await import('../../escalation-dashboard/api/escalationApi');
+                await escalationApi.triggerEscalation(
+                  fieldId,
+                  'high_severity',
+                  'Layer09',
+                  { issue: advisory.what_text, action: advisory.action_text, consentVerified: true }
+                );
                 setEscalationSent(true);
               } catch (e) {
                 console.error('Failed to escalate', e);
               }
             }}
-            className="w-full py-2 bg-error text-error-content font-bold rounded-lg text-sm hover:brightness-110 transition-all disabled:opacity-50 disabled:pointer-events-none"
           >
             Escalate to Agronomist
-          </button>
+          </Button>
         </div>
       )}
 
@@ -248,6 +233,6 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
           <p className="text-xs text-text-muted mt-1">An expert will review your field data.</p>
         </div>
       )}
-    </div>
+    </Card>
   );
 };

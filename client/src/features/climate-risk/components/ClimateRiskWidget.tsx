@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, ThermometerSun, Loader2 } from 'lucide-react';
 import { ClimateRiskData } from '../types';
-import { API_BASE } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 import { cn } from '../../../lib/cn';
 
 interface ClimateRiskWidgetProps {
@@ -17,11 +17,7 @@ export function ClimateRiskWidget({ fieldId }: ClimateRiskWidgetProps) {
     const fetchRisk = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE}/fields/${fieldId}/climate-risk`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch climate risk data');
-        }
-        const result: ClimateRiskData = await response.json();
+        const result = await request<ClimateRiskData>(`fields/${fieldId}/climate-risk`);
         setData(result);
       } catch (err: any) {
         setError(err.message || 'Unknown error occurred');

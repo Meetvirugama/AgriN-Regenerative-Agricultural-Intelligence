@@ -1,4 +1,4 @@
-import { API_BASE as API_URL } from '../../../lib/apiClient';
+import { request, ApiError } from '../../../services/apiClient';
 
 export interface SoilProfile {
   id: string;
@@ -23,41 +23,29 @@ export interface ParsedSoilData extends Partial<SoilProfile> {
 
 export const soilApi = {
   getSoilProfile: async (fieldId: string): Promise<SoilProfile> => {
-    const response = await fetch(`${API_URL}/fields/${fieldId}/soil`);
-    if (!response.ok) {
-      if (response.status === 404) {
+    try {
+      return await request(`fields/${fieldId}/soil`);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
         throw new Error('NO_DATA');
       }
-      throw new Error('Failed to fetch soil data');
+      throw error;
     }
-    return response.json();
   },
 
   parseLabReport: async (fieldId: string, file: Blob): Promise<ParsedSoilData> => {
     const formData = new FormData();
     formData.append('document', file, 'lab_report.jpg');
-
-    const response = await fetch(`${API_URL}/fields/${fieldId}/soil/parse`, {
+    return request(`fields/${fieldId}/soil/parse`, {
       method: 'POST',
       body: formData,
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to parse document');
-    }
-    return response.json();
   },
 
   saveSoilProfile: async (fieldId: string, data: Partial<SoilProfile>): Promise<SoilProfile> => {
-    const response = await fetch(`${API_URL}/fields/${fieldId}/soil/save`, {
+    return request(`fields/${fieldId}/soil/save`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to save soil profile');
-    }
-    return response.json();
   }
 };

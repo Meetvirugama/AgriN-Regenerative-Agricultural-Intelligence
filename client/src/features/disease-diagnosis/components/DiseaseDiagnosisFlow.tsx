@@ -176,16 +176,13 @@ export function DiseaseDiagnosisFlow({ fieldId, onClose }: DiseaseDiagnosisFlowP
                     disabled={!consentGiven}
                     onClick={async () => {
                       try {
-                        await fetch('http://localhost:8000/api/escalations/trigger', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            fieldId,
-                            reason: result.predicted_category === 'unknown' ? 'low_confidence' : 'high_severity',
-                            source: 'Layer07',
-                            contextData: { issue: result.predicted_label, confidence: result.confidence, consentVerified: true }
-                          })
-                        });
+                        const { escalationApi } = await import('../../escalation-dashboard/api/escalationApi');
+                        await escalationApi.triggerEscalation(
+                          fieldId,
+                          result.predicted_category === 'unknown' ? 'low_confidence' : 'high_severity',
+                          'Layer07',
+                          { issue: result.predicted_label, confidence: result.confidence, consentVerified: true }
+                        );
                         alert('Escalation sent successfully! An expert will reach out soon.');
                         onClose();
                       } catch {

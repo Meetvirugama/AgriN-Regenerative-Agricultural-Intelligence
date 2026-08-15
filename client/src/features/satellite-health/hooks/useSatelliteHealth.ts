@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SatelliteHealthData, FieldHealthTrend } from '../types/satellite.types';
-import { API_BASE as API_URL } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 
 export function useSatelliteHealth(fieldId: string | undefined) {
   const [data, setData] = useState<SatelliteHealthData | null>(null);
@@ -18,17 +18,10 @@ export function useSatelliteHealth(fieldId: string | undefined) {
       setError(null);
       
       try {
-        const [latestRes, timelineRes] = await Promise.all([
-          fetch(`${API_URL}/fields/${fieldId}/satellite/latest`),
-          fetch(`${API_URL}/fields/${fieldId}/satellite/timeline`)
+        const [latestData, timelineData] = await Promise.all([
+          request<SatelliteHealthData>(`fields/${fieldId}/satellite/latest`),
+          request<{timeline: FieldHealthTrend[]}>(`fields/${fieldId}/satellite/timeline`)
         ]);
-
-        if (!latestRes.ok || !timelineRes.ok) {
-          throw new Error('Failed to fetch satellite data');
-        }
-
-        const latestData = await latestRes.json();
-        const timelineData = await timelineRes.json();
 
         if (isMounted) {
           setData(latestData);

@@ -1,4 +1,4 @@
-import { API_BASE } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 
 export type StageEnum = 'germination' | 'vegetative' | 'flowering' | 'maturity';
 
@@ -16,49 +16,21 @@ export interface FieldCropState {
 }
 
 export const cropApi = {
-  // Stub init to get a field to work with
-  initStub: async () => {
-    const res = await fetch(`${API_BASE}/fields/stub-init`, { method: 'POST' });
-    if (!res.ok) throw new Error('Failed to init stub');
-    return res.json();
-  },
-
-  fetchCropState: async (fieldId: string): Promise<FieldCropState> => {
-    const res = await fetch(`${API_BASE}/fields/${fieldId}/crop-state`);
-    if (!res.ok) throw new Error('Failed to fetch crop state');
-    return res.json();
-  },
-
+  initStub: async () => request<{ field: { id: string } }>('fields/stub-init', { method: 'POST' }),
+  fetchCropState: async (fieldId: string): Promise<FieldCropState> => request(`fields/${fieldId}/crop-state`),
   identifyCrop: async (fieldId: string, imageBlob: Blob) => {
-    const formData = new FormData();
-    formData.append('image', imageBlob);
-    
-    // Using simple fetch without formData for mock simplicity
-    const res = await fetch(`${API_BASE}/fields/${fieldId}/identify-crop`, {
+    return request(`fields/${fieldId}/identify-crop`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ image: 'mock_base64' }),
     });
-    
-    if (!res.ok) throw new Error('Failed to identify crop');
-    return res.json();
   },
-
   overrideCropState: async (
     fieldId: string,
     data: { cropType?: string; variety?: string; stage?: StageEnum }
   ): Promise<FieldCropState> => {
-    const res = await fetch(`${API_BASE}/fields/${fieldId}/override-stage`, {
+    return request(`fields/${fieldId}/override-stage`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(data),
     });
-    
-    if (!res.ok) throw new Error('Failed to override crop state');
-    return res.json();
   }
 };
