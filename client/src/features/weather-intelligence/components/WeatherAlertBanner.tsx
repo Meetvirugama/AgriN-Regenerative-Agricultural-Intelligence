@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertTriangle, CloudRain, ThermometerSun, Droplets, Snowflake, X } from 'lucide-react';
 import { WeatherEventFlag } from '../api/weatherApi';
+import { TextToSpeechButton } from '../../voice/components/TextToSpeechButton';
 
 interface WeatherAlertBannerProps {
   flags: WeatherEventFlag[];
@@ -95,7 +96,13 @@ export function WeatherAlertBanner({ flags }: WeatherAlertBannerProps) {
             {content.icon}
           </div>
           <div>
-            <h4 className="font-bold text-lg uppercase tracking-wide">{content.title}</h4>
+            <h4 className="font-bold text-lg uppercase tracking-wide flex items-center gap-2">
+              {content.title}
+              <TextToSpeechButton 
+                textToRead={`Weather Alert: ${content.title}. ${content.message}`} 
+                className="w-7 h-7 p-1 text-current bg-background/20 hover:bg-background/40" 
+              />
+            </h4>
             <p className="font-medium text-sm">{content.message}</p>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FieldCropState, StageEnum } from '../api/cropApi';
+import { TextToSpeechButton } from '../../voice/components/TextToSpeechButton';
 
 interface GrowthStageBannerProps {
   cropState: FieldCropState | null;
@@ -36,8 +37,12 @@ export function GrowthStageBanner({ cropState, isLoading, onOverrideClick }: Gro
       
       <div className="flex justify-between items-start">
         <div>
-          <h2 className="text-2xl font-bold uppercase tracking-tight text-text">
+          <h2 className="text-2xl font-bold uppercase tracking-tight text-text flex items-center gap-2">
             Day {approxDays} — {current_stage} stage
+            <TextToSpeechButton 
+              textToRead={`Day ${approxDays}, ${current_stage} stage. ${confirmed_crop}. ${stage_description}`} 
+              className="w-8 h-8 p-1" 
+            />
           </h2>
           <p className="text-text-muted mt-2 text-sm max-w-xl">
             {confirmed_crop.toUpperCase()} • {stage_description}

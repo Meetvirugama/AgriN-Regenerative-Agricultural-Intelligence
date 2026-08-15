@@ -1,6 +1,7 @@
 import React from 'react';
 import { SatelliteHealthData } from '../types/satellite.types';
 import { Satellite, AlertTriangle, CloudRain, CheckCircle, Info } from 'lucide-react';
+import { TextToSpeechButton } from '../../voice/components/TextToSpeechButton';
 
 interface SatelliteHealthCardProps {
   data: SatelliteHealthData | null;
@@ -75,7 +76,13 @@ export const SatelliteHealthCard: React.FC<SatelliteHealthCardProps> = ({ data, 
       <div className="flex items-start gap-3">
         <Icon className={`${severityColor} mt-1`} size={24} />
         <div>
-          <p className="font-semibold text-lg">{summaryText}</p>
+          <p className="font-semibold text-lg flex items-center gap-2">
+            {summaryText}
+            <TextToSpeechButton 
+              textToRead={`Satellite Health: ${summaryText}`} 
+              className="w-7 h-7 p-1" 
+            />
+          </p>
           {latestTile.cloudCoverPct > 30 && (
             <p className="text-xs text-text-muted mt-2 flex items-center gap-1">
               <CloudRain size={12} /> Partial cloud cover ({Math.round(latestTile.cloudCoverPct)}%)

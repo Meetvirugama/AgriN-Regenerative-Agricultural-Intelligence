@@ -13,6 +13,8 @@ import { SoilUploadFlow } from './features/soil-intelligence/components/SoilUplo
 import { SatelliteHealthCard, SatelliteDetailView, useSatelliteHealth } from './features/satellite-health';
 import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRiskWidget';
 import { AdvisoryCard } from './features/agro-advisory/components/AdvisoryCard';
+import { LanguageSwitcher } from './features/voice/components/LanguageSwitcher';
+import { GlobalMicButton } from './features/voice/components/GlobalMicButton';
 
 function App() {
   const [fieldId, setFieldId] = useState<string | null>(null);
@@ -93,10 +95,14 @@ function App() {
 
   return (
     <div className="min-h-screen bg-surface flex justify-center p-4">
+      <GlobalMicButton />
       <div className="w-full max-w-md flex flex-col gap-6 mt-8">
-        <header className="mb-2">
-          <h1 className="text-3xl font-black text-text tracking-tight">AgriMesh</h1>
-          <p className="text-text-muted">Field Intelligence Dashboard</p>
+        <header className="mb-2 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-black text-text tracking-tight">AgriMesh</h1>
+            <p className="text-text-muted">Field Intelligence Dashboard</p>
+          </div>
+          <LanguageSwitcher />
         </header>
 
         {/* Layer 03 Alert Banner (Top Priority) */}
