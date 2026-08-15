@@ -79,6 +79,31 @@ export interface WeatherEventFlag {
   generated_at: string;
 }
 
+export interface SoilProfile {
+  id: string;
+  field_id: string;
+  source: 'lab_report' | 'regional_inference';
+  texture: 'sandy' | 'loam' | 'clay' | 'sandy_loam' | 'clay_loam' | 'silt_loam';
+  organic_matter_pct: number;
+  nitrogen_level: 'low' | 'medium' | 'high';
+  phosphorus_level: 'low' | 'medium' | 'high';
+  potassium_level: 'low' | 'medium' | 'high';
+  water_holding_capacity: 'low' | 'medium' | 'high';
+  ph: number;
+  report_date: string;
+  raw_document_url: string | null;
+  summary_text: string | null;
+}
+
+export interface RegionalSoilBaseline {
+  region_id: string; // e.g. "US-MW"
+  texture: 'sandy' | 'loam' | 'clay' | 'sandy_loam' | 'clay_loam' | 'silt_loam';
+  avg_organic_matter: number;
+  avg_npk: { n: 'low' | 'medium' | 'high', p: 'low' | 'medium' | 'high', k: 'low' | 'medium' | 'high' };
+  avg_ph: number;
+  water_holding_capacity: 'low' | 'medium' | 'high';
+}
+
 // In-Memory Store
 export class InMemoryDB {
   public farmers: Map<string, Farmer> = new Map();
@@ -88,6 +113,8 @@ export class InMemoryDB {
   public overrideEvents: OverrideEvent[] = [];
   public weatherSnapshots: Map<string, FieldWeatherSnapshot[]> = new Map();
   public weatherFlags: Map<string, WeatherEventFlag[]> = new Map();
+  public soilProfiles: Map<string, SoilProfile[]> = new Map(); // history of profiles
+  public regionalSoilBaselines: Map<string, RegionalSoilBaseline> = new Map();
 
   constructor() {
     this.seed();
@@ -117,6 +144,16 @@ export class InMemoryDB {
         { stage: 'flowering', gdd_threshold: 800, typical_days: [71, 100] },
         { stage: 'maturity', gdd_threshold: 1500, typical_days: [101, 150] }
       ]
+    });
+    
+    // Seed Regional Baseline for this region
+    this.regionalSoilBaselines.set("US-MW", {
+      region_id: "US-MW",
+      texture: "silt_loam",
+      avg_organic_matter: 3.5,
+      avg_npk: { n: "medium", p: "medium", k: "high" },
+      avg_ph: 6.8,
+      water_holding_capacity: "high"
     });
 
     this.cropCalendars.set('maize_punjab', {

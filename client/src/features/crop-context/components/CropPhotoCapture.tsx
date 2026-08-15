@@ -43,7 +43,7 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }: Cro
       <div className="bg-surface w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col">
         <div className="p-4 border-b border-neutral flex justify-between items-center bg-surface">
           <h3 className="font-bold text-lg">Update Crop Information</h3>
-          <button aria-label="Close" onClick={onClose} className="p-1 hover:bg-neutral rounded-full transition-colors">
+          <button aria-label="Close" onClick={onClose} className="p-1 hover:bg-neutral rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
             <X size={24} />
           </button>
         </div>
@@ -53,7 +53,7 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }: Cro
             <div className="flex flex-col items-center justify-center gap-4 py-8">
               <button 
                 onClick={handleSimulateCapture}
-                className="w-24 h-24 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors"
+                className="w-24 h-24 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
               >
                 <Camera size={40} />
               </button>
@@ -61,7 +61,7 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }: Cro
                 <p className="font-bold text-lg">Take a photo of your crop</p>
                 <p className="text-sm text-text-muted">Our AI will identify the crop and growth stage</p>
               </div>
-              <button onClick={() => setStep('manual')} className="text-sm text-primary font-bold underline mt-4">
+              <button onClick={() => setStep('manual')} className="text-sm text-primary font-bold underline mt-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2">
                 Enter manually instead
               </button>
             </div>
@@ -96,13 +96,13 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }: Cro
               <div className="flex flex-col gap-3 mt-4">
                 <button 
                   onClick={handleConfirmResult}
-                  className="w-full py-4 bg-primary text-primary-content font-bold rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all"
+                  className="w-full py-4 bg-primary text-primary-content font-bold rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
                 >
                   Yes, this is correct
                 </button>
                 <button 
                   onClick={() => setStep('manual')}
-                  className="w-full py-4 border-2 border-primary text-primary font-bold rounded-xl text-lg hover:bg-primary/5 transition-all"
+                  className="w-full py-4 border-2 border-primary text-primary font-bold rounded-xl text-lg hover:bg-primary/5 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
                 >
                   No, let me fix it
                 </button>
@@ -121,7 +121,7 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }: Cro
                 <label htmlFor="manual-crop-select" className="font-bold text-sm">Crop Type</label>
                 <select 
                   id="manual-crop-select"
-                  className="p-3 border-2 border-neutral rounded-lg bg-surface text-lg font-medium outline-none focus:border-primary transition-colors"
+                  className="p-3 border-2 border-neutral rounded-lg bg-surface text-lg font-medium outline-none focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary transition-colors"
                   value={manualCrop}
                   onChange={(e) => setManualCrop(e.target.value)}
                 >
@@ -136,7 +136,7 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }: Cro
                 <label htmlFor="manual-stage-select" className="font-bold text-sm">Current Growth Stage</label>
                 <select 
                   id="manual-stage-select"
-                  className="p-3 border-2 border-neutral rounded-lg bg-surface text-lg font-medium outline-none focus:border-primary transition-colors"
+                  className="p-3 border-2 border-neutral rounded-lg bg-surface text-lg font-medium outline-none focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary transition-colors"
                   value={manualStage}
                   onChange={(e) => setManualStage(e.target.value)}
                 >
@@ -149,7 +149,7 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }: Cro
 
               <button 
                 onClick={handleManualSubmit}
-                className="w-full mt-4 py-4 bg-primary text-primary-content font-bold rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all"
+                className="w-full mt-4 py-4 bg-primary text-primary-content font-bold rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
               >
                 Save Changes
               </button>

@@ -103,7 +103,7 @@ export function WeatherAlertBanner({ flags }: WeatherAlertBannerProps) {
         <button 
           onClick={handleDismiss}
           aria-label="Dismiss alert"
-          className="p-1 hover:bg-background/30 rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="p-1 hover:bg-background/30 rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <X size={20} />
         </button>

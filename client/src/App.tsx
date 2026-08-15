@@ -7,6 +7,9 @@ import { weatherApi, WeatherData } from './features/weather-intelligence/api/wea
 import { WeatherAlertBanner } from './features/weather-intelligence/components/WeatherAlertBanner';
 import { WeatherStrip } from './features/weather-intelligence/components/WeatherStrip';
 import { WeatherDetails } from './features/weather-intelligence/components/WeatherDetails';
+import { soilApi, SoilProfile } from './features/soil-intelligence/api/soilApi';
+import { SoilSummaryCard } from './features/soil-intelligence/components/SoilSummaryCard';
+import { SoilUploadFlow } from './features/soil-intelligence/components/SoilUploadFlow';
 
 function App() {
   const [fieldId, setFieldId] = useState<string | null>(null);
@@ -19,6 +22,11 @@ function App() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [isWeatherLoading, setIsWeatherLoading] = useState(true);
   const [showWeatherDetails, setShowWeatherDetails] = useState(false);
+
+  // Layer 04 State
+  const [soilProfile, setSoilProfile] = useState<SoilProfile | null>(null);
+  const [isSoilLoading, setIsSoilLoading] = useState(true);
+  const [showSoilUpload, setShowSoilUpload] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -43,9 +51,20 @@ function App() {
         setWeatherData(weather);
       } catch (err: any) {
         console.error("Weather fetch failed", err);
-        // Fail silently and let UI degrade gracefully (per requirements)
       } finally {
         setIsWeatherLoading(false);
+      }
+
+      // Fetch Layer 04 (Soil) - Non-blocking
+      try {
+        const { field } = await cropApi.initStub();
+        const soil = await soilApi.getSoilProfile(field.id);
+        setSoilProfile(soil);
+      } catch (err: any) {
+        console.error("Soil fetch failed", err);
+        // NO_DATA is expected for entirely new users/regions
+      } finally {
+        setIsSoilLoading(false);
       }
     }
     init();
@@ -121,11 +140,29 @@ function App() {
           )}
         </section>
 
+        {/* Layer 04 Soil Context UI */}
+        <section className="flex flex-col gap-4 mt-6 mb-12">
+          <SoilSummaryCard 
+            profile={soilProfile} 
+            isLoading={isSoilLoading} 
+            onUploadClick={() => setShowSoilUpload(true)} 
+          />
+        </section>
+
+        {/* Modals */}
         {showOverride && (
           <CropPhotoCapture 
             onClose={() => setShowOverride(false)}
             onIdentify={handleIdentify}
             onOverrideConfirm={handleOverrideConfirm}
+          />
+        )}
+
+        {showSoilUpload && fieldId && (
+          <SoilUploadFlow 
+            fieldId={fieldId}
+            onClose={() => setShowSoilUpload(false)}
+            onSave={(profile) => setSoilProfile(profile)}
           />
         )}
       </div>
