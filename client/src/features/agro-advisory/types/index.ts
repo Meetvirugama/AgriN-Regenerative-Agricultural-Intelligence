@@ -12,6 +12,7 @@ export interface Advisory {
   source_layers: string[];
   farmer_response: 'followed' | 'ignored' | 'overridden' | null;
   overridden_reason: string | null;
+  historical_parallel_callout?: string;
 }
 
 export interface FarmerFeedbackPayload {

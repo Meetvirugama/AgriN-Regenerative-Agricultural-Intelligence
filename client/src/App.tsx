@@ -15,6 +15,10 @@ import { ClimateRiskWidget } from './features/climate-risk/components/ClimateRis
 import { AdvisoryCard } from './features/agro-advisory/components/AdvisoryCard';
 import { LanguageSwitcher } from './features/voice/components/LanguageSwitcher';
 import { GlobalMicButton } from './features/voice/components/GlobalMicButton';
+import { memoryApi } from './features/field-memory/api/memoryApi';
+import { PendingPrompt, FieldTimelineEntry } from './features/field-memory/types';
+import { FeedbackPrompt } from './features/field-memory/components/FeedbackPrompt';
+import { FieldTimeline } from './features/field-memory/components/FieldTimeline';
 
 function App() {
   const [fieldId, setFieldId] = useState<string | null>(null);
@@ -32,6 +36,10 @@ function App() {
   const [soilProfile, setSoilProfile] = useState<SoilProfile | null>(null);
   const [isSoilLoading, setIsSoilLoading] = useState(true);
   const [showSoilUpload, setShowSoilUpload] = useState(false);
+
+  // Layer 12 State
+  const [pendingPrompts, setPendingPrompts] = useState<PendingPrompt[]>([]);
+  const [timeline, setTimeline] = useState<FieldTimelineEntry[]>([]);
 
   useEffect(() => {
     async function init() {
@@ -71,6 +79,17 @@ function App() {
       } finally {
         setIsSoilLoading(false);
       }
+      
+      // Fetch Layer 12 (Field Memory) - Non-blocking
+      try {
+        const { field } = await cropApi.initStub();
+        const prompts = await memoryApi.getPendingPrompts(field.id);
+        setPendingPrompts(prompts);
+        const tl = await memoryApi.getTimeline(field.id);
+        setTimeline(tl);
+      } catch (err: any) {
+        console.error("Field memory fetch failed", err);
+      }
     }
     init();
   }, []);
@@ -104,6 +123,14 @@ function App() {
           </div>
           <LanguageSwitcher />
         </header>
+
+        {/* Layer 12 Feedback Prompt */}
+        {pendingPrompts.length > 0 && (
+          <FeedbackPrompt 
+            prompt={pendingPrompts[0]} 
+            onDismiss={() => setPendingPrompts(prev => prev.slice(1))} 
+          />
+        )}
 
         {/* Layer 03 Alert Banner (Top Priority) */}
         {!isWeatherLoading && weatherData && (
@@ -170,8 +197,13 @@ function App() {
         </section>
 
         {/* Layer 05 Satellite Context UI */}
-        <section className="flex flex-col gap-4 mt-6 mb-12">
+        <section className="flex flex-col gap-4 mt-6">
           {fieldId && <FieldSatelliteWrapper fieldId={fieldId} />}
+        </section>
+
+        {/* Layer 12 Field Timeline */}
+        <section className="mt-8 mb-12 border-t-2 border-neutral/30 pt-4">
+          <FieldTimeline entries={timeline} />
         </section>
 
         {/* Modals */}
