@@ -26,25 +26,62 @@ import { GlobalInsightsWidget } from './features/cross-border';
 import { ExtensionDashboard } from './features/escalation-dashboard';
 import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf, ArrowRightLeft } from 'lucide-react';
 
-function FieldHealthScoreWrapper({ fieldId }: { fieldId: string }) {
-  const { score, dimensions } = useHealthScore(fieldId);
+// Satellite card + detail modal wrapper
+const FieldSatelliteWrapper = ({ fieldId }: { fieldId: string }) => {
+  const [showDetail, setShowDetail] = useState(false);
+  const { data, loading, error } = useSatelliteHealth(fieldId);
+
+  if (error) {
+    return <div className="border border-error p-4 text-error text-sm rounded-xl">Failed to load satellite data.</div>;
+  }
+
   return (
     <>
-      <FieldHealthHero score={score} />
-      <div className="grid grid-cols-2 gap-2">
-        {dimensions.map((d) => (
-          <HealthDimensionCard key={d.label} {...d} />
-        ))}
-      </div>
+      <SatelliteHealthCard
+        data={data}
+        loading={loading}
+        onClick={() => setShowDetail(true)}
+      />
+      {showDetail && (
+        <SatelliteDetailView
+          fieldId={fieldId}
+          fieldBoundary={[
+            { lat: 20.593, lng: 78.962 },
+            { lat: 20.594, lng: 78.962 },
+            { lat: 20.594, lng: 78.963 },
+            { lat: 20.593, lng: 78.963 },
+          ]}
+          onClose={() => setShowDetail(false)}
+        />
+      )}
     </>
   );
-}
+};
 
-function FieldSatelliteWrapper({ fieldId }: { fieldId: string }) {
-  const { data } = useSatelliteHealth(fieldId);
-  return <SatelliteHealthCard data={data} />;
-}
->>>>>>> main
+// Field Health Score synthesis wrapper (Layer 06)
+const FieldHealthScoreWrapper = ({ fieldId }: { fieldId: string }) => {
+  const { data: score, loading, error } = useHealthScore(fieldId);
+
+  if (error) {
+    return <div className="border border-error p-4 text-error text-sm rounded-xl">Failed to load field health score.</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <FieldHealthHero score={score} loading={loading} />
+      {score && !loading && (
+        <div className="grid grid-cols-2 gap-2">
+          <HealthDimensionCard title="Water" dimension={score.water_condition} icon={<Droplets size={16} />} />
+          <HealthDimensionCard title="Soil" dimension={score.soil_condition} icon={<Mountain size={16} />} />
+          <HealthDimensionCard title="Weather" dimension={score.weather_risk} icon={<CloudLightning size={16} />} />
+          <HealthDimensionCard title="Disease" dimension={score.disease_risk} icon={<Bug size={16} />} />
+          <HealthDimensionCard title="Climate" dimension={score.climate_stress} icon={<ThermometerSun size={16} />} />
+          <HealthDimensionCard title="Vegetation" dimension={score.vegetation_trend} icon={<Leaf size={16} />} />
+        </div>
+      )}
+    </div>
+  );
+};
 
 function App() {
   const [persona, setPersona] = useState<'farmer' | 'extension'>('farmer');
@@ -53,74 +90,58 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showOverride, setShowOverride] = useState(false);
-  
-  // Layer 03 State
+  const [showDiagnosisFlow, setShowDiagnosisFlow] = useState(false);
+
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [isWeatherLoading, setIsWeatherLoading] = useState(true);
   const [showWeatherDetails, setShowWeatherDetails] = useState(false);
 
-  // Layer 04 State
   const [soilProfile, setSoilProfile] = useState<SoilProfile | null>(null);
   const [isSoilLoading, setIsSoilLoading] = useState(true);
   const [showSoilUpload, setShowSoilUpload] = useState(false);
 
-  // Layer 12 State
   const [pendingPrompts, setPendingPrompts] = useState<PendingPrompt[]>([]);
   const [timeline, setTimeline] = useState<FieldTimelineEntry[]>([]);
 
-  // Layer 07 State
-  const [showDiagnosisFlow, setShowDiagnosisFlow] = useState(false);
-
   useEffect(() => {
     async function init() {
+      let currentFieldId: string | null = null;
+
+      // Step 1: Init field (single call — creates one mock field)
       try {
         const { field } = await cropApi.initStub();
+        currentFieldId = field.id;
         setFieldId(field.id);
-        
-        // Fetch Layer 02 (Crop)
         const state = await cropApi.fetchCropState(field.id);
         setCropState(state);
       } catch (err: any) {
-        console.error("Initialization failed", err);
-        setError("Failed to load field data. Please try again.");
+        console.error('Initialization failed', err);
+        setError('Failed to load field data. Please try again.');
       } finally {
         setIsLoading(false);
       }
 
-      // Fetch Layer 03 (Weather) - Non-blocking
-      try {
-        const { field } = await cropApi.initStub();
-        const weather = await weatherApi.getForecast(field.id);
-        setWeatherData(weather);
-      } catch (err: any) {
-        console.error("Weather fetch failed", err);
-      } finally {
-        setIsWeatherLoading(false);
-      }
+      if (!currentFieldId) return;
+      const fid = currentFieldId;
 
-      // Fetch Layer 04 (Soil) - Non-blocking
-      try {
-        const { field } = await cropApi.initStub();
-        const soil = await soilApi.getSoilProfile(field.id);
-        setSoilProfile(soil);
-      } catch (err: any) {
-        console.error("Soil fetch failed", err);
-        // NO_DATA is expected for entirely new users/regions
-      } finally {
-        setIsSoilLoading(false);
-      }
-      
-      // Fetch Layer 12 (Field Memory) - Non-blocking
-      try {
-        const { field } = await cropApi.initStub();
-        const prompts = await memoryApi.getPendingPrompts(field.id);
-        setPendingPrompts(prompts);
-        const tl = await memoryApi.getTimeline(field.id);
-        setTimeline(tl);
-      } catch (err: any) {
-        console.error("Field memory fetch failed", err);
-      }
+      // Step 2: Non-blocking parallel data fetches
+      const [weatherResult, soilResult, promptsResult, timelineResult] = await Promise.allSettled([
+        weatherApi.getForecast(fid),
+        soilApi.getSoilProfile(fid),
+        memoryApi.getPendingPrompts(fid),
+        memoryApi.getTimeline(fid),
+      ]);
+
+      if (weatherResult.status === 'fulfilled') setWeatherData(weatherResult.value);
+      setIsWeatherLoading(false);
+
+      if (soilResult.status === 'fulfilled') setSoilProfile(soilResult.value);
+      setIsSoilLoading(false);
+
+      if (promptsResult.status === 'fulfilled') setPendingPrompts(promptsResult.value);
+      if (timelineResult.status === 'fulfilled') setTimeline(timelineResult.value);
     }
+
     init();
   }, []);
 
@@ -145,7 +166,7 @@ function App() {
   if (persona === 'extension') {
     return (
       <div className="relative">
-        <button 
+        <button
           onClick={() => setPersona('farmer')}
           className="fixed top-4 right-4 z-50 bg-neutral/80 backdrop-blur text-text font-bold px-4 py-2 rounded-full shadow border border-neutral flex items-center gap-2 hover:bg-neutral transition-colors"
         >
@@ -159,8 +180,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-surface flex justify-center p-4 relative">
+      {/* Global voice mic — positioned bottom-left to avoid camera FAB at bottom-right */}
       <GlobalMicButton />
-      <button 
+
+      <button
         onClick={() => setPersona('extension')}
         className="absolute top-4 right-4 z-50 bg-neutral/80 backdrop-blur text-text font-bold px-4 py-2 rounded-full shadow border border-neutral flex items-center gap-2 hover:bg-neutral transition-colors"
       >
@@ -177,34 +200,34 @@ function App() {
           <LanguageSwitcher />
         </header>
 
-        {/* Layer 12 Feedback Prompt */}
+        {/* Pending feedback prompt */}
         {pendingPrompts.length > 0 && (
-          <FeedbackPrompt 
-            prompt={pendingPrompts[0]} 
-            onDismiss={() => setPendingPrompts(prev => prev.slice(1))} 
+          <FeedbackPrompt
+            prompt={pendingPrompts[0]}
+            onDismiss={() => setPendingPrompts(prev => prev.slice(1))}
           />
         )}
 
-        {/* Layer 06: Field Health Score Synthesis */}
+        {/* Field Health Score (Layer 06) */}
         {fieldId && (
-          <section className="flex flex-col gap-4">
+          <section>
             <FieldHealthScoreWrapper fieldId={fieldId} />
           </section>
         )}
 
-        {/* Layer 03 Alert Banner (Top Priority) */}
+        {/* Weather Alert Banner */}
         {!isWeatherLoading && weatherData && (
           <WeatherAlertBanner flags={weatherData.flags} />
         )}
 
-        {/* Layer 09 AI Agro-Advisory */}
+        {/* AI Advisory (Layer 09) */}
         {fieldId && (
-          <section className="flex flex-col gap-4 mt-2">
+          <section>
             <AdvisoryCard fieldId={fieldId} />
           </section>
         )}
 
-        {/* Layer 02 Crop Context UI */}
+        {/* Crop Context (Layer 02) */}
         <section className="flex flex-col gap-6 mt-2">
           {error ? (
             <div className="bg-error/10 border border-error p-4 rounded-xl text-error text-center font-bold">
@@ -212,12 +235,11 @@ function App() {
             </div>
           ) : (
             <>
-              <GrowthStageBanner 
-                cropState={cropState} 
-                isLoading={isLoading} 
-                onOverrideClick={() => setShowOverride(true)} 
+              <GrowthStageBanner
+                cropState={cropState}
+                isLoading={isLoading}
+                onOverrideClick={() => setShowOverride(true)}
               />
-              
               <div className="bg-surface border border-neutral p-6 rounded-xl shadow-sm">
                 <h3 className="font-bold mb-6 tracking-wide text-sm text-text-muted uppercase">Season Progress</h3>
                 {isLoading ? (
@@ -230,11 +252,11 @@ function App() {
           )}
         </section>
 
-        {/* Layer 03 Weather Context UI */}
+        {/* Weather (Layer 03) */}
         <section className="flex flex-col gap-4 mt-6">
-          <WeatherStrip 
-            forecasts={weatherData?.forecasts || []} 
-            flags={weatherData?.flags || []} 
+          <WeatherStrip
+            forecasts={weatherData?.forecasts || []}
+            flags={weatherData?.flags || []}
             isLoading={isWeatherLoading}
             onExpand={() => setShowWeatherDetails(!showWeatherDetails)}
           />
@@ -243,64 +265,40 @@ function App() {
           )}
         </section>
 
-        {/* Layer 08 Climate Risk Prediction UI */}
+        {/* Climate Risk (Layer 08) */}
         <section className="flex flex-col gap-4 mt-6">
           {fieldId && <ClimateRiskWidget fieldId={fieldId} />}
         </section>
 
-        {/* Layer 04 Soil Context UI */}
+        {/* Soil (Layer 04) */}
         <section className="flex flex-col gap-4 mt-6">
-          <SoilSummaryCard 
-            profile={soilProfile} 
-            isLoading={isSoilLoading} 
-            onUploadClick={() => setShowSoilUpload(true)} 
+          <SoilSummaryCard
+            profile={soilProfile}
+            isLoading={isSoilLoading}
+            onUploadClick={() => setShowSoilUpload(true)}
           />
         </section>
 
-        {/* Layer 05 Satellite Context UI */}
+        {/* Satellite (Layer 05) */}
         <section className="flex flex-col gap-4 mt-6">
           {fieldId && <FieldSatelliteWrapper fieldId={fieldId} />}
         </section>
 
-        {/* Layer 12 Field Timeline */}
-        <section className="mt-8 mb-12 border-t-2 border-neutral/30 pt-4">
-          <FieldTimeline entries={timeline} />
-        </section>
-
-        {/* Layer 10 Regen Ag Context UI */}
-        <section className="flex flex-col gap-4 mt-6 mb-12">
+        {/* Regen + Cross-border (Layer 10 / 14) */}
+        <section className="flex flex-col gap-4 mt-6">
           {fieldId && <RegenPlanningCard fieldId={fieldId} />}
           {fieldId && <GlobalInsightsWidget fieldId={fieldId} />}
         </section>
 
-        {/* Modals */}
-        {showOverride && (
-          <CropPhotoCapture 
-            onClose={() => setShowOverride(false)}
-            onIdentify={handleIdentify}
-            onOverrideConfirm={handleOverrideConfirm}
-          />
-        )}
-
-        {showSoilUpload && fieldId && (
-          <SoilUploadFlow 
-            fieldId={fieldId}
-            onClose={() => setShowSoilUpload(false)}
-            onSave={(profile) => setSoilProfile(profile)}
-          />
-        )}
-
-        {showDiagnosisFlow && fieldId && (
-          <DiseaseDiagnosisFlow
-            fieldId={fieldId}
-            onClose={() => setShowDiagnosisFlow(false)}
-          />
-        )}
+        {/* Field History Timeline (Layer 12) */}
+        <section className="mt-8 mb-24 border-t-2 border-neutral/30 pt-4">
+          <FieldTimeline entries={timeline} />
+        </section>
       </div>
 
-      {/* Floating Action Button for Layer 07 */}
+      {/* Crop diagnosis FAB (bottom-right) */}
       {fieldId && !showDiagnosisFlow && (
-        <button 
+        <button
           onClick={() => setShowDiagnosisFlow(true)}
           className="fixed bottom-6 right-6 w-16 h-16 bg-primary text-primary-content rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary z-40"
           aria-label="Inspect Crop"
@@ -308,64 +306,30 @@ function App() {
           <Camera size={32} />
         </button>
       )}
-    </div>
-  );
-}
 
-// Wrapper to handle data fetching for the card and modal state
-const FieldSatelliteWrapper = ({ fieldId }: { fieldId: string }) => {
-  const [showDetail, setShowDetail] = useState(false);
-  const { data, loading, error } = useSatelliteHealth(fieldId);
-  
-  if (error) {
-    return <div className="border border-danger p-4 text-danger text-sm">Failed to load satellite data.</div>;
-  }
-  
-  return (
-    <>
-      <SatelliteHealthCard 
-        data={data} 
-        loading={loading} 
-        onClick={() => setShowDetail(true)} 
-      />
-      {showDetail && (
-        <SatelliteDetailView 
-          fieldId={fieldId} 
-          fieldBoundary={[
-            { lat: 20.593, lng: 78.962 },
-            { lat: 20.594, lng: 78.962 },
-            { lat: 20.594, lng: 78.963 },
-            { lat: 20.593, lng: 78.963 },
-          ]}
-          onClose={() => setShowDetail(false)} 
+      {/* Modals */}
+      {showOverride && (
+        <CropPhotoCapture
+          onClose={() => setShowOverride(false)}
+          onIdentify={handleIdentify}
+          onOverrideConfirm={handleOverrideConfirm}
         />
       )}
-    </>
-  );
-}
 
-// Wrapper for Layer 06
-const FieldHealthScoreWrapper = ({ fieldId }: { fieldId: string }) => {
-  const { data: score, loading, error } = useHealthScore(fieldId);
+      {showSoilUpload && fieldId && (
+        <SoilUploadFlow
+          fieldId={fieldId}
+          onClose={() => setShowSoilUpload(false)}
+          onSave={(profile) => setSoilProfile(profile)}
+        />
+      )}
 
-  if (error) {
-    return <div className="border border-danger p-4 text-danger text-sm">Failed to load field health score.</div>;
-  }
-
-  return (
-    <div className="space-y-4">
-       <FieldHealthHero score={score} loading={loading} />
-       
-       {score && !loading && (
-         <div className="grid grid-cols-2 gap-2">
-           <HealthDimensionCard title="Water" dimension={score.water_condition} icon={<Droplets size={16} />} />
-           <HealthDimensionCard title="Soil" dimension={score.soil_condition} icon={<Mountain size={16} />} />
-           <HealthDimensionCard title="Weather" dimension={score.weather_risk} icon={<CloudLightning size={16} />} />
-           <HealthDimensionCard title="Disease" dimension={score.disease_risk} icon={<Bug size={16} />} />
-           <HealthDimensionCard title="Climate" dimension={score.climate_stress} icon={<ThermometerSun size={16} />} />
-           <HealthDimensionCard title="Vegetation" dimension={score.vegetation_trend} icon={<Leaf size={16} />} />
-         </div>
-       )}
+      {showDiagnosisFlow && fieldId && (
+        <DiseaseDiagnosisFlow
+          fieldId={fieldId}
+          onClose={() => setShowDiagnosisFlow(false)}
+        />
+      )}
     </div>
   );
 }

@@ -188,7 +188,7 @@ export function DiseaseDiagnosisFlow({ fieldId, onClose }: DiseaseDiagnosisFlowP
                         });
                         alert('Escalation sent successfully! An expert will reach out soon.');
                         onClose();
-                      } catch (e) {
+                      } catch {
                         alert('Failed to send escalation.');
                       }
                     }}

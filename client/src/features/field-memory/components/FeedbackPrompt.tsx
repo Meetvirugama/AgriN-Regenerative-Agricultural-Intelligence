@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ThumbsUp, ThumbsDown, X, MessageSquare, Camera } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, X, Camera } from 'lucide-react';
 import { PendingPrompt } from '../types';
 import { memoryApi } from '../api/memoryApi';
 import { TextToSpeechButton } from '../../voice/components/TextToSpeechButton';

@@ -1,13 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, ThermometerSun, Loader2 } from 'lucide-react';
 import { ClimateRiskData } from '../types';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-// Helper to merge Tailwind classes safely
-export function cn(...inputs: (string | undefined | null | false)[]) {
-  return twMerge(clsx(inputs));
-}
+import { API_BASE } from '../../../lib/apiClient';
+import { cn } from '../../../lib/cn';
 
 interface ClimateRiskWidgetProps {
   fieldId: string;
@@ -22,8 +17,7 @@ export function ClimateRiskWidget({ fieldId }: ClimateRiskWidgetProps) {
     const fetchRisk = async () => {
       try {
         setLoading(true);
-        // Using relative path, depends on Vite proxy or standard fetch to backend
-        const response = await fetch(`http://localhost:8000/api/fields/${fieldId}/climate-risk`);
+        const response = await fetch(`${API_BASE}/fields/${fieldId}/climate-risk`);
         if (!response.ok) {
           throw new Error('Failed to fetch climate risk data');
         }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { GoogleMap, Polygon } from '@react-google-maps/api';
 import { SatelliteHealthData } from '../types/satellite.types';
-import { AlertTriangle, Cloud } from 'lucide-react';
+import { Cloud } from 'lucide-react';
 
 interface SatelliteFieldMapProps {
   boundary: { lat: number; lng: number }[];
@@ -15,7 +15,7 @@ const mapContainerStyle = {
 };
 
 export const SatelliteFieldMap: React.FC<SatelliteFieldMapProps> = ({ boundary, data, onAnomalyClick }) => {
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [_map, setMap] = useState<google.maps.Map | null>(null);
 
   // Calculate center of boundary
   const center = React.useMemo(() => {

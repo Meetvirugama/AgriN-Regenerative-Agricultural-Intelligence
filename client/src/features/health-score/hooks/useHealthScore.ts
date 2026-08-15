@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FieldHealthScore } from '../types/health-score.types';
-
-const API_URL = 'http://localhost:8000/api';
+import { API_BASE as API_URL } from '../../../lib/apiClient';
 
 export function useHealthScore(fieldId: string | undefined) {
   const [data, setData] = useState<FieldHealthScore | null>(null);

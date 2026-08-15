@@ -1,9 +1,10 @@
 import { FieldTimelineEntry, PendingPrompt } from '../types';
+import { API_BASE } from '../../../lib/apiClient';
 
 export const memoryApi = {
   getPendingPrompts: async (fieldId: string): Promise<PendingPrompt[]> => {
     try {
-      const response = await fetch(`http://localhost:8000/api/feedback/pending/${fieldId}`);
+      const response = await fetch(`${API_BASE}/feedback/pending/${fieldId}`);
       const data = await response.json();
       return data.prompts || [];
     } catch (e) {
@@ -14,7 +15,7 @@ export const memoryApi = {
 
   submitFeedback: async (advisoryId: string, fieldId: string, responseType: 'helped' | 'didnt_help', note?: string) => {
     try {
-      await fetch('http://localhost:8000/api/feedback', {
+      await fetch(`${API_BASE}/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -31,7 +32,7 @@ export const memoryApi = {
 
   getTimeline: async (fieldId: string): Promise<FieldTimelineEntry[]> => {
     try {
-      const response = await fetch(`http://localhost:8000/api/timeline/${fieldId}`);
+      const response = await fetch(`${API_BASE}/timeline/${fieldId}`);
       const data = await response.json();
       return data.timeline || [];
     } catch (e) {

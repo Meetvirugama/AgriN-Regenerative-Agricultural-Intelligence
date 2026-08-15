@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { voiceApi } from '../api/voiceApi';
 
 export const GlobalMicButton: React.FC = () => {
@@ -43,7 +43,7 @@ export const GlobalMicButton: React.FC = () => {
   return (
     <>
       {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
+      <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-4">
         
         {/* Processing State or Response Text */}
         {(isProcessing || response) && (

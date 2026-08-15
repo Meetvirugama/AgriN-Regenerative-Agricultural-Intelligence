@@ -22,7 +22,7 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }: Cro
       const analysis = await onIdentify(blob);
       setResult(analysis);
       setStep('result');
-    } catch (err) {
+    } catch {
       setStep('manual'); // fallback
     }
   };

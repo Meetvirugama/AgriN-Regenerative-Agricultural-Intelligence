@@ -1,7 +1,9 @@
+import { API_BASE } from '../../../lib/apiClient';
+
 export const voiceApi = {
   setLanguage: async (language: string): Promise<void> => {
     try {
-      await fetch('http://localhost:8000/api/user/language', {
+      await fetch(`${API_BASE}/user/language`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language })
@@ -14,7 +16,7 @@ export const voiceApi = {
   stt: async (audioBlob: Blob, language: string): Promise<string> => {
     try {
       // For MVP, we send a dummy payload as FormData would require multer on backend
-      const response = await fetch('http://localhost:8000/api/voice/stt', {
+      const response = await fetch(`${API_BASE}/voice/stt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language })
@@ -29,7 +31,7 @@ export const voiceApi = {
 
   tts: async (text: string, language: string): Promise<string | null> => {
     try {
-      const response = await fetch('http://localhost:8000/api/voice/tts', {
+      const response = await fetch(`${API_BASE}/voice/tts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, language })
