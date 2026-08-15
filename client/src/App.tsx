@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { FieldOnboardingFlow, FieldCard, FieldData } from '@/features/field-foundation';
 import { SatelliteHealthCard, SatelliteDetailView, useSatelliteHealth } from '@/features/satellite-health';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { FieldHealthHero, HealthDimensionCard, useHealthScore } from '@/features/health-score';
+import { Plus, ArrowLeft, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf } from 'lucide-react';
 
 export default function App() {
   const [isOnboarding, setIsOnboarding] = useState(true);
@@ -44,7 +45,10 @@ export default function App() {
            </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Layer 06: Field Health Hero (Top) */}
+        <FieldHealthScoreWrapper fieldId={selectedField.id!} />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
            {/* Layer 05: Satellite Health Card */}
            <FieldSatelliteWrapper field={selectedField} />
            
@@ -112,5 +116,31 @@ const FieldSatelliteWrapper = ({ field }: { field: FieldData }) => {
         />
       )}
     </>
+  );
+}
+
+// Wrapper for Layer 06
+const FieldHealthScoreWrapper = ({ fieldId }: { fieldId: string }) => {
+  const { data: score, loading, error } = useHealthScore(fieldId);
+
+  if (error) {
+    return <div className="border border-danger p-4 text-danger text-sm">Failed to load field health score.</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+       <FieldHealthHero score={score} loading={loading} />
+       
+       {score && !loading && (
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-2">
+           <HealthDimensionCard title="Water" dimension={score.water_condition} icon={<Droplets size={16} />} />
+           <HealthDimensionCard title="Soil" dimension={score.soil_condition} icon={<Mountain size={16} />} />
+           <HealthDimensionCard title="Weather" dimension={score.weather_risk} icon={<CloudLightning size={16} />} />
+           <HealthDimensionCard title="Disease" dimension={score.disease_risk} icon={<Bug size={16} />} />
+           <HealthDimensionCard title="Climate" dimension={score.climate_stress} icon={<ThermometerSun size={16} />} />
+           <HealthDimensionCard title="Vegetation" dimension={score.vegetation_trend} icon={<Leaf size={16} />} />
+         </div>
+       )}
+    </div>
   );
 }

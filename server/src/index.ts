@@ -11,7 +11,10 @@ app.use(cors());
 app.use(express.json());
 
 import satelliteRoutes from './satellite/satellite.routes';
+import healthScoreRoutes from './health-score/health-score.routes';
+
 app.use('/api', satelliteRoutes);
+app.use('/api', healthScoreRoutes);
 
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
