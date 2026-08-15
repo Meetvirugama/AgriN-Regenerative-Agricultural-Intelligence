@@ -5,7 +5,7 @@ const router = Router();
 
 // GET /api/fields/:fieldId/health-score
 router.get('/fields/:fieldId/health-score', async (req: Request, res: Response) => {
-  const { fieldId } = req.params;
+  const fieldId = req.params.fieldId as string;
   
   try {
     const score = await healthScoreService.computeScore(fieldId);

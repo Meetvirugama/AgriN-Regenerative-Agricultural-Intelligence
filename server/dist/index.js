@@ -11,6 +11,18 @@ const app = (0, express_1.default)();
 const PORT = process.env.PORT || 8000;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+const satellite_routes_1 = __importDefault(require("./satellite/satellite.routes"));
+const cropRoutes_1 = require("./routes/cropRoutes");
+const weatherRoutes_1 = __importDefault(require("./routes/weatherRoutes"));
+const soilRoutes_1 = __importDefault(require("./routes/soilRoutes"));
+const diagnosisRoutes_1 = __importDefault(require("./routes/diagnosisRoutes"));
+const regenRoutes_1 = __importDefault(require("./routes/regenRoutes"));
+app.use('/api', satellite_routes_1.default);
+app.use('/api/fields', cropRoutes_1.cropRoutes);
+app.use('/api/fields', weatherRoutes_1.default);
+app.use('/api/fields', soilRoutes_1.default);
+app.use('/api/fields', diagnosisRoutes_1.default);
+app.use('/api/fields', regenRoutes_1.default);
 app.get('/health', (req, res) => {
     res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });

@@ -6,7 +6,7 @@ const router = Router();
 
 // GET /api/fields/:fieldId/satellite/latest
 router.get('/fields/:fieldId/satellite/latest', async (req: Request, res: Response) => {
-  const { fieldId } = req.params;
+  const fieldId = req.params.fieldId as string;
   
   const latestTile = await satelliteStore.getLatestTile(fieldId);
   const latestTrend = await satelliteStore.getLatestTrend(fieldId);
@@ -21,7 +21,7 @@ router.get('/fields/:fieldId/satellite/latest', async (req: Request, res: Respon
 
 // GET /api/fields/:fieldId/satellite/timeline
 router.get('/fields/:fieldId/satellite/timeline', async (req: Request, res: Response) => {
-  const { fieldId } = req.params;
+  const fieldId = req.params.fieldId as string;
   
   const timeline = await satelliteStore.getTrendsTime_series(fieldId);
   res.json({ timeline });
@@ -29,7 +29,7 @@ router.get('/fields/:fieldId/satellite/timeline', async (req: Request, res: Resp
 
 // GET /api/fields/:fieldId/satellite/anomalies
 router.get('/fields/:fieldId/satellite/anomalies', async (req: Request, res: Response) => {
-  const { fieldId } = req.params;
+  const fieldId = req.params.fieldId as string;
   
   const anomalies = await satelliteStore.getAllAnomalies(fieldId);
   res.json({ anomalies });
