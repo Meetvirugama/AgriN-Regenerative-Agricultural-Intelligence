@@ -11,6 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 import satelliteRoutes from './satellite/satellite.routes';
+import healthScoreRoutes from './health-score/health-score.routes';
 import { cropRoutes } from './routes/cropRoutes';
 import weatherRoutes from './routes/weatherRoutes';
 import soilRoutes from './routes/soilRoutes';
@@ -18,6 +19,7 @@ import diagnosisRoutes from './routes/diagnosisRoutes';
 import regenRoutes from './routes/regenRoutes';
 
 app.use('/api', satelliteRoutes);
+app.use('/api', healthScoreRoutes);
 app.use('/api/fields', cropRoutes);
 app.use('/api/fields', weatherRoutes);
 app.use('/api/fields', soilRoutes);
