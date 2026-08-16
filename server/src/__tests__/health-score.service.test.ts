@@ -4,6 +4,7 @@ import { satelliteStore } from '../modules/satellite/satellite.store';
 import { cropStateRepo } from '../db/repositories/farmerRepository';
 import { weatherRepo } from '../db/repositories/weatherRepository';
 import { soilRepo } from '../db/repositories/soilRepository';
+import { PythonClient } from '../services/pythonClient';
 
 // Mock dependencies
 vi.mock('../modules/satellite/satellite.store', () => ({
@@ -30,6 +31,12 @@ vi.mock('../db/repositories/weatherRepository', () => ({
 vi.mock('../db/repositories/soilRepository', () => ({
   soilRepo: {
     getLatestProfile: vi.fn(),
+  }
+}));
+
+vi.mock('../services/pythonClient', () => ({
+  PythonClient: {
+    computeHealthScore: vi.fn(),
   }
 }));
 
@@ -60,49 +67,26 @@ describe('HealthScoreService', () => {
     vi.mocked(soilRepo.getLatestProfile).mockResolvedValue(null);
   });
 
-  it('should compute a high overall score when conditions are optimal', async () => {
-    // Optimal conditions
+  it('should delegate score computation to PythonClient', async () => {
     vi.mocked(weatherRepo.getSnapshots).mockResolvedValue([
       { is_forecast: false, rainfall_mm: 5, temp_max: 25, humidity_pct: 50 } as any,
       { is_forecast: true, rainfall_mm: 10, temp_max: 25, humidity_pct: 50 } as any,
     ]);
 
+    vi.mocked(PythonClient.computeHealthScore).mockResolvedValue({
+      crop_health: { value: 'Good', severity: 'green' },
+      water_condition: { value: 'Adequate', severity: 'green' },
+      soil_condition: { value: 'Moderate', severity: 'green' },
+      weather_risk: { value: 'Low Risk', severity: 'green' },
+      disease_risk: { value: 'Low Risk', severity: 'green' },
+      climate_stress: { value: 'Normal', severity: 'green' },
+      vegetation_trend: { value: 'Stable', severity: 'green' }
+    });
+
     const score = await service.computeScore('f1');
     
+    expect(PythonClient.computeHealthScore).toHaveBeenCalled();
     expect(score.crop_health.value).toBe('Good');
     expect(score.crop_health.severity).toBe('green');
-  });
-
-  it('should lower score significantly if extreme heat flag is active', async () => {
-    // Heat stress condition
-    vi.mocked(weatherRepo.getSnapshots).mockResolvedValue([
-      { is_forecast: true, rainfall_mm: 0, temp_max: 42, humidity_pct: 20 } as any,
-    ]);
-    vi.mocked(weatherRepo.getActiveFlags).mockResolvedValue([
-      { event_type: 'heat_event' } as any
-    ]);
-
-    const score = await service.computeScore('f1');
-    
-    // We expect weather risk to be elevated (amber)
-    expect(score.weather_risk.severity).toBe('amber');
-    expect(score.crop_health.severity).toBe('amber');
-    expect(score.crop_health.value).toBe('Moderate');
-  });
-
-  it('should flag disease risk during high humidity and rainfall', async () => {
-    // Disease risk: high humidity + recent rain
-    vi.mocked(cropStateRepo.getCropState).mockResolvedValue({
-      current_stage: 'flowering'
-    } as any);
-    
-    vi.mocked(weatherRepo.getSnapshots).mockResolvedValue([
-      { is_forecast: false, rainfall_mm: 20, temp_max: 28, humidity_pct: 90 } as any,
-    ]);
-
-    const score = await service.computeScore('f1');
-    
-    expect(score.disease_risk.severity).toBe('amber');
-    expect(score.disease_risk.value).toBe('Elevated Risk');
   });
 });

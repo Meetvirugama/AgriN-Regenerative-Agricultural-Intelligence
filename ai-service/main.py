@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import crop, disease, advisory, climate
+from routers import crop, disease, advisory, climate, phenology, weather_rules, health, satellite, regen, vision, cross_border, voice
 import os
 
 app = FastAPI(
@@ -28,6 +28,14 @@ app.include_router(crop.router, prefix="/api/v1/crop", tags=["Crop"])
 app.include_router(disease.router, prefix="/api/v1/disease", tags=["Disease"])
 app.include_router(advisory.router, prefix="/api/v1/advisory", tags=["Advisory"])
 app.include_router(climate.router, prefix="/api/v1/climate", tags=["Climate"])
+app.include_router(phenology.router, prefix="/api/v1/phenology", tags=["Phenology"])
+app.include_router(weather_rules.router, prefix="/api/v1/weather-rules", tags=["Weather Rules"])
+app.include_router(health.router, prefix="/api/v1/health-score", tags=["Health Score"])
+app.include_router(satellite.router, prefix="/api/v1/satellite", tags=["Satellite"])
+app.include_router(regen.router, prefix="/api/v1/regen", tags=["Regen AI"])
+app.include_router(vision.router, prefix="/api/v1/vision", tags=["Vision AI"])
+app.include_router(cross_border.router, prefix="/api/v1/cross-border", tags=["Cross-Border AI"])
+app.include_router(voice.router, prefix="/api/v1/voice", tags=["Voice AI"])
 
 if __name__ == "__main__":
     import uvicorn

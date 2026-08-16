@@ -42,7 +42,7 @@ class Layer3Service {
     await weatherRepo.deleteStaleForecastsOlderThan(fieldId, 2);
 
     // Evaluate rules and persist flags
-    const flags = this.ruleEngine.evaluate(fieldId, forecasts);
+    const flags = await this.ruleEngine.evaluate(fieldId, forecasts);
     for (const flag of flags) {
       await weatherRepo.saveFlag({
         field_id: flag.field_id,

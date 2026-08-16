@@ -1,29 +1,9 @@
 import { FieldCropState, StageEnum, CropCalendar } from '../../models/Database';
 import { layer1Service } from '../field/field.service';
 import { cropStateRepo } from '../../db/repositories/farmerRepository';
+import { PythonClient } from '../../services/pythonClient';
 
 export class Layer2Service {
-  /**
-   * Stub function to calculate GDD since sowing date.
-   * Assumes 15 GDD accumulated per day on average for this mock.
-   */
-  private calculateAccumulatedGDD(sowingDate: string): number {
-    const sowing = new Date(sowingDate);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - sowing.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays * 15; // 15 GDD/day stub
-  }
-
-  private inferStageFromGDD(gdd: number, calendar: CropCalendar): StageEnum {
-    const sortedStages = [...calendar.stages].sort((a, b) => a.gdd_threshold - b.gdd_threshold);
-    let currentStage = sortedStages[0].stage;
-    for (const stage of sortedStages) {
-      if (gdd >= stage.gdd_threshold) currentStage = stage.stage;
-      else break;
-    }
-    return currentStage;
-  }
-
   private getStageDescription(stage: StageEnum, cropType: string): string {
     const descriptions: Record<string, Record<StageEnum, string>> = {
       wheat: {
@@ -62,29 +42,24 @@ export class Layer2Service {
       throw new Error(`Crop calendar not found for ${field.crop_type} in region punjab`);
     }
 
-    const gdd = this.calculateAccumulatedGDD(field.sowing_date);
-    const inferredStage = this.inferStageFromGDD(gdd, calendar);
+    // Call Python FastAPI for scientific calculation
+    const phenology = await PythonClient.calculatePhenology(field.sowing_date, calendar);
 
     const newState: FieldCropState = {
       field_id: fieldId,
       confirmed_crop: field.crop_type,
       confirmed_variety: field.crop_variety,
-      current_stage: inferredStage,
-      stage_description: this.getStageDescription(inferredStage, field.crop_type),
+      current_stage: phenology.current_stage as StageEnum,
+      stage_description: phenology.stage_description,
       stage_confidence: 'high',
       stage_conflict: existingState?.stage_conflict ?? false,
-      accumulated_gdd: gdd,
+      accumulated_gdd: phenology.accumulated_gdd,
       last_updated_from: 'calendar_estimate',
       updated_at: new Date().toISOString(),
     };
 
     await cropStateRepo.upsertCropState(newState);
     return newState;
-  }
-
-  public identifyCrop(_fieldId: string, _imageBlob: any) {
-    // Phase 6: replace with real Gemini Vision call
-    return { crop: 'wheat', variety: 'HD2967', confidence: 'high' };
   }
 
   public async overrideCropState(

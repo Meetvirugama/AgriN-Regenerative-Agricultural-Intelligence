@@ -57,4 +57,116 @@ export class PythonClient {
     if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
     return res.json();
   }
+
+  static async calculatePhenology(sowingDate: string, calendar: any) {
+    const res = await fetch(`${PYTHON_API_URL}/phenology/gdd`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sowing_date: sowingDate,
+        calendar: calendar
+      })
+    });
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
+
+  static async evaluateWeatherRules(fieldId: string, forecasts: any[], config?: any) {
+    const res = await fetch(`${PYTHON_API_URL}/weather-rules/evaluate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        field_id: fieldId,
+        forecasts: forecasts,
+        config: config
+      })
+    });
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
+
+  static async computeHealthScore(payload: any) {
+    const res = await fetch(`${PYTHON_API_URL}/health-score/compute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
+
+  static async processSatelliteData(fieldId: string, currentTile: any, history: any[]) {
+    const res = await fetch(`${PYTHON_API_URL}/satellite/process`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        field_id: fieldId,
+        current_tile: currentTile,
+        history: history
+      })
+    });
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
+
+  static async generateRegenPlan(context: any) {
+    const res = await fetch(`${PYTHON_API_URL}/regen/generate-plan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ context })
+    });
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
+
+  static async parseSoilReport(imageBuffer: Buffer, mimeType: string) {
+    const form = new FormData();
+    form.append('image', imageBuffer, { contentType: mimeType, filename: 'soil_report.jpg' });
+
+    const res = await fetch(`${PYTHON_API_URL}/vision/parse-soil-report`, {
+      method: 'POST',
+      body: form
+    });
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
+
+  static async getGlobalInsights(fieldId: string) {
+    const res = await fetch(`${PYTHON_API_URL}/cross-border/insights/${fieldId}`);
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
+
+  static async transcribeAudio(audioBuffer: Buffer, languageCode: string) {
+    const form = new FormData();
+    form.append('audio', audioBuffer, { contentType: 'audio/wav', filename: 'audio.wav' });
+    form.append('languageCode', languageCode);
+
+    const res = await fetch(`${PYTHON_API_URL}/voice/stt`, {
+      method: 'POST',
+      body: form
+    });
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
+
+  static async synthesizeSpeech(text: string, languageCode: string) {
+    const res = await fetch(`${PYTHON_API_URL}/voice/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, languageCode })
+    });
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
+
+  static async assessClimateRisk(payload: { region: string, weather_history: string, weather_forecast: string, crop_type: string }) {
+    const res = await fetch(`${PYTHON_API_URL}/climate/risk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
+    return res.json();
+  }
 }

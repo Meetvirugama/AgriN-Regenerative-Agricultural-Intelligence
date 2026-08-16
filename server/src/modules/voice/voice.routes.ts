@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { MockVoiceAdapter } from './VoiceAdapter';
+import { PythonVoiceAdapter } from './VoiceAdapter';
 
 const router = Router();
-const voiceAdapter = new MockVoiceAdapter();
+const voiceAdapter = new PythonVoiceAdapter();
 
 // Mock language preference storage (in memory for MVP)
 let userLanguage = 'en-US';
