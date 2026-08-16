@@ -2,60 +2,41 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: var(--primary);
-  --color-primary-content: var(--background);
-  --color-secondary: var(--secondary);
-  --color-secondary-content: var(--secondary-content);
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-raised: var(--surface-raised);
-  --color-text-main: var(--text-main);
-  --color-text: var(--text-main);
-  --color-text-muted: var(--text-muted);
-  --color-border: var(--border);
-  --color-neutral: var(--neutral);
-  --color-info: var(--info);
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-danger: var(--danger);
-  --color-error: var(--danger);
+  --color-primary: #16a34a; /* Tailwind green-600 */
+  --color-primary-content: #ffffff;
+  --color-secondary: #f3f4f6; /* Tailwind gray-100 */
+  --color-secondary-content: #1f2937; /* Tailwind gray-800 */
+  --color-background: #f9fafb; /* Soft light gray background */
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-text-main: #111827; /* Tailwind gray-900 */
+  --color-text-muted: #6b7280; /* Tailwind gray-500 */
+  --color-border: #e5e7eb; /* Tailwind gray-200 */
+  
+  --color-info: #3b82f6;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-error: #ef4444;
 }
 
 :root {
-  --primary: #000000;
-  --secondary: #4b5563;
-  --secondary-content: #ffffff;
-  --background: #ffffff;
-  --surface: #f5f5f5;
-  --surface-raised: #ffffff;
-  --text-main: #000000;
-  --text-muted: #555555;
-  --border: #000000;
-  --neutral: #d4d4d4;
-  
-  --info: #3b82f6;
-  --success: #16a34a;
-  --warning: #f59e0b;
-  --danger: #dc2626;
+  --primary: #16a34a;
+  --background: #f9fafb;
+  --surface: #ffffff;
+  --text-main: #111827;
+  --text-muted: #6b7280;
+  --border: #e5e7eb;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary: #ffffff;
-    --secondary: #9ca3af;
-    --secondary-content: #000000;
-    --background: #000000;
-    --surface: #111111;
-    --surface-raised: #222222;
-    --text-main: #ffffff;
-    --text-muted: #a0a0a0;
-    --border: #ffffff;
-    --neutral: #404040;
-    
-    --info: #3b82f6;
-    --success: #16a34a;
-    --warning: #f59e0b;
-    --danger: #dc2626;
+    --primary: #22c55e;
+    --background: #111827;
+    --surface: #1f2937;
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+    --border: #374151;
   }
 }
 
@@ -84,101 +65,22 @@ a {
   text-decoration: none;
 }
 
-/* Typography */
-.title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  margin-bottom: 0.5rem;
-}
-
-.subtitle {
-  font-size: 1.125rem;
-  color: var(--text-muted);
-  margin-bottom: 2rem;
-}
-
-/* Layout */
-.container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-.main-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100vh - 4rem);
-}
-
-/* Sharp Cards (replaced glass-card) */
-.sharp-card {
-  background: var(--background);
-  border: 1px solid var(--border);
-  padding: 2.5rem;
-  width: 100%;
-  max-width: 480px;
-}
-
-/* Forms */
-.form-group {
-  margin-bottom: 1.5rem;
-  width: 100%;
-}
-
-.form-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-  color: var(--text-main);
-}
-
-.form-input, .form-select {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border-radius: 0;
-  border: 1px solid var(--border);
-  background-color: var(--background);
-  color: var(--text-main);
-  font-family: inherit;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  outline: none;
-}
-
-.form-input:focus, .form-select:focus {
-  border-color: var(--text-main);
-  background-color: var(--surface);
-}
-
-
-
-/* Utilities (Removed legacy classes) */
-
-
-/* Micro-animations */
+/* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease forwards;
+  animation: fadeIn 0.4s ease forwards;
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.35s ease forwards;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Legacy field-card class removed — use Tailwind utilities directly. */

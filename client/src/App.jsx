@@ -9,6 +9,8 @@ import { FarmerShell } from "./app/FarmerShell";
 import { ExtensionShell } from "./app/ExtensionShell";
 import { Home } from "./pages/Home";
 import { Field } from "./pages/Field";
+import { MyFields } from "./pages/MyFields";
+import { AddFieldWizard } from "./features/field-management/components/AddFieldWizard";
 import { Onboarding } from "./pages/Onboarding";
 import { ExtensionDashboard } from "./features/escalation-dashboard";
 import { AuthProvider } from "./app/providers/AuthProvider";
@@ -53,7 +55,11 @@ function AppRoutes() {
         >
           <Route index element={<Home />} />
           <Route path="onboarding" element={<Onboarding />} />
-          <Route path="fields/:fieldId" element={<Field />} />
+          <Route path="fields">
+            <Route index element={<MyFields />} />
+            <Route path="add" element={<AddFieldWizard />} />
+            <Route path=":fieldId" element={<Field />} />
+          </Route>
         </Route>
 
         {/* Extension routes — protected */}
