@@ -1,0 +1,98 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { HealthScoreService } from "../modules/health-score/health-score.service.js";
+import { satelliteStore } from "../modules/satellite/satellite.store.js";
+import { cropStateRepo } from "../db/repositories/farmerRepository.js";
+import { weatherRepo } from "../db/repositories/weatherRepository.js";
+import { soilRepo } from "../db/repositories/soilRepository.js";
+import { PythonClient } from "../services/pythonClient.js";
+
+// Mock dependencies
+vi.mock("../modules/satellite/satellite.store", () => ({
+  satelliteStore: {
+    getLatestTile: vi.fn(),
+    getLatestTrend: vi.fn(),
+    getActiveAnomalies: vi.fn(),
+  },
+}));
+
+vi.mock("../db/repositories/farmerRepository", () => ({
+  cropStateRepo: {
+    getCropState: vi.fn(),
+  },
+}));
+
+vi.mock("../db/repositories/weatherRepository", () => ({
+  weatherRepo: {
+    getSnapshots: vi.fn(),
+    getActiveFlags: vi.fn(),
+  },
+}));
+
+vi.mock("../db/repositories/soilRepository", () => ({
+  soilRepo: {
+    getLatestProfile: vi.fn(),
+  },
+}));
+
+vi.mock("../services/pythonClient", () => ({
+  PythonClient: {
+    computeHealthScore: vi.fn(),
+  },
+}));
+
+describe("HealthScoreService", () => {
+  const service = new HealthScoreService();
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    // Setup default happy-path mocks
+    vi.mocked(satelliteStore.getLatestTile).mockResolvedValue({
+      id: "t1",
+      field_id: "f1",
+      date: "2026-08-16",
+      ndvi_avg: 0.8,
+      cloudCoverPct: 0,
+      resolution_m: 10,
+    });
+    vi.mocked(satelliteStore.getLatestTrend).mockResolvedValue({
+      id: "tr1",
+      field_id: "f1",
+      start_date: "2026-08-16",
+      end_date: "2026-08-16",
+      trend: "improving",
+      computed_at: "",
+    });
+    vi.mocked(satelliteStore.getActiveAnomalies).mockResolvedValue([]);
+    vi.mocked(cropStateRepo.getCropState).mockResolvedValue({
+      field_id: "f1",
+      current_stage: "vegetative",
+      last_updated: new Date().toISOString(),
+    });
+
+    vi.mocked(weatherRepo.getSnapshots).mockResolvedValue([]);
+    vi.mocked(weatherRepo.getActiveFlags).mockResolvedValue([]);
+    vi.mocked(soilRepo.getLatestProfile).mockResolvedValue(null);
+  });
+
+  it("should delegate score computation to PythonClient", async () => {
+    vi.mocked(weatherRepo.getSnapshots).mockResolvedValue([
+      { is_forecast: false, rainfall_mm: 5, temp_max: 25, humidity_pct: 50 },
+      { is_forecast: true, rainfall_mm: 10, temp_max: 25, humidity_pct: 50 },
+    ]);
+
+    vi.mocked(PythonClient.computeHealthScore).mockResolvedValue({
+      crop_health: { value: "Good", severity: "green" },
+      water_condition: { value: "Adequate", severity: "green" },
+      soil_condition: { value: "Moderate", severity: "green" },
+      weather_risk: { value: "Low Risk", severity: "green" },
+      disease_risk: { value: "Low Risk", severity: "green" },
+      climate_stress: { value: "Normal", severity: "green" },
+      vegetation_trend: { value: "Stable", severity: "green" },
+    });
+
+    const score = await service.computeScore("f1");
+    expect(PythonClient.computeHealthScore).toHaveBeenCalled();
+    expect(score.crop_health.value).toBe("Good");
+    expect(score.crop_health.severity).toBe("green");
+  });
+});

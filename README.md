@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AgriN & Regenerative Agricultural Intelligence
+
+Welcome to **AgriMesh**, a 3-tier AI-powered agricultural intelligence platform designed to provide precision farming insights, satellite analysis, and generative agronomy.
+
+## System Architecture
+
+AgriMesh uses a clean separation of concerns across three microservices:
+
+1. **Frontend (`client/`)**
+   - React 19 + Vite (JavaScript)
+   - Real-time dashboards, maps, and camera capture.
+   - Run with: `cd client && npm run dev`
+
+2. **Backend Gateway (`server/`)**
+   - Node.js + Express (JavaScript)
+   - Pure stateless API gateway, database orchestration (PostgreSQL), JWT auth, and cron jobs.
+   - Run with: `cd server && npm run dev`
+
+3. **AI Compute Engine (`ai-service/`)**
+   - Python + FastAPI
+   - Heavy data processing, Computer Vision (Gemini), predictive ML modeling, and geospatial arrays.
+   - Run with: `cd ai-service && fastapi dev main.py --port 8001`
+
+*(Note: The AI service is designed as the intended final state for all heavy ML/AI work, not a temporary leftover. Do not duplicate Python logic into Node.)*
 
 ## Getting Started
 
-First, run the development server:
+To spin up the entire stack locally:
 
 ```bash
+# 1. Start the Database & AI Engine
+cd ai-service
+pip install -r requirements.txt
+fastapi dev main.py --port 8001
+
+# 2. Start the Backend API
+cd ../server
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 3. Start the Frontend App
+cd ../client
+npm install
+npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
