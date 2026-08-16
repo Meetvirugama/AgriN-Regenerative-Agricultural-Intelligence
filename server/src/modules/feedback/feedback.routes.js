@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   feedbackRepo,
   timelineRepo,
-} from "../../db/repositories/feedbackRepository";
+} from "../../db/repositories/feedbackRepository.js";
 
 const router = Router();
 

@@ -1,4 +1,3 @@
-import { Request } from "express";
 import { AuthService } from "../modules/auth/auth.service.js";
 
 /**
