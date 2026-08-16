@@ -13,7 +13,8 @@ import {
   Search,
   Sprout,
   Globe,
-  ChevronDown
+  ChevronDown,
+  Sun
 } from "lucide-react";
 import { GlobalMicButton } from "../features/voice/components/GlobalMicButton";
 import { FieldProvider } from "./providers/FieldProvider";
@@ -83,6 +84,19 @@ export const FarmerShell = () => {
               <Settings size={20} />
               Settings
             </Link>
+            
+            <div className="w-full h-px bg-border my-4"></div>
+            
+            <div className="px-3 py-2 flex items-center gap-3">
+              <Sun size={32} className="text-warning stroke-2 shrink-0" />
+              <div>
+                <div className="text-lg font-bold text-text-main flex items-center gap-1">32°C</div>
+                <div className="text-[11px] font-medium text-text-muted mt-0.5 leading-tight">
+                  Sunny<br/>
+                  Madhopur, UP
+                </div>
+              </div>
+            </div>
           </div>
         </aside>
 
