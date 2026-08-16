@@ -14,7 +14,7 @@ import feedbackRouter from "./modules/feedback/feedback.routes.js";
 import satelliteRoutes from "./modules/satellite/satellite.routes.js";
 import healthScoreRoutes from "./modules/health-score/health-score.routes.js";
 import escalationRoutes from "./modules/escalation/escalation.routes.js";
-import crossBorderRoutes from "./modules/cross-border/crossBorder.routes.js";
+import crossBorderRoutes from "./modules/cross-border/cross-border.routes.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { checkDatabaseHealth } from "./db/connection.js";

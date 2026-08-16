@@ -1,7 +1,7 @@
-import { db } from "../../models/Database.js";
+import { db } from "../../models/database.js";
 import { layer1Service } from "../field/field.service.js";
 import { v4 as uuidv4 } from "uuid";
-import { DocumentParser } from "./DocumentParser.js";
+import { DocumentParser } from "./document.parser.js";
 
 class Layer4Service {
   getActiveSoilProfile(fieldId) {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { CrossBorderService } from "./crossBorder.service.js";
+import { CrossBorderService } from "./cross-border.service.js";
 
 const router = Router();
 

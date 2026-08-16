@@ -1,4 +1,4 @@
-import { MockWeatherProvider } from "./WeatherProvider.js";
+import { MockWeatherProvider } from "./weather.provider.js";
 
 // Open-Meteo free API — no key required
 const OPEN_METEO_BASE = "https://api.open-meteo.com/v1";

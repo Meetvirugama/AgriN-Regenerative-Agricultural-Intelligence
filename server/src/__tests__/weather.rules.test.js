@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { WeatherRuleEngine } from "../modules/weather/WeatherRuleEngine.js";
+import { WeatherRuleEngine } from "../modules/weather/weather.rules.js";
 import { PythonClient } from "../services/pythonClient.js";
 
 vi.mock("../services/pythonClient", () => ({

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { PythonVoiceAdapter } from "./VoiceAdapter.js";
+import { PythonVoiceAdapter } from "./voice.adapter.js";
 
 const router = Router();
 const voiceAdapter = new PythonVoiceAdapter();

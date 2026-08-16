@@ -1,5 +1,5 @@
-import { createWeatherProvider } from "./OpenMeteoProvider.js";
-import { WeatherRuleEngine } from "./WeatherRuleEngine.js";
+import { createWeatherProvider } from "./openMeteo.provider.js";
+import { WeatherRuleEngine } from "./weather.rules.js";
 import { layer1Service } from "../field/field.service.js";
 import { weatherRepo } from "../../db/repositories/weatherRepository.js";
 
