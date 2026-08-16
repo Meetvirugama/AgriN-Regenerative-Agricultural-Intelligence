@@ -1,33 +1,41 @@
-import { db } from '../models/Database';
 import { layer3Service } from '../modules/weather/weather.service';
+import { pool } from '../db/connection';
 
 /**
- * Ingestion Job
- * "Ingest short-range (7-day) and medium-range (14–30 day) forecasts on a scheduled job"
- * 
- * This script runs daily to fetch the latest weather from the provider, 
- * run the rules engine, and store updated flags.
+ * Daily Weather Ingestion Job
+ *
+ * Fetches fresh 7-day forecast from Open-Meteo for every field in the DB,
+ * evaluates the rule engine, and persists weather event flags.
+ * Runs nightly via the cron scheduler in scheduler.ts.
  */
 export async function runDailyWeatherIngestion() {
-  console.log('Starting daily weather ingestion job...');
+  console.log('[Job:Weather] Starting daily weather ingestion...');
   let updatedCount = 0;
   let errorCount = 0;
 
-  for (const [fieldId, field] of db.fields.entries()) {
+  // Query all field IDs directly — avoids loading full Field objects
+  const { rows } = await pool.query<{ id: string; name: string }>(
+    'SELECT id, name FROM fields ORDER BY created_at ASC'
+  );
+
+  for (const row of rows) {
     try {
-      await layer3Service.fetchAndStoreForecast(fieldId);
+      const { forecasts, flags } = await layer3Service.fetchAndStoreForecast(row.id);
       updatedCount++;
-      console.log(`Ingested weather for field ${fieldId}.`);
+      console.log(`[Job:Weather] Field "${row.name}" (${row.id}): ${forecasts.length} forecasts, ${flags.length} flags`);
     } catch (err: any) {
       errorCount++;
-      console.error(`Error ingesting weather for field ${fieldId}:`, err.message);
+      console.error(`[Job:Weather] Error for field ${row.id}:`, err.message);
     }
   }
 
-  console.log(`Job complete. Updated: ${updatedCount}, Errors: ${errorCount}`);
+  console.log(`[Job:Weather] Done. Updated: ${updatedCount}, Errors: ${errorCount}`);
 }
 
-// If run directly
+// If run directly: npx tsx src/jobs/ingestWeather.ts
 if (require.main === module) {
-  runDailyWeatherIngestion().then(() => process.exit(0));
+  runDailyWeatherIngestion()
+    .then(() => process.exit(0))
+    .catch((err) => { console.error(err); process.exit(1); });
 }
+

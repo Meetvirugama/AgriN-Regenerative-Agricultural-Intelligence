@@ -1,58 +1,47 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { EscalationService } from './escalation.service';
 
 const router = Router();
 
 // Trigger a new escalation (Farmer Side)
-router.post('/trigger', (req: Request, res: Response) => {
+router.post('/trigger', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { fieldId, reason, source, contextData } = req.body;
-    
     if (!fieldId || !reason || !source) {
-       return res.status(400).json({ error: 'Missing required fields' });
+      res.status(400).json({ error: { message: 'Missing required fields: fieldId, reason, source' } });
+      return;
     }
-
-    const ticket = EscalationService.triggerEscalation(fieldId, reason, source, contextData);
+    const ticket = await EscalationService.triggerEscalation(fieldId, reason, source, contextData);
     res.status(201).json(ticket);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to trigger escalation' });
-  }
+  } catch (err) { next(err); }
 });
 
 // Get pending tickets (Extension Worker Side)
-router.get('/tickets', (req: Request, res: Response) => {
+router.get('/tickets', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const pending = EscalationService.getPendingTickets();
-    res.json({ tickets: pending });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch tickets' });
-  }
+    const page = parseInt(req.query.page as string || '1', 10);
+    const limit = parseInt(req.query.limit as string || '20', 10);
+    const offset = (page - 1) * limit;
+    const pending = await EscalationService.getPendingTickets(limit, offset);
+    res.json({ tickets: pending, page, limit });
+  } catch (err) { next(err); }
 });
 
 // Resolve a ticket
-router.post('/tickets/:id/resolve', (req: Request, res: Response) => {
+router.post('/tickets/:id/resolve', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = req.params.id as string;
-    const resolved = EscalationService.resolveTicket(id);
-    
-    if (!resolved) {
-      return res.status(404).json({ error: 'Ticket not found' });
-    }
-    
-    res.json(resolved);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to resolve ticket' });
-  }
+    await EscalationService.resolveTicket(req.params.id as string);
+    res.json({ success: true });
+  } catch (err) { next(err); }
 });
 
 // Get regional heatmap/risk data
-router.get('/regional-risk', (req: Request, res: Response) => {
+router.get('/regional-risk', async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const risk = EscalationService.getRegionalRisk();
+    const risk = await EscalationService.getRegionalRisk();
     res.json(risk);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch regional risk' });
-  }
+  } catch (err) { next(err); }
 });
 
 export default router;
+

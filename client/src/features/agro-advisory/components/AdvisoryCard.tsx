@@ -20,15 +20,30 @@ export const AdvisoryCard: React.FC<AdvisoryCardProps> = ({ fieldId }) => {
   const [consentGiven, setConsentGiven] = useState(false);
   const [escalationSent, setEscalationSent] = useState(false);
 
+  const [error, setError] = useState(false);
+
   useEffect(() => {
     const fetchAdvisory = async () => {
-      setLoading(true);
-      const data = await advisoryApi.getAdvisory(fieldId);
-      setAdvisory(data);
-      setLoading(false);
+      try {
+        setLoading(true);
+        const data = await advisoryApi.getAdvisory(fieldId);
+        setAdvisory(data);
+      } catch (err) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchAdvisory();
   }, [fieldId]);
+
+  if (error) {
+    return (
+      <Card className="bg-danger/10 border-danger/30 p-6 text-center">
+        <p className="text-danger font-bold">Failed to load AI advisory.</p>
+      </Card>
+    );
+  }
 
   const handleFeedback = async (action: 'followed' | 'ignored' | 'overridden') => {
     if (action === 'overridden' && !showOverrideInput) {

@@ -12,7 +12,7 @@ interface SatelliteHealthCardProps {
 export const SatelliteHealthCard: React.FC<SatelliteHealthCardProps> = ({ data, loading, onClick }) => {
   if (loading) {
     return (
-      <div className="sharp-card animate-pulse border-border">
+      <div className="bg-background border border-border p-5 animate-pulse">
         <div className="h-6 w-32 bg-surface mb-4"></div>
         <div className="h-4 w-48 bg-surface"></div>
       </div>
@@ -21,7 +21,7 @@ export const SatelliteHealthCard: React.FC<SatelliteHealthCardProps> = ({ data, 
 
   if (!data || !data.latestTile) {
     return (
-      <div className="sharp-card border-border border-dashed text-text-muted">
+      <div className="bg-background border border-dashed border-border p-5 text-text-muted">
         <div className="flex items-center gap-2 mb-2">
           <Satellite size={20} />
           <h3 className="font-bold uppercase tracking-wider text-sm">Satellite View</h3>

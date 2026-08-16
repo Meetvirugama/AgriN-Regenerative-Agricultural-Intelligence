@@ -5,27 +5,10 @@ export class SatelliteStore {
   private trends: FieldHealthTrend[] = [];
   private anomalies: AnomalyFlag[] = [];
 
-  // Seed with some mock data for development
-  constructor() {
-    this.seedMockData();
-  }
-
-  private seedMockData() {
-    const fieldId1 = 'mock-field-1'; // Assume we have this from Layer 01
-
-    // Seed anomaly
-    this.anomalies.push({
-      id: 'anomaly-1',
-      fieldId: fieldId1,
-      subregionGeometry: { type: 'Polygon', coordinates: [] },
-      subregionLabel: 'Northeast corner',
-      detectedDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-      anomalyType: 'vegetation_decline',
-      severity: 'moderate',
-      stillActive: true,
-      resolvedDate: null,
-    });
-  }
+  // No pre-seeded data — anomalies are created by real satellite ingestion per field.
+  // Seeding with a hardcoded field ID caused satellite health to always reference
+  // a non-existent field, producing incorrect data for every real field.
+  constructor() {}
 
   async saveTile(tile: SatelliteTile): Promise<void> {
     this.tiles.push(tile);

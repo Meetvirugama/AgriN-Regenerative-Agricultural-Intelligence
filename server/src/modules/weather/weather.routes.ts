@@ -1,34 +1,45 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { layer3Service } from '../weather/weather.service';
 
 const router = Router();
 
 // GET /api/fields/:fieldId/weather/forecast
-router.get('/:fieldId/weather/forecast', async (req: Request, res: Response) => {
+// Smart cache: serves Postgres data if fresh, otherwise fetches from Open-Meteo
+router.get('/:fieldId/weather/forecast', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const fieldId = req.params.fieldId as string;
-    
-    // In a real system, we'd serve cached forecasts and a background job would fetch.
-    // For MVP, if it doesn't exist, we fetch it immediately (on-demand cache).
-    let data = layer3Service.getLocalizedForecast(fieldId);
-    if (data.forecasts.length === 0) {
-      data = await layer3Service.fetchAndStoreForecast(fieldId);
-    }
-    
+    const data = await layer3Service.getLocalizedForecast(req.params.fieldId as string);
     res.json(data);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
+  } catch (err) { next(err); }
 });
 
-// GET /api/fields/:fieldId/weather/history
-router.get('/:fieldId/weather/history', async (req: Request, res: Response) => {
+// GET /api/fields/:fieldId/weather/history?days=30
+// Returns historical actuals — fetches from Open-Meteo if not cached
+router.get('/:fieldId/weather/history', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const history = await layer3Service.getFieldWeatherHistory(req.params.fieldId as string);
+    const days = Math.min(parseInt(req.query.days as string ?? '14', 10), 30);
+    const fieldId = req.params.fieldId as string;
+
+    // Check Postgres cache first
+    const cached = await layer3Service.getCachedHistory(fieldId, days);
+    if (cached.length > 0) {
+      res.json(cached);
+      return;
+    }
+
+    // If nothing cached yet, fetch from Open-Meteo API and persist
+    const history = await layer3Service.getFieldWeatherHistory(fieldId);
     res.json(history);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
+  } catch (err) { next(err); }
+});
+
+// POST /api/fields/:fieldId/weather/refresh
+// Force-refresh — bypasses cache and fetches fresh data from Open-Meteo
+router.post('/:fieldId/weather/refresh', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await layer3Service.fetchAndStoreForecast(req.params.fieldId as string);
+    res.json({ message: 'Weather data refreshed', ...data });
+  } catch (err) { next(err); }
 });
 
 export default router;
+

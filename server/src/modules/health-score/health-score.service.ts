@@ -1,63 +1,65 @@
 import { FieldHealthScore, DimensionResult, Severity } from './health-score.types';
 import { satelliteStore } from '../satellite/satellite.store';
+import { cropStateRepo } from '../../db/repositories/farmerRepository';
+import { weatherRepo } from '../../db/repositories/weatherRepository';
+import { soilRepo } from '../../db/repositories/soilRepository';
 
 export class HealthScoreService {
   
   async computeScore(fieldId: string): Promise<FieldHealthScore> {
-    // 1. Fetch real Satellite Data (Layer 05)
-    const latestTile = await satelliteStore.getLatestTile(fieldId);
-    const latestTrend = await satelliteStore.getLatestTrend(fieldId);
+    // ── Layer 05: Satellite (already real) ─────────────────────────────────
+    const latestTile    = await satelliteStore.getLatestTile(fieldId);
+    const latestTrend   = await satelliteStore.getLatestTrend(fieldId);
     const activeAnomalies = await satelliteStore.getActiveAnomalies(fieldId);
 
-    // 2. Generate deterministic mock data for upstream layers we haven't built yet
-    // Layer 02: Crop Stage Mock
-    const mockCropStage = {
-      stage: 'Flowering',
-      waterNeed: 'High',
-      diseaseSusceptibility: 'Moderate'
+    // ── Layer 02: Crop Stage (now real from Postgres) ──────────────────────
+    const cropState = await cropStateRepo.getCropState(fieldId);
+    const cropStage = {
+      stage: cropState?.current_stage ?? 'vegetative',
+      waterNeed: this.stageWaterNeed(cropState?.current_stage ?? 'vegetative'),
+      diseaseSusceptibility: this.stageDiseaseRisk(cropState?.current_stage ?? 'vegetative'),
     };
 
-    // Layer 03: Weather Mock
-    const mockWeather = {
-      recentRainfallMm: latestTile && latestTile.cloudCoverPct > 20 ? 15 : 0, // correlate rain with recent clouds
-      forecastRainfallMm: 0,
-      forecastHighTemp: 34,
-      humidityAvg: 65,
-      activeFlags: [] as string[]
-    };
-    if (mockWeather.forecastHighTemp > 35) mockWeather.activeFlags.push('heat_event_expected');
+    // ── Layer 03: Weather (now real from Postgres) ─────────────────────────
+    const recentSnapshots = await weatherRepo.getSnapshots(fieldId, 7);
+    const activeFlags     = await weatherRepo.getActiveFlags(fieldId);
+    const avgRainfall = recentSnapshots.filter(s => !s.is_forecast)
+      .reduce((sum, s) => sum + (s.rainfall_mm ?? 0), 0) / Math.max(recentSnapshots.filter(s => !s.is_forecast).length, 1);
+    const forecastRain = recentSnapshots.filter(s => s.is_forecast)
+      .reduce((sum, s) => sum + (s.rainfall_mm ?? 0), 0);
+    const maxForecastTemp = Math.max(...recentSnapshots.filter(s => s.is_forecast).map(s => s.temp_max ?? 28), 28);
+    const avgHumidity = recentSnapshots.length > 0
+      ? recentSnapshots.reduce((sum, s) => sum + (s.humidity_pct ?? 60), 0) / recentSnapshots.length
+      : 60;
 
-    // Layer 04: Soil Mock
-    const mockSoil = {
-      texture: 'sandy_loam',
-      waterHoldingCapacity: 'low',
-      nitrogenLevel: 'medium'
+    const weather = {
+      recentRainfallMm: avgRainfall,
+      forecastRainfallMm: forecastRain,
+      forecastHighTemp: maxForecastTemp,
+      humidityAvg: avgHumidity,
+      activeFlags: activeFlags.map(f => f.event_type),
     };
 
-    // 3. Compute Dimensions using explicit rules
-    
-    // --- Vegetation Trend (from Layer 05) ---
+    // ── Layer 04: Soil (now real from Postgres) ────────────────────────────
+    const soilProfile = await soilRepo.getLatestProfile(fieldId);
+    const soil = {
+      texture: soilProfile?.texture ?? 'loam',
+      waterHoldingCapacity: soilProfile?.water_holding_capacity ?? 'medium',
+      nitrogenLevel: soilProfile?.nitrogen_level ?? 'medium',
+    };
+
+    // ── Compute all dimensions ─────────────────────────────────────────────
     const vegetationTrend = this.computeVegetationTrend(latestTrend, activeAnomalies);
+    const waterCondition  = this.computeWaterCondition(weather, soil, latestTile, cropStage);
+    const soilCondition   = this.computeSoilCondition(soil);
+    const weatherRisk     = this.computeWeatherRisk(weather, cropStage);
+    const diseaseRisk     = this.computeDiseaseRisk(weather, cropStage, activeAnomalies);
+    const climateStress   = this.computeClimateStress(weather, activeAnomalies);
+    const cropHealth      = this.computeCropHealth([
+      vegetationTrend, waterCondition, soilCondition,
+      weatherRisk, diseaseRisk, climateStress,
+    ]);
 
-    // --- Water Condition (Fusion: 03 Weather, 04 Soil, 05 Satellite, 02 Stage) ---
-    const waterCondition = this.computeWaterCondition(mockWeather, mockSoil, latestTile, mockCropStage);
-
-    // --- Soil Condition (Fusion: 04 Soil) ---
-    const soilCondition = this.computeSoilCondition(mockSoil);
-
-    // --- Weather Risk (Fusion: 03 Weather, 02 Stage) ---
-    const weatherRisk = this.computeWeatherRisk(mockWeather, mockCropStage);
-
-    // --- Disease Risk (Fusion: 03 Weather, 02 Stage, 05 Satellite) ---
-    const diseaseRisk = this.computeDiseaseRisk(mockWeather, mockCropStage, activeAnomalies);
-
-    // --- Climate Stress (Fusion: 03 Weather, 05 Satellite) ---
-    const climateStress = this.computeClimateStress(mockWeather, activeAnomalies);
-
-    // --- Overall Crop Health (Fusion of all above) ---
-    const cropHealth = this.computeCropHealth([vegetationTrend, waterCondition, soilCondition, weatherRisk, diseaseRisk, climateStress]);
-
-    // 4. Return Full Score (Synthesis text will be generated by Layer 09 later)
     return {
       fieldId,
       computedAt: new Date().toISOString(),
@@ -68,8 +70,26 @@ export class HealthScoreService {
       disease_risk: diseaseRisk,
       climate_stress: climateStress,
       vegetation_trend: vegetationTrend,
-      synthesis_text: null // Layer 09 fills this
+      synthesis_text: null, // Phase 6: AI-generated synthesis
     };
+  }
+
+  /** Helper: map crop stage to water need label */
+  private stageWaterNeed(stage: string): 'Low' | 'Moderate' | 'High' {
+    const map: Record<string, 'Low' | 'Moderate' | 'High'> = {
+      germination: 'Moderate', vegetative: 'Moderate',
+      flowering: 'High', maturity: 'Low',
+    };
+    return map[stage] ?? 'Moderate';
+  }
+
+  /** Helper: map crop stage to disease susceptibility */
+  private stageDiseaseRisk(stage: string): 'Low' | 'Moderate' | 'High' {
+    const map: Record<string, 'Low' | 'Moderate' | 'High'> = {
+      germination: 'Low', vegetative: 'Moderate',
+      flowering: 'High', maturity: 'Moderate',
+    };
+    return map[stage] ?? 'Moderate';
   }
 
   // --- Dimension Computation Rules ---

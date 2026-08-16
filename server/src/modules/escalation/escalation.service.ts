@@ -1,68 +1,67 @@
-import { EscalationTicket, RegionalRisk } from './escalation.types';
-
-// In-memory store for MVP
-const tickets: EscalationTicket[] = [
-  // Stub an existing ticket for the dashboard to look populated
-  {
-    id: 'ticket-999',
-    fieldId: 'mock-field-456',
-    farmerId: 'farmer-789',
-    reason: 'high_severity',
-    source: 'Layer07',
-    status: 'pending',
-    createdAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    contextData: { issue: 'Late Blight', confidence: 0.95 }
-  }
-];
+import { EscalationTicket as ClientTicket, RegionalRisk } from './escalation.types';
+import { escalationRepo } from '../../db/repositories/escalationRepository';
+import { STUB_FARMER_ID } from '../field/field.service';
 
 export class EscalationService {
-  static triggerEscalation(
-    fieldId: string, 
-    reason: 'low_confidence' | 'high_severity', 
-    source: 'Layer07' | 'Layer09', 
+  /**
+   * Create a new escalation ticket in PostgreSQL.
+   * Previously this used a hardcoded in-memory array with a fake farmerId.
+   */
+  static async triggerEscalation(
+    fieldId: string,
+    reason: 'low_confidence' | 'high_severity' | 'farmer_request',
+    source: string,
     contextData: any = {}
-  ): EscalationTicket {
-    const ticket: EscalationTicket = {
-      id: `ticket-${Math.floor(Math.random() * 10000)}`,
-      fieldId,
-      farmerId: 'farmer-123', // Stub farmer ID
-      reason,
+  ): Promise<ClientTicket> {
+    const row = await escalationRepo.createTicket({
+      field_id: fieldId,
+      farmer_id: STUB_FARMER_ID, // Phase 4: replace with JWT-authenticated farmer ID
       source,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      contextData
-    };
-    
-    tickets.unshift(ticket);
-    return ticket;
-  }
-
-  static getPendingTickets(): EscalationTicket[] {
-    return tickets.filter(t => t.status === 'pending').sort((a, b) => {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      reason,
+      context_data: contextData,
     });
-  }
 
-  static resolveTicket(ticketId: string): EscalationTicket | null {
-    const index = tickets.findIndex(t => t.id === ticketId);
-    if (index === -1) return null;
-    
-    tickets[index].status = 'resolved';
-    return tickets[index];
-  }
-
-  static getRegionalRisk(): RegionalRisk {
-    // Stub aggregated dashboard data
-    const active = tickets.filter(t => t.status === 'pending');
-    const highSev = active.filter(t => t.reason === 'high_severity');
-
+    // Map DB shape → client shape
     return {
-      region: 'Central Rift Valley',
-      activeTickets: active.length,
-      highSeverityCount: highSev.length,
-      averageHealthScore: 68,
-      climateRiskLevel: 'high',
-      topIssues: ['Late Blight', 'Drought Stress', 'Unknown Leaf Spot']
+      id: row.id,
+      fieldId: row.field_id,
+      farmerId: row.farmer_id,
+      reason: row.reason,
+      source: row.source,
+      status: row.status as 'pending',
+      createdAt: row.created_at,
+      contextData: row.context_data,
+    };
+  }
+
+  static async getPendingTickets(limit = 20, offset = 0): Promise<ClientTicket[]> {
+    const rows = await escalationRepo.getPendingTickets(limit, offset);
+    return rows.map((r) => ({
+      id: r.id,
+      fieldId: r.field_id,
+      farmerId: r.farmer_id,
+      reason: r.reason,
+      source: r.source,
+      status: r.status as 'pending',
+      createdAt: r.created_at,
+      contextData: r.context_data,
+    }));
+  }
+
+  static async resolveTicket(ticketId: string): Promise<void> {
+    await escalationRepo.resolveTicket(ticketId);
+  }
+
+  static async getRegionalRisk(): Promise<RegionalRisk> {
+    const stats = await escalationRepo.getRegionalStats();
+    return {
+      region: 'Punjab',
+      activeTickets: stats.activeTickets,
+      highSeverityCount: stats.highSeverityCount,
+      averageHealthScore: 68, // Phase 6: compute from real health-score aggregation
+      climateRiskLevel: stats.highSeverityCount > 2 ? 'high' : 'medium',
+      topIssues: ['Late Blight', 'Drought Stress', 'Nutrient Deficiency'], // Phase 6: AI-aggregated
     };
   }
 }
+

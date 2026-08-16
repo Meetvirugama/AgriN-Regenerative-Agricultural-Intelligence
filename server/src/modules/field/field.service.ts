@@ -1,50 +1,60 @@
-import { db, Farmer, Field } from '../../models/Database';
+import { Farmer, Field } from '../../models/Database';
+import { farmerRepo, fieldRepo } from '../../db/repositories/farmerRepository';
+
+/** Stable IDs for the development stub farmer and field. */
+export const STUB_FARMER_ID = 'farmer_mock_1';
+export const STUB_FIELD_ID  = 'field_stub_1';
 
 export class Layer1Service {
   /**
-   * Stub to ensure a farmer exists for testing Layer 2.
+   * Idempotent — returns the existing mock farmer or creates one.
+   * Uses upsert so this is safe to call on every app boot.
    */
-  public getOrCreateMockFarmer(): Farmer {
-    const farmerId = 'farmer_mock_1';
-    if (!db.farmers.has(farmerId)) {
-      const farmer: Farmer = {
-        id: farmerId,
-        phone_number: '+1234567890',
-        name: 'Meena',
-        preferred_language: 'en',
-        created_at: new Date().toISOString(),
-      };
-      db.farmers.set(farmerId, farmer);
-    }
-    return db.farmers.get(farmerId)!;
+  public async getOrCreateMockFarmer(): Promise<Farmer> {
+    return farmerRepo.upsertFarmer({
+      id: STUB_FARMER_ID,
+      phone_number: '+1234567890',
+      name: 'Meena',
+      preferred_language: 'en',
+    });
   }
 
   /**
-   * Stub to register a field (so Layer 2 has something to work with)
+   * Idempotent stub field — always returns the same field_stub_1.
+   * If the field doesn't exist yet, creates it sown 45 days ago.
    */
-  public registerField(
+  public async getOrCreateStubField(farmerId: string): Promise<Field> {
+    const existing = await fieldRepo.findFieldById(STUB_FIELD_ID);
+    if (existing) return existing;
+
+    const date45DaysAgo = new Date();
+    date45DaysAgo.setDate(date45DaysAgo.getDate() - 45);
+
+    return fieldRepo.upsertField({
+      id: STUB_FIELD_ID,
+      farmer_id: farmerId,
+      name: 'Main Plot',
+      crop_type: 'wheat',
+      crop_variety: null,
+      sowing_date: date45DaysAgo.toISOString().split('T')[0],
+    });
+  }
+
+  /**
+   * Register a new field (real registration — Phase 4 will add auth guard).
+   */
+  public async registerField(
     farmerId: string,
     name: string,
     cropType: string,
-    sowingDate: string
-  ): Field {
-    const fieldId = `field_${Date.now()}`;
-    const field: Field = {
-      id: fieldId,
-      farmer_id: farmerId,
-      name,
-      crop_type: cropType,
-      crop_variety: null,
-      sowing_date: sowingDate,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    db.fields.set(fieldId, field);
-    return field;
+    sowingDate: string,
+    cropVariety?: string
+  ): Promise<Field> {
+    return fieldRepo.createField(farmerId, name, cropType, sowingDate, cropVariety);
   }
-  
-  public getField(fieldId: string): Field | undefined {
-    return db.fields.get(fieldId);
+
+  public async getField(fieldId: string): Promise<Field | undefined> {
+    return (await fieldRepo.findFieldById(fieldId)) ?? undefined;
   }
 }
 

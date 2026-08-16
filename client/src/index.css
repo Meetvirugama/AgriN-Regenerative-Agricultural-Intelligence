@@ -161,6 +161,7 @@ a {
 
 /* Utilities (Removed legacy classes) */
 
+
 /* Micro-animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -171,23 +172,13 @@ a {
   animation: fadeIn 0.5s ease forwards;
 }
 
-/* Field Cards */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  width: 100%;
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.field-card {
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: 0;
-  padding: 1.5rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
+.animate-fade-in-up {
+  animation: fadeInUp 0.35s ease forwards;
 }
 
-.field-card:hover {
-  background: var(--surface);
-}
+/* Legacy field-card class removed — use Tailwind utilities directly. */

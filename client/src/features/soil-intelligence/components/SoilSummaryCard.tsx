@@ -62,17 +62,20 @@ export function SoilSummaryCard({ profile, isLoading, onUploadClick }: SoilSumma
         {profile.summary_text ? (
           <p className="font-medium text-lg leading-snug flex items-start gap-2">
             {profile.summary_text}
-            <TextToSpeechButton 
-              textToRead={`Soil Profile: ${profile.summary_text}`} 
-              className="w-8 h-8 p-1 shrink-0" 
+            <TextToSpeechButton
+              textToRead={`Soil Profile: ${profile.summary_text}`}
+              className="w-8 h-8 p-1 shrink-0"
             />
           </p>
         ) : (
-          <p className="font-medium text-lg leading-snug text-text-muted italic">
-            Summary generation pending Layer 09 integration.
+          <p className="font-medium text-base leading-snug text-text-muted">
+            {isLabReport
+              ? `${profile.texture.replace('_', ' ')} soil with pH ${profile.ph}. Organic matter at ${profile.organic_matter_pct}%. Nitrogen is ${profile.nitrogen_level}.`
+              : `Regional baseline for this area: ${profile.texture.replace('_', ' ')} soil, pH ${profile.ph}. Upload your lab report for field-specific advice.`}
           </p>
         )}
       </div>
+
 
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div className="p-3 bg-background rounded-lg border border-neutral">

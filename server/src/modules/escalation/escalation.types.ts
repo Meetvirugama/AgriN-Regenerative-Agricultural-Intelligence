@@ -2,11 +2,11 @@ export interface EscalationTicket {
   id: string;
   fieldId: string;
   farmerId: string;
-  reason: 'low_confidence' | 'high_severity';
-  source: 'Layer07' | 'Layer09';
-  status: 'pending' | 'resolved';
+  reason: 'low_confidence' | 'high_severity' | 'farmer_request';
+  source: string;
+  status: 'pending' | 'acknowledged' | 'resolved';
   createdAt: string;
-  contextData: any; // E.g., photo blob ref, crop stage, health score
+  contextData: any;
 }
 
 export interface RegionalRisk {
@@ -14,6 +14,7 @@ export interface RegionalRisk {
   activeTickets: number;
   highSeverityCount: number;
   averageHealthScore: number;
-  climateRiskLevel: 'low' | 'moderate' | 'high';
+  climateRiskLevel: 'low' | 'medium' | 'moderate' | 'high';
   topIssues: string[];
 }
+

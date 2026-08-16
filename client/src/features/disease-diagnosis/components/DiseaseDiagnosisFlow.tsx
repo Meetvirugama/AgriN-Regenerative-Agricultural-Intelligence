@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Camera, ScanSearch, Check, AlertTriangle, PhoneCall, HelpCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Camera, ScanSearch, Check, AlertTriangle, PhoneCall, HelpCircle, ImageIcon } from 'lucide-react';
 import { diagnosisApi, DiagnosisEvent } from '../api/diagnosisApi';
 import { Dialog } from '../../../components/ui/Dialog';
 import { Button } from '../../../components/ui/Button';
@@ -13,22 +13,59 @@ export function DiseaseDiagnosisFlow({ fieldId, onClose }: DiseaseDiagnosisFlowP
   const [step, setStep] = useState<'capture' | 'analyzing' | 'result' | 'escalation'>('capture');
   const [result, setResult] = useState<DiagnosisEvent | null>(null);
   const [consentGiven, setConsentGiven] = useState(false);
+  const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null);
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const simulateCapture = async (isBlurry: boolean = false) => {
+  /** Triggered when farmer selects or captures an image. */
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCapturedBlob(file);
+    const objectUrl = URL.createObjectURL(file);
+    setCapturedImageUrl(objectUrl);
+  };
+
+  const handleCapture = async () => {
+    if (!capturedBlob) return;
     setStep('analyzing');
     try {
-      // 999 bytes forces "unknown" in our backend mock
-      const blobSize = isBlurry ? 999 : 2048; 
-      const data = await diagnosisApi.diagnoseCrop(fieldId, blobSize);
-      setResult(data);
-      if (data.escalation_triggered) {
+      // Read blob as base64 string
+      const base64String = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(capturedBlob);
+      });
+
+      // We now pass the real base64 image to our Node.js backend
+      const data: any = await diagnosisApi.diagnoseCrop(fieldId, base64String);
+      
+      // Map the Python AI response to the frontend's DiagnosisEvent
+      const mappedResult: DiagnosisEvent = {
+        id: `diag-${Date.now()}`,
+        field_id: fieldId,
+        photo_url: capturedImageUrl || '',
+        submitted_at: new Date().toISOString(),
+        crop_type: 'Unknown',
+        growth_stage: 'Unknown',
+        predicted_category: data.severity === 'high' ? 'disease' : 'unknown',
+        predicted_label: data.disease_name,
+        confidence: data.confidence,
+        severity: data.severity as 'low' | 'moderate' | 'high',
+        recommended_action_text: data.treatment_recommendation,
+        escalation_triggered: data.severity === 'high'
+      };
+      
+      setResult(mappedResult);
+      if (mappedResult.escalation_triggered) {
         setStep('escalation');
       } else {
         setStep('result');
       }
     } catch (err) {
       console.error(err);
-      setStep('capture'); // reset on error
+      setStep('capture');
     }
   };
 
@@ -54,32 +91,63 @@ export function DiseaseDiagnosisFlow({ fieldId, onClose }: DiseaseDiagnosisFlowP
       <div className="flex flex-col min-h-[400px]">
         {step === 'capture' && (
           <div className="flex flex-col items-center justify-center flex-1 py-8">
-            <div className="relative w-48 h-48 border-2 border-dashed border-primary rounded-xl mb-8 flex flex-col items-center justify-center bg-primary/5">
-              <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-primary"></div>
-              <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-primary"></div>
-              <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-primary"></div>
-              <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-primary"></div>
-              <p className="text-primary font-bold text-sm text-center px-4">Center the affected leaf/area</p>
+            {/* Hidden file input — triggered by buttons below */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+
+            {/* Image preview area */}
+            <div
+              className="relative w-48 h-48 border-2 border-dashed border-primary rounded-xl mb-8 flex flex-col items-center justify-center bg-primary/5 overflow-hidden cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {capturedImageUrl ? (
+                <img
+                  src={capturedImageUrl}
+                  alt="Captured crop"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <>
+                  <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-primary" />
+                  <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-primary" />
+                  <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-primary" />
+                  <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-primary" />
+                  <ImageIcon size={32} className="text-primary/40 mb-2" />
+                  <p className="text-primary font-bold text-sm text-center px-4">Tap to add photo</p>
+                </>
+              )}
             </div>
-            
+
             <h3 className="font-bold text-xl mb-2 text-center">Inspect Crop</h3>
-            <p className="text-text-muted text-center text-sm mb-8">Take a clear photo of the symptoms.</p>
-            
+            <p className="text-text-muted text-center text-sm mb-8">
+              {capturedImageUrl ? 'Photo selected — ready to analyze.' : 'Take or upload a clear photo of the affected area.'}
+            </p>
+
             <div className="flex flex-col gap-4 w-full">
-              <Button 
-                onClick={() => simulateCapture(false)}
-                className="w-full text-lg py-4"
-              >
-                <Camera size={24} />
-                Take Photo
-              </Button>
-              
-              <Button 
+              {/* Camera capture — opens native camera on mobile */}
+              <Button
+                onClick={() => fileInputRef.current?.click()}
                 variant="secondary"
-                onClick={() => simulateCapture(true)}
                 className="w-full"
               >
-                Test "Unknown/Blurry" Flow
+                <Camera size={20} />
+                {capturedImageUrl ? 'Retake Photo' : 'Open Camera / Gallery'}
+              </Button>
+
+              {/* Analyze — only enabled after image is selected */}
+              <Button
+                onClick={handleCapture}
+                className="w-full text-lg py-4"
+                disabled={!capturedBlob}
+              >
+                <ScanSearch size={20} />
+                Analyze Crop
               </Button>
             </div>
           </div>

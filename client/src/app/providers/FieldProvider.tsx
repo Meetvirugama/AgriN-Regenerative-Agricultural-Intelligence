@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { cropApi, FieldCropState } from '../../features/crop-context/api/cropApi';
 
+const FIELD_ID_SESSION_KEY = 'agri_active_field_id';
+
 interface FieldContextValue {
   activeFieldId: string | null;
   cropState: FieldCropState | null;
@@ -32,13 +34,28 @@ export const FieldProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsLoading(true);
     setError(null);
     try {
-      // In a real app we'd fetch the farmer's fields. Here we use the stub.
-      const { field } = await cropApi.initStub();
-      setActiveFieldId(field.id);
-      const state = await cropApi.fetchCropState(field.id);
+      // 1. Check sessionStorage first — avoids creating a new field on every refresh
+      const cachedFieldId = sessionStorage.getItem(FIELD_ID_SESSION_KEY);
+
+      let fieldId: string;
+
+      if (cachedFieldId) {
+        // Use the cached field ID — no new stub-init call needed
+        fieldId = cachedFieldId;
+      } else {
+        // First load — call stub-init (idempotent — returns existing or creates once)
+        const { field } = await cropApi.initStub();
+        fieldId = field.id;
+        sessionStorage.setItem(FIELD_ID_SESSION_KEY, fieldId);
+      }
+
+      setActiveFieldId(fieldId);
+      const state = await cropApi.fetchCropState(fieldId);
       setCropState(state);
     } catch (err: any) {
       console.error('Initialization failed', err);
+      // Clear stale cached ID if initialization fails so we retry cleanly
+      sessionStorage.removeItem(FIELD_ID_SESSION_KEY);
       setError('Failed to load field data. Please try again.');
     } finally {
       setIsLoading(false);
@@ -65,3 +82,4 @@ export const FieldProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     </FieldContext.Provider>
   );
 };
+

@@ -2,30 +2,46 @@ import { Router, Request, Response } from 'express';
 
 const router = Router();
 
-// Mock data for AI Agro-Advisory reasoning engine
-router.get('/fields/:fieldId/advisory', (req: Request, res: Response) => {
-  const { fieldId } = req.params;
+// Endpoint to generate advisory via Python AI Service
+router.get('/fields/:fieldId/advisory', async (req: Request, res: Response) => {
+  try {
+    const fieldId = req.params.fieldId as string;
+    
+    // In a full implementation, we would pull these summaries from DB/services
+    // For now, we provide context directly to the Python client to test the generation
+    const { PythonClient } = await import('../../services/pythonClient');
+    
+    const advisory = await PythonClient.generateAdvisory(
+      fieldId,
+      "Wheat", // mock crop
+      "Flowering", // mock stage
+      "Slight decline in NDVI detected.", // mock health
+      "Temperatures 3°C above average, no rain forecast.", // mock weather
+      "Sandy loam, low water retention." // mock soil
+    );
 
-  // Mocking the AI reasoning output based on the Layer 09 requirements
-  // Following the six-question structure: what/why/how serious/what to do/when/what to monitor
-  const mockAdvisory = {
-    id: `adv-${Date.now()}`,
-    field_id: fieldId,
-    generated_at: new Date().toISOString(),
-    trigger: 'scheduled',
-    what_text: 'Your wheat crop is showing severe signs of heat stress and potential blight.',
-    why_text: 'Temperatures have been 3°C above average for the past week, and satellite imagery shows a rapid drop in canopy moisture.',
-    severity: 'High',
-    action_text: 'Immediate intervention required. Apply targeted fungicide and increase irrigation by 30%.',
-    action_deadline: 'Within the next 24 hours',
-    monitor_text: 'Watch for rapid spreading of yellowing on the lower leaves. If it spreads, escalate immediately.',
-    source_layers: ['Layer 02 (Stage)', 'Layer 03 (Weather)', 'Layer 05 (Satellite)'],
-    farmer_response: null,
-    overridden_reason: null,
-    historical_parallel_callout: 'Similar to the dry spell in week 5 last season — that time, delaying irrigation resulted in a 10% canopy loss.'
-  };
+    // Map AI response to frontend expected format
+    const formattedAdvisory = {
+      id: `adv-${Date.now()}`,
+      field_id: fieldId,
+      generated_at: new Date().toISOString(),
+      trigger: 'ai_generated',
+      what_text: advisory.crop_health_status,
+      why_text: advisory.weather_impact,
+      severity: 'Medium',
+      action_text: advisory.irrigation_advice + " " + advisory.nutrient_management,
+      action_deadline: 'Within 3 days',
+      monitor_text: advisory.pest_disease_risks,
+      source_layers: ['Layer 02', 'Layer 03', 'Layer 04', 'Layer 05', 'Layer 09'],
+      farmer_response: null,
+      overridden_reason: null,
+      historical_parallel_callout: advisory.regenerative_practice
+    };
 
-  res.json(mockAdvisory);
+    res.json(formattedAdvisory);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Endpoint to record farmer response

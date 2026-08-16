@@ -26,6 +26,7 @@ import { GlobalInsightsWidget } from '../features/cross-border';
 import { cropApi } from '../features/crop-context/api/cropApi';
 import { Camera, Droplets, Mountain, CloudLightning, Bug, ThermometerSun, Leaf } from 'lucide-react';
 import { ErrorState } from '../components/ui/ErrorState';
+import { FeatureErrorBoundary } from '../components/ui/FeatureErrorBoundary';
 
 const FieldSatelliteWrapper = ({ fieldId }: { fieldId: string }) => {
   const [showDetail, setShowDetail] = useState(false);
@@ -167,80 +168,110 @@ export const Field: React.FC = () => {
       {/* Field Health Score (Layer 06) */}
       {fieldId && (
         <section>
-          <FieldHealthScoreWrapper fieldId={fieldId} />
+          <FeatureErrorBoundary sectionName="Field Health Score">
+            <FieldHealthScoreWrapper fieldId={fieldId} />
+          </FeatureErrorBoundary>
         </section>
       )}
 
       {/* Weather Alert Banner */}
       {!isWeatherLoading && weatherData && (
-        <WeatherAlertBanner flags={weatherData.flags} />
+        <FeatureErrorBoundary sectionName="Weather Alerts" compact>
+          <WeatherAlertBanner flags={weatherData.flags} />
+        </FeatureErrorBoundary>
       )}
 
       {/* AI Advisory (Layer 09) */}
       {fieldId && (
         <section>
-          <AdvisoryCard fieldId={fieldId} />
+          <FeatureErrorBoundary sectionName="AI Advisory">
+            <AdvisoryCard fieldId={fieldId} />
+          </FeatureErrorBoundary>
         </section>
       )}
 
       {/* Crop Context (Layer 02) */}
       <section className="flex flex-col gap-6 mt-2">
-        <GrowthStageBanner
-          cropState={cropState}
-          isLoading={isLoading}
-          onOverrideClick={() => setShowOverride(true)}
-        />
-        <div className="bg-surface border border-neutral p-6 rounded-xl shadow-sm">
-          <h3 className="font-bold mb-6 tracking-wide text-sm text-text-muted uppercase">Season Progress</h3>
-          {isLoading ? (
-            <div className="h-16 animate-pulse bg-neutral/20 rounded"></div>
-          ) : (
-            <StageProgressIndicator currentStage={cropState?.current_stage} />
-          )}
-        </div>
+        <FeatureErrorBoundary sectionName="Crop Stage">
+          <GrowthStageBanner
+            cropState={cropState}
+            isLoading={isLoading}
+            onOverrideClick={() => setShowOverride(true)}
+          />
+          <div className="bg-surface border border-neutral p-6 rounded-xl shadow-sm">
+            <h3 className="font-bold mb-6 tracking-wide text-sm text-text-muted uppercase">Season Progress</h3>
+            {isLoading ? (
+              <div className="h-16 animate-pulse bg-neutral/20 rounded"></div>
+            ) : (
+              <StageProgressIndicator currentStage={cropState?.current_stage} />
+            )}
+          </div>
+        </FeatureErrorBoundary>
       </section>
 
       {/* Weather (Layer 03) */}
       <section className="flex flex-col gap-4 mt-6">
-        <WeatherStrip
-          forecasts={weatherData?.forecasts || []}
-          flags={weatherData?.flags || []}
-          isLoading={isWeatherLoading}
-          onExpand={() => setShowWeatherDetails(!showWeatherDetails)}
-        />
-        {showWeatherDetails && weatherData && (
-          <WeatherDetails forecasts={weatherData.forecasts} />
-        )}
+        <FeatureErrorBoundary sectionName="Weather">
+          <WeatherStrip
+            forecasts={weatherData?.forecasts || []}
+            flags={weatherData?.flags || []}
+            isLoading={isWeatherLoading}
+            onExpand={() => setShowWeatherDetails(!showWeatherDetails)}
+          />
+          {showWeatherDetails && weatherData && (
+            <WeatherDetails forecasts={weatherData.forecasts} />
+          )}
+        </FeatureErrorBoundary>
       </section>
 
       {/* Climate Risk (Layer 08) */}
       <section className="flex flex-col gap-4 mt-6">
-        {fieldId && <ClimateRiskWidget fieldId={fieldId} />}
+        {fieldId && (
+          <FeatureErrorBoundary sectionName="Climate Risk">
+            <ClimateRiskWidget fieldId={fieldId} />
+          </FeatureErrorBoundary>
+        )}
       </section>
 
       {/* Soil (Layer 04) */}
       <section className="flex flex-col gap-4 mt-6">
-        <SoilSummaryCard
-          profile={soilProfile}
-          isLoading={isSoilLoading}
-          onUploadClick={() => setShowSoilUpload(true)}
-        />
+        <FeatureErrorBoundary sectionName="Soil Intelligence">
+          <SoilSummaryCard
+            profile={soilProfile}
+            isLoading={isSoilLoading}
+            onUploadClick={() => setShowSoilUpload(true)}
+          />
+        </FeatureErrorBoundary>
       </section>
 
       {/* Satellite (Layer 05) */}
       <section className="flex flex-col gap-4 mt-6">
-        {fieldId && <FieldSatelliteWrapper fieldId={fieldId} />}
+        {fieldId && (
+          <FeatureErrorBoundary sectionName="Satellite Health">
+            <FieldSatelliteWrapper fieldId={fieldId} />
+          </FeatureErrorBoundary>
+        )}
       </section>
 
       {/* Regen + Cross-border (Layer 10 / 14) */}
       <section className="flex flex-col gap-4 mt-6">
-        {fieldId && <RegenPlanningCard fieldId={fieldId} />}
-        {fieldId && <GlobalInsightsWidget fieldId={fieldId} />}
+        {fieldId && (
+          <FeatureErrorBoundary sectionName="Regenerative Planning">
+            <RegenPlanningCard fieldId={fieldId} />
+          </FeatureErrorBoundary>
+        )}
+        {fieldId && (
+          <FeatureErrorBoundary sectionName="Global Insights" compact>
+            <GlobalInsightsWidget fieldId={fieldId} />
+          </FeatureErrorBoundary>
+        )}
       </section>
 
       {/* Field History Timeline (Layer 12) */}
       <section className="mt-8 mb-24 border-t-2 border-neutral/30 pt-4">
-        <FieldTimeline entries={timeline} />
+        <FeatureErrorBoundary sectionName="Field Timeline" compact>
+          <FieldTimeline entries={timeline} />
+        </FeatureErrorBoundary>
       </section>
 
       {/* Crop diagnosis FAB (bottom-right) */}
@@ -280,3 +311,4 @@ export const Field: React.FC = () => {
     </div>
   );
 };
+

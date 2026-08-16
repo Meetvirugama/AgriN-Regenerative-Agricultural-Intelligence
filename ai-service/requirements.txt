@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+google-genai
+python-multipart
+pydantic

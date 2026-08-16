@@ -16,12 +16,13 @@ export interface DiagnosisEvent {
 }
 
 export const diagnosisApi = {
-  async diagnoseCrop(fieldId: string, imageBlobSize: number): Promise<DiagnosisEvent> {
+  async diagnoseCrop(fieldId: string, base64Image: string): Promise<DiagnosisEvent> {
     return request(`fields/${fieldId}/diagnose`, {
       method: 'POST',
-      body: JSON.stringify({ imageBlobSize })
+      body: JSON.stringify({ image: base64Image })
     });
   },
+
 
   async getDiagnosisHistory(fieldId: string): Promise<DiagnosisEvent[]> {
     const data = await request<{ history: DiagnosisEvent[] }>(`fields/${fieldId}/diagnoses`);

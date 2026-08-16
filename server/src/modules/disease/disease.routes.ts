@@ -7,12 +7,20 @@ const router = Router();
 router.post('/:fieldId/diagnose', async (req: Request, res: Response) => {
   try {
     const fieldId = req.params.fieldId as string;
+    const { image, crop_type = "wheat", crop_stage = "vegetative", recent_weather = "normal" } = req.body;
     
-    // In a real app, we'd use multer and parse the file. 
-    // Here we just mock the blob size from the body to simulate different test cases.
-    const { imageBlobSize } = req.body;
+    if (!image) throw new Error("Image data is required");
 
-    const result = await layer7Service.diagnoseCrop(fieldId, imageBlobSize || 1024);
+    // Convert base64 data URL to Buffer
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+    const mimeMatch = image.match(/^data:(image\/\w+);base64,/);
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+
+    // Call Python AI service
+    const { PythonClient } = await import('../../services/pythonClient');
+    const result = await PythonClient.diagnoseDisease(imageBuffer, mimeType, crop_type, crop_stage, recent_weather);
+    
     res.json(result);
   } catch (error: any) {
     console.error("Diagnosis error:", error);

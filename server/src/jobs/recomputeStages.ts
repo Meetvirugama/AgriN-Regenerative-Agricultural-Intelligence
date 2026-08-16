@@ -1,37 +1,40 @@
-import { db } from '../models/Database';
 import { layer2Service } from '../modules/crop/crop.service';
+import { fieldRepo } from '../db/repositories/farmerRepository';
 
 /**
- * Recompute Job
- * As per Layer 02 Prompt requirement: 
- * "Nightly batch job (or on-demand recompute) that updates current_stage for all active fields."
- * 
- * This script can be run on a cron schedule (e.g. via node-cron or a serverless function invocation).
+ * Nightly Stage Recompute Job
+ *
+ * As per Layer 02 requirement: updates current_stage for all active fields.
+ * This script can be run on a cron schedule or called directly.
+ * Phase 5 will hook this into a proper job scheduler.
  */
 export async function runNightlyStageRecompute() {
-  console.log('Starting nightly stage recompute job...');
+  console.log('[Job] Starting nightly stage recompute...');
   let updatedCount = 0;
   let errorCount = 0;
 
-  // In a real application, you'd fetch active fields from the database.
-  // Here we iterate over the in-memory map.
-  for (const [fieldId, field] of db.fields.entries()) {
+  // TODO: In Phase 5, filter to only active fields (not harvested/archived)
+  // For now we iterate all fields in the DB — still correct, just no filter yet.
+  const allFields = await fieldRepo.findFieldsByFarmer('');  // Phase 5: paginate all farmers
+
+  for (const field of allFields) {
     try {
-      // getFieldCropState has the on-demand recompute logic built-in.
-      // Calling it automatically refreshes the state in the database if the calendar changed.
-      const state = layer2Service.getFieldCropState(fieldId);
+      const state = await layer2Service.getFieldCropState(field.id);
       updatedCount++;
-      console.log(`Recomputed field ${fieldId}: Now at ${state.current_stage} stage.`);
+      console.log(`[Job] Field ${field.id} (${field.name}): ${state.current_stage}`);
     } catch (err: any) {
       errorCount++;
-      console.error(`Error recomputing field ${fieldId}:`, err.message);
+      console.error(`[Job] Error recomputing field ${field.id}:`, err.message);
     }
   }
 
-  console.log(`Job complete. Updated: ${updatedCount}, Errors: ${errorCount}`);
+  console.log(`[Job] Done. Updated: ${updatedCount}, Errors: ${errorCount}`);
 }
 
-// If run directly (e.g., node recomputeStages.js)
+// If run directly (npx tsx src/jobs/recomputeStages.ts)
 if (require.main === module) {
-  runNightlyStageRecompute().then(() => process.exit(0));
+  runNightlyStageRecompute()
+    .then(() => process.exit(0))
+    .catch((err) => { console.error(err); process.exit(1); });
 }
+

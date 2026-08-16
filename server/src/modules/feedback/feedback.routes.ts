@@ -1,88 +1,83 @@
-import { Router, Request, Response } from 'express';
-import { FieldTimelineEntry } from '../../models/Feedback';
+import { Router, Request, Response, NextFunction } from 'express';
+import { feedbackRepo, timelineRepo } from '../../db/repositories/feedbackRepository';
 
 const router = Router();
 
-// Mock database
-let feedbackRecords: any[] = [];
-let pendingFeedbackPrompts = [
-  {
-    id: `prompt-${Date.now()}`,
-    advisory_id: 'adv-123',
-    field_id: 'field-1',
-    prompted_at: new Date().toISOString(),
-    summary: 'You applied extra irrigation last week.'
-  } // Initial mock prompt
-];
+/**
+ * POST /api/feedback
+ * Record a farmer's feedback response on an advisory.
+ */
+router.post('/feedback', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { advisory_id, field_id, farmer_response, follow_up_note, follow_up_photo_url } = req.body;
 
-router.post('/feedback', (req: Request, res: Response) => {
-  const { advisory_id, field_id, farmer_response, follow_up_note, follow_up_photo_url } = req.body;
-  
-  const record = {
-    id: `fb-${Date.now()}`,
-    advisory_id,
-    field_id,
-    prompted_at: new Date().toISOString(),
-    farmer_response,
-    follow_up_photo_url: follow_up_photo_url || null,
-    follow_up_note: follow_up_note || null,
-    collected_at: new Date().toISOString()
-  };
-  
-  feedbackRecords.push(record);
-  
-  // Remove from pending prompts
-  pendingFeedbackPrompts = pendingFeedbackPrompts.filter(p => p.advisory_id !== advisory_id);
-
-  res.json({ success: true, record });
-});
-
-router.get('/feedback/pending/:field_id', (req: Request, res: Response) => {
-  res.json({ prompts: pendingFeedbackPrompts });
-});
-
-// Mock timeline endpoint
-router.get('/timeline/:field_id', (req: Request, res: Response) => {
-  const mockTimeline: FieldTimelineEntry[] = [
-    {
-      id: 'tl-1',
-      field_id: req.params.field_id as string,
-      date: new Date().toISOString(),
-      entry_type: 'weather_event',
-      summary_text: 'Heavy rainfall event (45mm)',
-      linked_record_id: 'we-1',
-      season_label: 'This Season'
-    },
-    {
-      id: 'tl-2',
-      field_id: req.params.field_id as string,
-      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      entry_type: 'advisory',
-      summary_text: 'Applied Zinc sulfate to address deficiency',
-      linked_record_id: 'adv-456',
-      season_label: 'This Season'
-    },
-    {
-      id: 'tl-3',
-      field_id: req.params.field_id as string,
-      date: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString(), // ~5 months ago
-      entry_type: 'satellite_anomaly',
-      summary_text: 'Severe heat stress detected in Northeast corner',
-      linked_record_id: 'sat-789',
-      season_label: 'Last Season'
+    if (!field_id || !farmer_response) {
+      res.status(400).json({ error: { message: 'field_id and farmer_response are required' } });
+      return;
     }
-  ];
-  
-  res.json({ timeline: mockTimeline });
+
+    const record = await feedbackRepo.saveFeedback({
+      advisory_id: advisory_id ?? null,
+      field_id,
+      farmer_response,
+      follow_up_photo_url: follow_up_photo_url ?? null,
+      follow_up_note: follow_up_note ?? null,
+      collected_at: new Date().toISOString(),
+    });
+
+    // Write a timeline entry for this feedback
+    await timelineRepo.addEntry({
+      field_id,
+      entry_date: new Date().toISOString(),
+      entry_type: 'advisory',
+      summary_text: `Farmer responded: "${farmer_response}" to advisory`,
+      linked_record_id: advisory_id ?? null,
+      season_label: 'This Season',
+    });
+
+    res.json({ success: true, record });
+  } catch (err) { next(err); }
 });
 
-// Mock Scheduled Jobs Endpoint (To be triggered manually or by a cron)
-router.post('/jobs/trigger-feedback-prompts', (req: Request, res: Response) => {
-  res.json({ message: 'Checked for stale advisories. Created 0 new prompts.' });
+/**
+ * GET /api/feedback/pending/:field_id
+ * Returns pending feedback prompts for a field (unanswered advisory responses).
+ */
+router.get('/feedback/pending/:field_id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const prompts = await feedbackRepo.getPendingPrompts(req.params.field_id as string);
+    res.json({ prompts });
+  } catch (err) { next(err); }
 });
 
-router.post('/jobs/verify-outcomes', (req: Request, res: Response) => {
-  res.json({ message: 'Ran satellite outcome verification on 0 active advisories.' });
+/**
+ * GET /api/timeline/:field_id
+ * Returns the field's event history in reverse-chronological order.
+ */
+router.get('/timeline/:field_id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const entries = await timelineRepo.getTimeline(req.params.field_id as string);
+    res.json({ timeline: entries });
+  } catch (err) { next(err); }
+});
+
+/**
+ * POST /api/jobs/trigger-feedback-prompts
+ * Background job endpoint — checks for advisories older than N days with no response.
+ */
+router.post('/jobs/trigger-feedback-prompts', async (_req: Request, res: Response) => {
+  // Phase 5: implement stale advisory detection and create feedback_events rows
+  res.json({ message: 'Checked for stale advisories. Job not yet implemented — see Phase 5.' });
+});
+
+/**
+ * POST /api/jobs/verify-outcomes
+ * Background job endpoint — satellite-based outcome verification.
+ */
+router.post('/jobs/verify-outcomes', async (_req: Request, res: Response) => {
+  // Phase 5: implement satellite change detection comparison
+  res.json({ message: 'Satellite outcome verification: not yet implemented — see Phase 5.' });
 });
 
 export default router;
+
