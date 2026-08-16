@@ -1,11 +1,11 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
-import { AdvisoryCard } from "../features/agro-advisory/components/AdvisoryCard";
-import { advisoryApi } from "../features/agro-advisory/api/advisoryApi";
+import { AdvisoryCard } from "../AdvisoryCard";
+import { advisoryApi } from "../../api/advisoryApi";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 
 // Mock the API module
-vi.mock("../features/agro-advisory/api/advisoryApi", () => ({
+vi.mock("../../api/advisoryApi", () => ({
   advisoryApi: {
     getAdvisory: vi.fn(),
   },

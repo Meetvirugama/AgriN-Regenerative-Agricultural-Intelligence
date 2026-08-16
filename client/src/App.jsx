@@ -11,7 +11,7 @@ import { Home } from "./pages/Home";
 import { Field } from "./pages/Field";
 import { Onboarding } from "./pages/Onboarding";
 import { ExtensionDashboard } from "./features/escalation-dashboard";
-import { AuthProvider } from "./features/auth/AuthProvider";
+import { AuthProvider } from "./app/providers/AuthProvider";
 import { LoginPage } from "./features/auth/components/LoginPage";
 import { ProtectedRoute } from "./app/ProtectedRoute";
 

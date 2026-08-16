@@ -7,7 +7,7 @@ import {
   CheckCircle,
   Loader2,
 } from "lucide-react";
-import { useAuth } from "../AuthProvider";
+import { useAuth } from "../../../app/providers/AuthProvider";
 
 export const LoginPage = ({ onSuccess }) => {
   const { requestOtp, verifyOtp } = useAuth();

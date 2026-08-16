@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronRight, Leaf, MapPin, Calendar } from "lucide-react";
-import { useAuth } from "../features/auth/AuthProvider";
+import { useAuth } from "../app/providers/AuthProvider";
 
 export const Onboarding = () => {
   const { farmer } = useAuth();
