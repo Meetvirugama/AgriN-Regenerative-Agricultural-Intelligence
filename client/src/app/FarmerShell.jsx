@@ -95,6 +95,9 @@ export const FarmerShell = () => {
                   Sunny<br/>
                   Madhopur, UP
                 </div>
+                <Link to="/intelligence" className="text-[10px] font-bold text-primary hover:underline mt-1 inline-block">
+                  View Forecast &rarr;
+                </Link>
               </div>
             </div>
           </div>

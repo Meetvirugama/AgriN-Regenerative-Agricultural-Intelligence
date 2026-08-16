@@ -12,6 +12,7 @@ import { Field } from "./pages/Field";
 import { MyFields } from "./pages/MyFields";
 import { Intelligence } from "./pages/Intelligence";
 import { Ask } from "./pages/Ask";
+import { Alerts } from "./pages/Alerts";
 import { AddFieldWizard } from "./features/field-management/components/AddFieldWizard";
 import { Onboarding } from "./pages/Onboarding";
 import { ExtensionDashboard } from "./features/escalation-dashboard";
@@ -59,6 +60,7 @@ function AppRoutes() {
           <Route path="onboarding" element={<Onboarding />} />
           <Route path="intelligence" element={<Intelligence />} />
           <Route path="ask" element={<Ask />} />
+          <Route path="alerts" element={<Alerts />} />
           <Route path="fields">
             <Route index element={<MyFields />} />
             <Route path="add" element={<AddFieldWizard />} />
