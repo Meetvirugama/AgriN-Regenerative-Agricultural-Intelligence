@@ -3,6 +3,9 @@ import { useSatelliteHealth } from '../hooks/useSatelliteHealth';
 import { SatelliteFieldMap } from './SatelliteFieldMap';
 import { SatelliteTrendChart } from './SatelliteTrendChart';
 import { X, AlertTriangle, Camera } from 'lucide-react';
+import { Button } from '../../../components/ui/Button';
+import { LoadingSkeleton } from '../../../components/ui/LoadingSkeleton';
+import { ErrorState } from '../../../components/ui/ErrorState';
 
 interface SatelliteDetailViewProps {
   fieldId: string;
@@ -15,11 +18,11 @@ export const SatelliteDetailView: React.FC<SatelliteDetailViewProps> = ({ fieldI
   const [selectedAnomaly, setSelectedAnomaly] = useState<string | null>(null);
 
   if (loading) {
-    return <div className="p-8 text-center text-text-muted animate-pulse font-bold uppercase tracking-widest">Loading satellite data...</div>;
+    return <div className="p-8"><LoadingSkeleton message="Loading satellite data..." /></div>;
   }
 
   if (error) {
-    return <div className="p-8 text-center text-danger border border-danger">{error}</div>;
+    return <div className="p-8"><ErrorState title="Satellite Data Failed" message={error} /></div>;
   }
 
   const activeAnomaly = data?.activeAnomalies.find(a => a.id === selectedAnomaly);
@@ -62,9 +65,9 @@ export const SatelliteDetailView: React.FC<SatelliteDetailViewProps> = ({ fieldI
                   </p>
                 </div>
               </div>
-              <button className="btn btn-primary whitespace-nowrap text-sm px-4 py-2" onClick={() => alert('Deep link to Layer 07 Diagnosis flow')}>
+              <Button size="sm" className="whitespace-nowrap" onClick={() => console.log('Deep link to Layer 07 Diagnosis flow')}>
                 <Camera size={16} /> INSPECT ON GROUND
-              </button>
+              </Button>
             </div>
           )}
         </section>

@@ -1,4 +1,4 @@
-import { API_BASE as API_URL } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 
 export interface DiagnosisEvent {
   id: string;
@@ -17,21 +17,14 @@ export interface DiagnosisEvent {
 
 export const diagnosisApi = {
   async diagnoseCrop(fieldId: string, imageBlobSize: number): Promise<DiagnosisEvent> {
-    const res = await fetch(`${API_URL}/fields/${fieldId}/diagnose`, {
+    return request(`fields/${fieldId}/diagnose`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({ imageBlobSize })
     });
-    if (!res.ok) throw new Error('Diagnosis request failed');
-    return res.json();
   },
 
   async getDiagnosisHistory(fieldId: string): Promise<DiagnosisEvent[]> {
-    const res = await fetch(`${API_URL}/fields/${fieldId}/diagnoses`);
-    if (!res.ok) throw new Error('Failed to fetch diagnosis history');
-    const data = await res.json();
+    const data = await request<{ history: DiagnosisEvent[] }>(`fields/${fieldId}/diagnoses`);
     return data.history;
   }
 };

@@ -40,7 +40,17 @@ export function RegenPlanningCard({ fieldId }: RegenPlanningCardProps) {
   }
 
   if (error || !plan) {
-    return null;
+    return (
+      <div className="bg-surface border border-danger p-6 rounded-xl shadow-sm relative overflow-hidden">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="bg-danger text-background p-2 rounded-lg">
+            <Leaf size={20} />
+          </div>
+          <h3 className="font-bold text-xl text-text tracking-tight">Regen Planning</h3>
+        </div>
+        <p className="text-danger font-medium text-sm">{error || 'Could not load planning insights'}</p>
+      </div>
+    );
   }
 
   const topPractice = plan.practices[0];

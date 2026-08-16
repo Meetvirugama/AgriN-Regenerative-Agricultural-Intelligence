@@ -1,11 +1,10 @@
 import { FieldTimelineEntry, PendingPrompt } from '../types';
-import { API_BASE } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 
 export const memoryApi = {
   getPendingPrompts: async (fieldId: string): Promise<PendingPrompt[]> => {
     try {
-      const response = await fetch(`${API_BASE}/feedback/pending/${fieldId}`);
-      const data = await response.json();
+      const data = await request<{prompts: PendingPrompt[]}>(`feedback/pending/${fieldId}`);
       return data.prompts || [];
     } catch (e) {
       console.error('Failed to fetch pending prompts', e);
@@ -15,9 +14,8 @@ export const memoryApi = {
 
   submitFeedback: async (advisoryId: string, fieldId: string, responseType: 'helped' | 'didnt_help', note?: string) => {
     try {
-      await fetch(`${API_BASE}/feedback`, {
+      await request('feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           advisory_id: advisoryId,
           field_id: fieldId,
@@ -32,8 +30,7 @@ export const memoryApi = {
 
   getTimeline: async (fieldId: string): Promise<FieldTimelineEntry[]> => {
     try {
-      const response = await fetch(`${API_BASE}/timeline/${fieldId}`);
-      const data = await response.json();
+      const data = await request<{timeline: FieldTimelineEntry[]}>(`timeline/${fieldId}`);
       return data.timeline || [];
     } catch (e) {
       console.error('Failed to fetch timeline', e);

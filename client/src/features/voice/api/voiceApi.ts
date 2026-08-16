@@ -1,11 +1,10 @@
-import { API_BASE } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 
 export const voiceApi = {
   setLanguage: async (language: string): Promise<void> => {
     try {
-      await fetch(`${API_BASE}/user/language`, {
+      await request('user/language', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language })
       });
     } catch (error) {
@@ -15,13 +14,10 @@ export const voiceApi = {
 
   stt: async (audioBlob: Blob, language: string): Promise<string> => {
     try {
-      // For MVP, we send a dummy payload as FormData would require multer on backend
-      const response = await fetch(`${API_BASE}/voice/stt`, {
+      const data = await request<{text: string}>('voice/stt', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language })
       });
-      const data = await response.json();
       return data.text;
     } catch (error) {
       console.error('STT Failed:', error);
@@ -31,12 +27,10 @@ export const voiceApi = {
 
   tts: async (text: string, language: string): Promise<string | null> => {
     try {
-      const response = await fetch(`${API_BASE}/voice/tts`, {
+      const data = await request<{audioContent: string}>('voice/tts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, language })
       });
-      const data = await response.json();
       return `data:audio/wav;base64,${data.audioContent}`;
     } catch (error) {
       console.error('TTS Failed:', error);

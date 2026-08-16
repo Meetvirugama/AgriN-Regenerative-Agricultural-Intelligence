@@ -1,4 +1,4 @@
-import { API_BASE as API_URL } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 
 export interface RegenPractice {
   id: string;
@@ -25,8 +25,6 @@ export interface RegenPlan {
 
 export const regenApi = {
   async getRegenPlan(fieldId: string): Promise<RegenPlan> {
-    const res = await fetch(`${API_URL}/fields/${fieldId}/regen/planning`);
-    if (!res.ok) throw new Error('Failed to fetch regen plan');
-    return res.json();
+    return request(`fields/${fieldId}/regen/planning`);
   }
 };

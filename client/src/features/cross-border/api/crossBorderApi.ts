@@ -1,4 +1,4 @@
-import { API_BASE } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 
 export interface GlobalInsight {
   id: string;
@@ -17,9 +17,7 @@ export interface CrossBorderResponse {
 
 export const crossBorderApi = {
   getInsights: async (fieldId: string): Promise<GlobalInsight[]> => {
-    const res = await fetch(`${API_BASE}/fields/${fieldId}/global-insights`);
-    if (!res.ok) throw new Error('Failed to fetch global insights');
-    const data = await res.json();
+    const data = await request<CrossBorderResponse>(`fields/${fieldId}/global-insights`);
     return data.insights;
   }
 };

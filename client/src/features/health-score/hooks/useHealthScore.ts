@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FieldHealthScore } from '../types/health-score.types';
-import { API_BASE as API_URL } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 
 export function useHealthScore(fieldId: string | undefined) {
   const [data, setData] = useState<FieldHealthScore | null>(null);
@@ -17,13 +17,7 @@ export function useHealthScore(fieldId: string | undefined) {
       setError(null);
       
       try {
-        const response = await fetch(`${API_URL}/fields/${fieldId}/health-score`);
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch field health score');
-        }
-
-        const scoreData = await response.json();
+        const scoreData = await request<FieldHealthScore>(`fields/${fieldId}/health-score`);
 
         if (isMounted) {
           setData(scoreData);

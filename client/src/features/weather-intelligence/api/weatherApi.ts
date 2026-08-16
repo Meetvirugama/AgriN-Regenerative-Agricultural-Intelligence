@@ -1,4 +1,4 @@
-import { API_BASE as API_URL } from '../../../lib/apiClient';
+import { request } from '../../../services/apiClient';
 
 export interface WeatherSnapshot {
   field_id: string;
@@ -29,10 +29,6 @@ export interface WeatherData {
 
 export const weatherApi = {
   getForecast: async (fieldId: string): Promise<WeatherData> => {
-    const response = await fetch(`${API_URL}/fields/${fieldId}/weather/forecast`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch weather forecast');
-    }
-    return response.json();
+    return request(`fields/${fieldId}/weather/forecast`);
   }
 };
