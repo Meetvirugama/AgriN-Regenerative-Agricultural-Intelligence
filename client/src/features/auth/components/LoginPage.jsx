@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Sprout, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Leaf, Eye, EyeOff, Loader2, Mail, Lock, Smartphone } from "lucide-react";
 import { useAuth } from "../../../app/providers/AuthProvider";
 
 export const LoginPage = ({ onSuccess }) => {
@@ -18,7 +18,6 @@ export const LoginPage = ({ onSuccess }) => {
     setError(null);
     try {
       // Mocking the OTP verify call since the backend expects OTP right now
-      // In a real email/pwd flow, we would call authApi.login(email, password)
       await verifyOtp("mock", "123456"); 
       onSuccess?.();
     } catch (err) {
@@ -26,6 +25,10 @@ export const LoginPage = ({ onSuccess }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOtpLogin = () => {
+    alert("Switching to OTP Flow...");
   };
 
   return (
@@ -36,15 +39,13 @@ export const LoginPage = ({ onSuccess }) => {
         
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="text-primary">
-              <Sprout size={28} strokeWidth={2.5} />
-            </div>
-            <span className="text-2xl font-bold tracking-tight text-text-main">
-              AgriMesh
-            </span>
+          <div className="w-12 h-12 flex items-center justify-center mb-3 text-primary">
+            <Leaf size={40} fill="currentColor" strokeWidth={1} />
           </div>
-          <p className="text-sm text-text-muted">Welcome back!</p>
+          <h1 className="text-2xl font-bold tracking-tight text-text-main mb-1">
+            AgriMesh
+          </h1>
+          <p className="text-sm text-text-muted">Smart Intelligence for Your Fields</p>
         </div>
 
         {/* Form */}
@@ -53,26 +54,30 @@ export const LoginPage = ({ onSuccess }) => {
           {/* Email / Phone */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text-main">Email / Phone</label>
-            <input
-              type="text"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email or phone"
-              className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-              required
-            />
+            <div className="relative">
+              <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+              <input
+                type="text"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email or phone"
+                className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                required
+              />
+            </div>
           </div>
 
           {/* Password */}
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text-main">Password</label>
             <div className="relative">
+              <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                className="w-full pl-4 pr-11 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                placeholder="Enter your password"
+                className="w-full pl-10 pr-11 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 required
               />
               <button
@@ -101,6 +106,26 @@ export const LoginPage = ({ onSuccess }) => {
             {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Login"}
           </button>
         </form>
+
+        {/* OR Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-surface px-2 text-text-muted font-medium">OR</span>
+          </div>
+        </div>
+
+        {/* Login with OTP Button */}
+        <button
+          onClick={handleOtpLogin}
+          type="button"
+          className="w-full py-2.5 bg-surface border border-border text-text-main font-semibold rounded-lg text-sm hover:bg-secondary active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+        >
+          <Smartphone size={18} />
+          Login with OTP
+        </button>
 
         <div className="mt-8 text-center text-sm text-text-muted">
           Don't have an account?{" "}
