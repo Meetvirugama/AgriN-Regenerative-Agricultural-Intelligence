@@ -34,7 +34,8 @@ export async function runNightlyStageRecompute() {
 }
 
 // If run directly (npx tsx src/jobs/recomputeStages.ts)
-if (require.main === module) {
+import { fileURLToPath } from 'url';
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   runNightlyStageRecompute()
     .then(() => process.exit(0))
     .catch((err) => {

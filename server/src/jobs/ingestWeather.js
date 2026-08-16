@@ -39,7 +39,8 @@ export async function runDailyWeatherIngestion() {
 }
 
 // If run directly: npx tsx src/jobs/ingestWeather.ts
-if (require.main === module) {
+import { fileURLToPath } from 'url';
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   runDailyWeatherIngestion()
     .then(() => process.exit(0))
     .catch((err) => {
