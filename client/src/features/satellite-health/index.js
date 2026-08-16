@@ -1,4 +1,4 @@
-export * from "./types/satellite.types";
+
 export * from "./hooks/useSatelliteHealth";
 export * from "./components/SatelliteHealthCard";
 export * from "./components/SatelliteTrendChart";

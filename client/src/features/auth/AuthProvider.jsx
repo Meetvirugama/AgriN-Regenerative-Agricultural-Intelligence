@@ -5,7 +5,7 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { authApi } from "../api/authApi";
+import { authApi } from "./api/authApi";
 
 const AuthContext = createContext({
   farmer: null,
