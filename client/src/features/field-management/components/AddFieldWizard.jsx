@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { 
   ArrowLeft, Search, Crosshair, MapPin, Info, Satellite, CloudRain, 
   Map as MapIcon, Plus, Minus, Check, MousePointer2, PenTool, Edit3, 
-  Trash2, Navigation, Calendar, Droplet, Triangle
+  Trash2, Navigation, Calendar, Droplet, Triangle, CloudUpload, 
+  BrainCircuit, Lightbulb, Tag, Bell
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -358,18 +359,109 @@ export const AddFieldWizard = () => {
 
         {/* STEP 4: CONFIRM */}
         {step === 4 && (
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="w-16 h-16 bg-success/10 text-success rounded-full flex items-center justify-center mb-4">
-              <Check size={32} />
+          <div className="flex-1 grid grid-cols-1 xl:grid-cols-3 gap-8">
+            
+            {/* Left Column (Success State) */}
+            <div className="xl:col-span-2 flex flex-col justify-center">
+              <div className="bg-surface border border-border rounded-xl p-8 shadow-sm">
+                
+                {/* Success Header */}
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center shrink-0">
+                    <Check size={40} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-text-main">Field Created Successfully!</h2>
+                    <p className="text-text-muted mt-2 font-medium">Your field has been added to AgriMesh.</p>
+                  </div>
+                </div>
+
+                <div className="w-full h-px bg-border my-8"></div>
+
+                {/* What's Next */}
+                <h3 className="text-lg font-bold text-text-main mb-1">What's Next?</h3>
+                <p className="text-sm text-text-muted font-medium mb-6">AgriMesh will now start collecting and analyzing data for your field.</p>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="border border-border rounded-xl p-4 flex flex-col items-center text-center gap-2">
+                    <CloudUpload size={28} className="text-success mb-1" strokeWidth={1.5} />
+                    <h4 className="font-bold text-xs text-text-main">Data Collection</h4>
+                    <p className="text-[10px] text-text-muted font-medium">We will collect satellite, weather and soil data.</p>
+                  </div>
+                  <div className="border border-border rounded-xl p-4 flex flex-col items-center text-center gap-2">
+                    <BrainCircuit size={28} className="text-success mb-1" strokeWidth={1.5} />
+                    <h4 className="font-bold text-xs text-text-main">AI Analysis</h4>
+                    <p className="text-[10px] text-text-muted font-medium">Our AI will analyze the data and generate insights.</p>
+                  </div>
+                  <div className="border border-border rounded-xl p-4 flex flex-col items-center text-center gap-2">
+                    <Lightbulb size={28} className="text-success mb-1" strokeWidth={1.5} />
+                    <h4 className="font-bold text-xs text-text-main">Smart Insights</h4>
+                    <p className="text-[10px] text-text-muted font-medium">You will receive personalized recommendations.</p>
+                  </div>
+                  <div className="border border-border rounded-xl p-4 flex flex-col items-center text-center gap-2">
+                    <Bell size={28} className="text-success mb-1" strokeWidth={1.5} />
+                    <h4 className="font-bold text-xs text-text-main">Alerts</h4>
+                    <p className="text-[10px] text-text-muted font-medium">We will notify you about important updates.</p>
+                  </div>
+                </div>
+
+                {/* Tip */}
+                <div className="mt-8 bg-info/5 border border-info/20 rounded-xl p-5 flex gap-3 text-info items-start">
+                  <Info size={20} className="shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-sm text-text-main">Tip</h4>
+                    <p className="text-sm text-text-muted mt-0.5 font-medium">You can view and manage this field from My Fields dashboard.</p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-4 mt-8">
+                  <button 
+                    onClick={() => { setStep(1); setFormData({...formData, name: ""}) }} 
+                    className="px-8 py-3 bg-surface border border-border text-text-main font-bold rounded-lg text-sm hover:bg-secondary transition-colors"
+                  >
+                    Add Another Field
+                  </button>
+                  <button 
+                    onClick={() => navigate('/fields')} 
+                    className="px-10 py-3 bg-text-main text-surface font-bold rounded-lg text-sm hover:bg-text-main/90 transition-colors shadow-md"
+                  >
+                    Go to My Fields
+                  </button>
+                </div>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-text-main mb-2">Field Added Successfully!</h2>
-            <p className="text-text-muted mb-8">Wheat Field 01 has been added to your dashboard.</p>
-            <button 
-              onClick={() => navigate('/fields')}
-              className="px-8 py-3 bg-primary text-primary-content font-bold rounded-lg text-sm hover:bg-primary/90 transition-colors shadow-md"
-            >
-              View Field Dashboard
-            </button>
+
+            {/* Right Column (Summary) */}
+            <div className="flex flex-col h-[750px]">
+              <div className="bg-surface border border-border rounded-xl p-6 shadow-sm h-full flex flex-col">
+                <h3 className="font-bold text-text-main text-base mb-4">Field Summary</h3>
+                
+                <div className="w-full h-40 rounded-xl overflow-hidden relative border border-border mb-6">
+                  <img src="https://images.unsplash.com/photo-1595180436402-2ebde09a32c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Satellite" className="absolute inset-0 w-full h-full object-cover" />
+                  <svg className="absolute inset-0 w-full h-full z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <polygon points="35,45 55,50 62,75 30,70" fill="rgba(255, 255, 255, 0.1)" stroke="white" strokeWidth="0.5" />
+                    <circle cx="35" cy="45" r="1.5" fill="white" />
+                    <circle cx="55" cy="50" r="1.5" fill="white" />
+                    <circle cx="62" cy="75" r="1.5" fill="white" />
+                    <circle cx="30" cy="70" r="1.5" fill="white" />
+                  </svg>
+                </div>
+
+                <div className="space-y-4 flex-1">
+                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Tag size={16} className="text-text-muted"/> Field Name</div><span className="font-bold text-sm">{formData.name}</span></div>
+                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><MapPin size={16} className="text-text-muted"/> Location</div><span className="font-bold text-sm">Madhopur, UP, India</span></div>
+                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Crosshair size={16} className="text-text-muted"/> Area</div><span className="font-bold text-sm">{formData.area}</span></div>
+                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><PenTool size={16} className="text-text-muted"/> Perimeter</div><span className="font-bold text-sm">528 m</span></div>
+                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Leaf size={16} className="text-text-muted"/> Crop</div><span className="font-bold text-sm">{formData.crop}</span></div>
+                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Sprout size={16} className="text-text-muted"/> Variety</div><span className="font-bold text-sm">{formData.variety}</span></div>
+                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Calendar size={16} className="text-text-muted"/> Sowing Date</div><span className="font-bold text-sm">{formData.date}</span></div>
+                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Droplet size={16} className="text-text-muted"/> Irrigation</div><span className="font-bold text-sm">{formData.irrigation}</span></div>
+                  <div className="flex justify-between items-center"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Triangle size={16} className="text-text-muted"/> Soil Type</div><span className="font-bold text-sm">{formData.soil}</span></div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
