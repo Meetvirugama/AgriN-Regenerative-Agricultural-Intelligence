@@ -1,64 +1,54 @@
 import { Router } from "express";
+import { alertsRepository } from "../../db/repositories/alertsRepository.js";
 
 const router = Router();
+
+// Helper function to format time (e.g., "1h ago")
+const timeSince = (date) => {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + "y ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + "mo ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + "d ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + "h ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + "m ago";
+  return Math.floor(seconds) + "s ago";
+};
 
 // Endpoint to get alerts
 router.get("/", async (req, res) => {
   try {
-    const mockAlerts = [
-      {
-        id: "alert-1",
-        title: "Aphids detected in Moong Field 03",
-        description: "Aphid population is above threshold level.",
-        priority: "High",
-        field: "Moong Field 03",
-        time: "1h ago",
-        resolved: false,
-        type: "pest"
-      },
-      {
-        id: "alert-2",
-        title: "Low soil moisture in Wheat Field 01",
-        description: "Soil moisture level is below optimal range.",
-        priority: "Medium",
-        field: "Wheat Field 01",
-        time: "3h ago",
-        resolved: false,
-        type: "soil"
-      },
-      {
-        id: "alert-3",
-        title: "Nitrogen deficiency in Rice Field 02",
-        description: "Recommended to apply nitrogen fertilizer.",
-        priority: "Medium",
-        field: "Rice Field 02",
-        time: "5h ago",
-        resolved: false,
-        type: "nutrient"
-      },
-      {
-        id: "alert-4",
-        title: "Weather alert: Heavy rainfall expected",
-        description: "Heavy rainfall expected in next 24 hours.",
-        priority: "Low",
-        field: "All Fields",
-        time: "8h ago",
-        resolved: false,
-        type: "weather"
-      },
-      {
-        id: "alert-5",
-        title: "Irrigation completed",
-        description: "Scheduled irrigation completed successfully.",
-        priority: "Low",
-        field: "Wheat Field 01",
-        time: "Yesterday",
-        resolved: true,
-        type: "action"
-      }
-    ];
+    const farmerId = req.user.id;
+    const dbAlerts = await alertsRepository.findAlertsByFarmerId(farmerId);
+    
+    // Map to the format expected by the frontend
+    const formattedAlerts = dbAlerts.map(alert => ({
+      id: alert.id,
+      title: alert.title,
+      description: alert.description,
+      priority: alert.priority,
+      field: alert.field,
+      time: timeSince(alert.created_at),
+      resolved: alert.resolved,
+      type: alert.type
+    }));
 
-    res.json(mockAlerts);
+    res.json(formattedAlerts);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Endpoint to create a new alert (for testing/seeding)
+router.post("/", async (req, res) => {
+  try {
+    const farmerId = req.user.id;
+    const newAlert = await alertsRepository.createAlert(farmerId, req.body);
+    res.status(201).json(newAlert);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
