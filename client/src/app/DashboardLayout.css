@@ -144,10 +144,11 @@
   position: relative;
 }
 
-.dashboard-header-search svg {
+.dashboard-header-search > svg {
   position: absolute;
   left: 14px;
   color: #9CA3AF;
+  pointer-events: none;
 }
 
 .dashboard-header-search input {

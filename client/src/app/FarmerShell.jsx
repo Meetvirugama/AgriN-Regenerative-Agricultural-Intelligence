@@ -149,7 +149,7 @@ export const FarmerShell = () => {
 
         <main className="dashboard-main">
           <header className="dashboard-header">
-            <div className="dashboard-search">
+            <div className="dashboard-header-search">
               <button 
                 className="md:hidden p-2 -ml-2 mr-2 text-text-main hover:bg-secondary rounded-lg"
                 onClick={() => setIsMobileMenuOpen(true)}
