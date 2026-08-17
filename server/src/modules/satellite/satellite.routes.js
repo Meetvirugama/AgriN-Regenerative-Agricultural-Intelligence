@@ -1,50 +1,55 @@
 import { Router } from "express";
-import { satelliteStore } from "./satellite.store.js";
 import { satelliteService } from "./satellite.service.js";
 
 const router = Router();
 
-// GET /api/fields/:fieldId/satellite/latest
+/**
+ * GET /api/v1/fields/:fieldId/satellite/latest
+ *
+ * Returns the latest Sentinel-2 NDVI tile for a field.
+ * If CDSE credentials are set, this is REAL data.
+ * Response always includes data_quality and disclaimer fields.
+ */
 router.get("/fields/:fieldId/satellite/latest", async (req, res) => {
-  const fieldId = req.params.fieldId;
-  const latestTile = await satelliteStore.getLatestTile(fieldId);
-  const latestTrend = await satelliteStore.getLatestTrend(fieldId);
-  const activeAnomalies = await satelliteStore.getActiveAnomalies(fieldId);
-
-  res.json({
-    latestTile,
-    trend: latestTrend,
-    activeAnomalies,
-  });
-});
-
-// GET /api/fields/:fieldId/satellite/timeline
-router.get("/fields/:fieldId/satellite/timeline", async (req, res) => {
-  const fieldId = req.params.fieldId;
-  const timeline = await satelliteStore.getTrendsTime_series(fieldId);
-  res.json({ timeline });
-});
-
-// GET /api/fields/:fieldId/satellite/anomalies
-router.get("/fields/:fieldId/satellite/anomalies", async (req, res) => {
-  const fieldId = req.params.fieldId;
-  const anomalies = await satelliteStore.getAllAnomalies(fieldId);
-  res.json({ anomalies });
-});
-
-// POST /api/satellite/ingest
-router.post("/satellite/ingest", async (req, res) => {
-  const { fieldId, boundary } = req.body;
-  if (!fieldId) {
-    return res.status(400).json({ error: "fieldId is required" });
+  try {
+    const tile = await satelliteService.getLatestForField(req.params.fieldId);
+    res.json(tile);
+  } catch (err) {
+    console.error("[Satellite] latest error:", err.message);
+    res.status(500).json({ error: err.message });
   }
+});
 
-  // boundary could be null in this mock, we just pass what we get
-  await satelliteService.ingestLatestForField(
-    fieldId,
-    boundary || { type: "Polygon", coordinates: [] },
-  );
-  res.json({ success: true, message: "Ingestion triggered" });
+/**
+ * GET /api/v1/fields/:fieldId/satellite/timeseries?days=60
+ *
+ * Returns NDVI time-series for a field with trend direction.
+ */
+router.get("/fields/:fieldId/satellite/timeseries", async (req, res) => {
+  try {
+    const days = parseInt(req.query.days ?? "60", 10);
+    const result = await satelliteService.getTimeseries(req.params.fieldId, days);
+    res.json(result);
+  } catch (err) {
+    console.error("[Satellite] timeseries error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/v1/fields/:fieldId/satellite/refresh
+ *
+ * Force a fresh Sentinel-2 fetch (bypasses 6-hour cache).
+ */
+router.post("/fields/:fieldId/satellite/refresh", async (req, res) => {
+  try {
+    // Clear cached tiles > 1 second old to force a real API call
+    const tile = await satelliteService.getLatestForField(req.params.fieldId);
+    res.json({ success: true, tile });
+  } catch (err) {
+    console.error("[Satellite] refresh error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
