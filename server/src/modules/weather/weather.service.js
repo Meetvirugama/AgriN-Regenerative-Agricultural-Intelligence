@@ -19,12 +19,17 @@ class Layer3Service {
     const field = await layer1Service.getField(fieldId);
     if (!field) throw new Error(`Field ${fieldId} not found`);
 
-    // Fetch from API (lat/lng default to Punjab if field has no coordinates yet)
-    const forecasts = await this.provider.getForecast(
-      field.lat ?? 0,
-      field.lng ?? 0,
-      fieldId,
-    );
+    const lat = field.lat;
+    const lng = field.lng;
+    if (lat == null || lng == null) {
+      throw new Error(
+        `Field ${fieldId} has no location coordinates. ` +
+        `Add a field boundary or lat/lng before fetching weather.`
+      );
+    }
+
+    // Fetch from Open-Meteo (real coordinates from PostGIS centroid)
+    const forecasts = await this.provider.getForecast(lat, lng, fieldId);
 
     // Persist each forecast snapshot (upserts on conflict)
     for (const snapshot of forecasts) {
@@ -79,11 +84,16 @@ class Layer3Service {
     const field = await layer1Service.getField(fieldId);
     if (!field) throw new Error(`Field ${fieldId} not found`);
 
-    const history = await this.provider.getHistory(
-      field.lat ?? 0,
-      field.lng ?? 0,
-      fieldId,
-    );
+    const lat = field.lat;
+    const lng = field.lng;
+    if (lat == null || lng == null) {
+      throw new Error(
+        `Field ${fieldId} has no location coordinates. ` +
+        `Add a field boundary or lat/lng before fetching weather history.`
+      );
+    }
+
+    const history = await this.provider.getHistory(lat, lng, fieldId);
 
     // Persist historical actuals
     for (const snapshot of history) {

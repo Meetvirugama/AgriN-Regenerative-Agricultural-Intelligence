@@ -130,10 +130,10 @@ export const Alerts = () => {
         </div>
         <div className="alerts-header-actions">
           <button className="alerts-btn">
-            Filter Alerts
+            All Fields <DownChevron size={16} className="text-text-muted" />
           </button>
-          <button className="alerts-btn primary">
-            Mark All as Read
+          <button className="alerts-btn">
+            <CheckedIcon size={16} className="text-text-muted" /> Mark all as read
           </button>
         </div>
       </div>
