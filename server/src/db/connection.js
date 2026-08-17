@@ -31,8 +31,11 @@ pool.on("error", (err) => {
   console.error("[DB] Unexpected pool error:", err.message);
 });
 
-pool.on("connect", () => {
+pool.on("connect", (client) => {
   console.log("[DB] New connection established");
+  client.on("error", (err) => {
+    console.error("[DB] Active client connection error:", err.message);
+  });
 });
 
 /**
