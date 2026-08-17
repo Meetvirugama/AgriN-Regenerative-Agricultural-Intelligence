@@ -1,10 +1,10 @@
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
 
 const RefreshIcon = forwardRef(
   (
-    { size = 24, color = "currentColor", strokeWidth = 2, className = "" },
+    { size = 24, color = "currentColor", strokeWidth = 2, className = "", isHovered = false },
     ref,
   ) => {
     const [scope, animate] = useAnimate();
@@ -29,6 +29,14 @@ const RefreshIcon = forwardRef(
       startAnimation: start,
       stopAnimation: stop,
     }));
+
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered, start, stop]);
 
     const handleHoverStart = () => {
       start();

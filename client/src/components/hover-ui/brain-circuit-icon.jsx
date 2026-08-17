@@ -1,12 +1,12 @@
 "use strict";
 
-import { forwardRef, useImperativeHandle, useCallback } from "react";
+import { forwardRef, useImperativeHandle, useCallback , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
 
 const BrainCircuitIcon = forwardRef(
   (
-    { size = 24, color = "currentColor", strokeWidth = 2, className = "" },
+    { size = 24, color = "currentColor", strokeWidth = 2, className = "", isHovered = false },
     ref,
   ) => {
     const [scope, animate] = useAnimate();

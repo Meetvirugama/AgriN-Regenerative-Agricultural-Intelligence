@@ -28,8 +28,46 @@ const NAV_ITEMS = [
   { label: "Ask AgriMesh", path: "/ask", icon: BrandTelegramIcon },
   { label: "Alerts", path: "/alerts", icon: FilledBellIcon },
   { label: "Crop Diagnosis", path: "/diagnosis", icon: Stethoscope },
-  { label: "Expert Support", path: "/expert", icon: Users },
 ];
+
+const SidebarNavItem = ({ item, isActive, activeAlertsCount }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const Icon = item.icon;
+  return (
+    <Link
+      to={item.path}
+      className={`dashboard-nav-item ${isActive ? "active" : ""}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="dashboard-nav-item-content">
+        <Icon size={18} strokeWidth={2} isHovered={isHovered} />
+        {item.label}
+      </div>
+      {item.label === "Alerts" && activeAlertsCount > 0 && (
+        <span className="dashboard-nav-badge">
+          {activeAlertsCount}
+        </span>
+      )}
+    </Link>
+  );
+};
+
+const FooterNavItem = ({ to, icon: Icon, label }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <Link
+      to={to}
+      className="dashboard-nav-item"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="dashboard-nav-item-content">
+        <Icon size={18} strokeWidth={2} isHovered={isHovered} /> {label}
+      </div>
+    </Link>
+  );
+};
 
 export const FarmerShell = () => {
   const location = useLocation();
@@ -38,6 +76,10 @@ export const FarmerShell = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [alerts, setAlerts] = useState([]);
+  
+  // Header Hover States
+  const [isAlertsHovered, setIsAlertsHovered] = useState(false);
+  const [isProfileHovered, setIsProfileHovered] = useState(false);
 
   React.useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -87,39 +129,21 @@ export const FarmerShell = () => {
           <nav className="dashboard-nav">
             {NAV_ITEMS.map((item) => {
               const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
-              const Icon = item.icon;
               return (
-                <Link
-                  key={item.label}
-                  to={item.path}
-                  className={`dashboard-nav-item ${isActive ? "active" : ""}`}
-                >
-                  <div className="dashboard-nav-item-content">
-                    <Icon size={18} strokeWidth={2} />
-                    {item.label}
-                  </div>
-                  {item.label === "Alerts" && activeAlertsCount > 0 && (
-                    <span className="dashboard-nav-badge">
-                      {activeAlertsCount}
-                    </span>
-                  )}
-                </Link>
+                <SidebarNavItem 
+                  key={item.label} 
+                  item={item} 
+                  isActive={isActive} 
+                  activeAlertsCount={activeAlertsCount} 
+                />
               );
             })}
           </nav>
 
           <div className="dashboard-sidebar-footer">
             <div className="dashboard-sidebar-divider"></div>
-            <Link to="/profile" className="dashboard-nav-item">
-              <div className="dashboard-nav-item-content">
-                <UserIcon size={18} strokeWidth={2} /> Profile
-              </div>
-            </Link>
-            <Link to="/settings" className="dashboard-nav-item">
-              <div className="dashboard-nav-item-content">
-                <GearIcon size={18} strokeWidth={2} /> Settings
-              </div>
-            </Link>
+            <FooterNavItem to="/profile" icon={UserIcon} label="Profile" />
+            <FooterNavItem to="/settings" icon={GearIcon} label="Settings" />
           </div>
         </aside>
 
@@ -148,9 +172,14 @@ export const FarmerShell = () => {
             </div>
 
             <div className="dashboard-header-actions">
-              <button className="dashboard-header-action alerts" onClick={() => navigate('/alerts')}>
+              <button 
+                className="dashboard-header-action alerts" 
+                onClick={() => navigate('/alerts')}
+                onMouseEnter={() => setIsAlertsHovered(true)}
+                onMouseLeave={() => setIsAlertsHovered(false)}
+              >
                 <div className="dashboard-bell-wrapper">
-                  <FilledBellIcon size={18} />
+                  <FilledBellIcon size={18} isHovered={isAlertsHovered} />
                   {activeAlertsCount > 0 && (
                     <span className="dashboard-bell-badge">{activeAlertsCount}</span>
                   )}
@@ -160,13 +189,17 @@ export const FarmerShell = () => {
               
               <LanguageSwitcher />
               
-              <div className="dashboard-header-profile">
+              <div 
+                className="dashboard-header-profile"
+                onMouseEnter={() => setIsProfileHovered(true)}
+                onMouseLeave={() => setIsProfileHovered(false)}
+              >
                 <div className="dashboard-header-profile-trigger">
                   <div className="dashboard-header-avatar">
-                    <UserIcon size={14} />
+                    <UserIcon size={14} isHovered={isProfileHovered} />
                   </div>
                   <span className="dashboard-header-action">
-                    Ramesh <DownChevron size={14} />
+                    Ramesh <DownChevron size={14} isHovered={isProfileHovered} />
                   </span>
                 </div>
 

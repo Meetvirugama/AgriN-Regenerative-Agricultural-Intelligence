@@ -1,9 +1,9 @@
-import { forwardRef, useImperativeHandle, useCallback } from "react";
+import { forwardRef, useImperativeHandle, useCallback , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
 
 const FilledBellIcon = forwardRef(
-  ({ size = 24, color = "currentColor", className = "" }, ref) => {
+  ({ size = 24, color = "currentColor", className = "", isHovered = false }, ref) => {
     const [scope, animate] = useAnimate();
 
     const start = useCallback(async () => {
@@ -42,6 +42,14 @@ const FilledBellIcon = forwardRef(
       startAnimation: start,
       stopAnimation: stop,
     }));
+
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered, start, stop]);
 
     return (
       <motion.svg

@@ -15,6 +15,80 @@ import ArrowNarrowRightIcon from "../components/hover-ui/arrow-narrow-right-icon
 
 import "./Alerts.css";
 
+const AlertsStatCard = ({ type, title, value, desc, icon: IconComponent }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <div 
+      className={`alerts-stat-card ${type}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="alerts-stat-header">
+        <div className={`alerts-stat-icon ${type}`}>
+          <IconComponent size={16} strokeWidth={2.5} isHovered={isHovered} />
+        </div>
+        <span className={`alerts-stat-title ${type}`}>{title}</span>
+      </div>
+      <h3 className="alerts-stat-value">{value}</h3>
+      <p className="alerts-stat-desc">{desc}</p>
+    </div>
+  );
+};
+
+const AlertsListItem = ({ alert, navigate }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <div 
+      className={`alerts-item ${alert.resolved ? 'resolved' : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="alerts-item-main">
+        <div className={`alerts-item-icon ${
+          alert.resolved ? 'resolved' :
+          alert.priority === 'High' ? 'high' :
+          alert.priority === 'Medium' ? 'medium' : 'info'
+        }`}>
+          {alert.resolved ? <CheckedIcon size={20} isHovered={isHovered} /> :
+           alert.priority === 'High' || alert.priority === 'Medium' ? <TriangleAlertIcon size={20} isHovered={isHovered} /> :
+           <InfoCircleIcon size={20} isHovered={isHovered} />}
+        </div>
+        <div>
+          <h4 className={`alerts-item-title ${alert.resolved ? 'resolved' : 'active'}`}>
+            {alert.title}
+          </h4>
+          <p className="alerts-item-desc">{alert.description}</p>
+          {!alert.resolved && (
+            <button className="alerts-item-link" onClick={() => navigate('/fields')}>
+              View Details <ArrowNarrowRightIcon size={12} isHovered={isHovered} />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="alerts-item-col">
+        <span className={`alerts-badge ${
+          alert.field === 'All Fields' ? 'all' : 'success'
+        }`}>
+          {alert.field}
+        </span>
+      </div>
+      <div className="alerts-item-col">
+        <span className={`alerts-badge ${
+          alert.resolved ? 'success' :
+          alert.priority === 'High' ? 'danger' :
+          alert.priority === 'Medium' ? 'warning' : 'info'
+        }`}>
+          {alert.resolved ? 'Resolved' : alert.priority}
+        </span>
+      </div>
+      <div className="alerts-item-time-col">
+        <span className="alerts-item-time">{alert.time}</span>
+        <button className="alerts-item-more"><MoreVertical size={18} /></button>
+      </div>
+    </div>
+  );
+};
+
 export const Alerts = () => {
   const [alerts, setAlerts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,10 +114,10 @@ export const Alerts = () => {
   const resolvedCount = alerts.filter(a => a.resolved).length;
   const totalAlerts = alerts.length;
 
-  const highPct = totalAlerts > 0 ? Math.round((highPriorityCount / totalAlerts) * 100) : 0;
-  const medPct = totalAlerts > 0 ? Math.round((mediumPriorityCount / totalAlerts) * 100) : 0;
-  const lowPct = totalAlerts > 0 ? Math.round((lowPriorityCount / totalAlerts) * 100) : 0;
-  const resPct = totalAlerts > 0 ? Math.round((resolvedCount / totalAlerts) * 100) : 0;
+  const highPct = totalAlerts === 0 ? 0 : Math.round((highPriorityCount / totalAlerts) * 100);
+  const medPct = totalAlerts === 0 ? 0 : Math.round((mediumPriorityCount / totalAlerts) * 100);
+  const lowPct = totalAlerts === 0 ? 0 : Math.round((lowPriorityCount / totalAlerts) * 100);
+  const resPct = totalAlerts === 0 ? 0 : Math.round((resolvedCount / totalAlerts) * 100);
 
   return (
     <div className="alerts-container">
@@ -51,8 +125,8 @@ export const Alerts = () => {
       {/* HEADER */}
       <div className="alerts-header">
         <div>
-          <h1 className="alerts-title">Alerts</h1>
-          <p className="alerts-subtitle">Stay updated with important alerts for your fields</p>
+          <h1>Alert Center</h1>
+          <p>Real-time updates and recommendations for your crops.</p>
         </div>
         <div className="alerts-header-actions">
           <button className="alerts-btn">
@@ -72,49 +146,37 @@ export const Alerts = () => {
           {/* Top Stats */}
           <div className="alerts-stats-grid">
             
-            <div className="alerts-stat-card danger">
-              <div className="alerts-stat-header">
-                <div className="alerts-stat-icon danger">
-                  <TriangleAlertIcon size={16} strokeWidth={2.5} />
-                </div>
-                <span className="alerts-stat-title danger">High Priority</span>
-              </div>
-              <h3 className="alerts-stat-value">{isLoading ? "-" : highPriorityCount}</h3>
-              <p className="alerts-stat-desc">Needs immediate action</p>
-            </div>
+            <AlertsStatCard 
+              type="danger" 
+              title="High Priority" 
+              value={isLoading ? "-" : highPriorityCount} 
+              desc="Needs immediate action" 
+              icon={TriangleAlertIcon} 
+            />
 
-            <div className="alerts-stat-card warning">
-              <div className="alerts-stat-header">
-                <div className="alerts-stat-icon warning">
-                  <TriangleAlertIcon size={16} strokeWidth={2.5} />
-                </div>
-                <span className="alerts-stat-title warning">Medium Priority</span>
-              </div>
-              <h3 className="alerts-stat-value">{isLoading ? "-" : mediumPriorityCount}</h3>
-              <p className="alerts-stat-desc">Needs attention</p>
-            </div>
+            <AlertsStatCard 
+              type="warning" 
+              title="Medium Priority" 
+              value={isLoading ? "-" : mediumPriorityCount} 
+              desc="Needs attention" 
+              icon={TriangleAlertIcon} 
+            />
 
-            <div className="alerts-stat-card info">
-              <div className="alerts-stat-header">
-                <div className="alerts-stat-icon info">
-                  <InfoCircleIcon size={16} strokeWidth={2.5} />
-                </div>
-                <span className="alerts-stat-title info">Low Priority</span>
-              </div>
-              <h3 className="alerts-stat-value">{isLoading ? "-" : lowPriorityCount}</h3>
-              <p className="alerts-stat-desc">For your information</p>
-            </div>
+            <AlertsStatCard 
+              type="info" 
+              title="Low Priority" 
+              value={isLoading ? "-" : lowPriorityCount} 
+              desc="For your information" 
+              icon={InfoCircleIcon} 
+            />
 
-            <div className="alerts-stat-card success">
-              <div className="alerts-stat-header">
-                <div className="alerts-stat-icon success">
-                  <CheckedIcon size={16} strokeWidth={2.5} />
-                </div>
-                <span className="alerts-stat-title success">Resolved</span>
-              </div>
-              <h3 className="alerts-stat-value">{isLoading ? "-" : resolvedCount}</h3>
-              <p className="alerts-stat-desc">Last 7 days</p>
-            </div>
+            <AlertsStatCard 
+              type="success" 
+              title="Resolved" 
+              value={isLoading ? "-" : resolvedCount} 
+              desc="Last 7 days" 
+              icon={CheckedIcon} 
+            />
             
           </div>
 
@@ -153,50 +215,7 @@ export const Alerts = () => {
                   <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "4px" }}>Everything is running smoothly on your fields.</p>
                 </div>
               ) : alerts.map((alert) => (
-                <div key={alert.id} className={`alerts-item ${alert.resolved ? 'resolved' : ''}`}>
-                  <div className="alerts-item-main">
-                    <div className={`alerts-item-icon ${
-                      alert.resolved ? 'resolved' :
-                      alert.priority === 'High' ? 'high' :
-                      alert.priority === 'Medium' ? 'medium' : 'info'
-                    }`}>
-                      {alert.resolved ? <CheckedIcon size={20} /> :
-                       alert.priority === 'High' || alert.priority === 'Medium' ? <TriangleAlertIcon size={20} /> :
-                       <InfoCircleIcon size={20} />}
-                    </div>
-                    <div>
-                      <h4 className={`alerts-item-title ${alert.resolved ? 'resolved' : 'active'}`}>
-                        {alert.title}
-                      </h4>
-                      <p className="alerts-item-desc">{alert.description}</p>
-                      {!alert.resolved && (
-                        <button className="alerts-item-link" onClick={() => navigate('/fields')}>
-                          View Details <ArrowNarrowRightIcon size={12} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="alerts-item-col">
-                    <span className={`alerts-badge ${
-                      alert.field === 'All Fields' ? 'all' : 'success'
-                    }`}>
-                      {alert.field}
-                    </span>
-                  </div>
-                  <div className="alerts-item-col">
-                    <span className={`alerts-badge ${
-                      alert.resolved ? 'success' :
-                      alert.priority === 'High' ? 'danger' :
-                      alert.priority === 'Medium' ? 'warning' : 'info'
-                    }`}>
-                      {alert.resolved ? 'Resolved' : alert.priority}
-                    </span>
-                  </div>
-                  <div className="alerts-item-time-col">
-                    <span className="alerts-item-time">{alert.time}</span>
-                    <button className="alerts-item-more"><MoreVertical size={18} /></button>
-                  </div>
-                </div>
+                <AlertsListItem key={alert.id} alert={alert} navigate={navigate} />
               ))}
 
             </div>

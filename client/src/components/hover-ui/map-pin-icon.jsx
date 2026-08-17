@@ -1,10 +1,10 @@
-import { forwardRef, useImperativeHandle, useCallback, useRef } from "react";
+import { forwardRef, useImperativeHandle, useCallback, useRef , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
 
 const MapPinIcon = forwardRef(
   (
-    { size = 24, color = "currentColor", strokeWidth = 2, className = "" },
+    { size = 24, color = "currentColor", strokeWidth = 2, className = "", isHovered = false },
     ref,
   ) => {
     const [scope, animate] = useAnimate();
@@ -34,6 +34,14 @@ const MapPinIcon = forwardRef(
       startAnimation: start,
       stopAnimation: stop,
     }));
+
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered, start, stop]);
 
     return (
       <motion.svg
