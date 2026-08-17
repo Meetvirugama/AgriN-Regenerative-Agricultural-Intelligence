@@ -294,7 +294,7 @@ export const Diagnosis = () => {
               <p className="diagnosis-footer-desc">This diagnosis is AI-generated. Please consult local agricultural experts for final decision.</p>
             </div>
             <div className="diagnosis-footer-link-group">
-              Need help? Contact <Link to="/expert" className="diagnosis-footer-link">Expert Support</Link>
+              Need help? Contact <Link to="/ask" className="diagnosis-footer-link">Ask AgriMesh</Link>
             </div>
           </div>
 

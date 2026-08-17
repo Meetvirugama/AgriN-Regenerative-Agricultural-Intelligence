@@ -17,7 +17,6 @@ import healthScoreRoutes from "./modules/health-score/health-score.routes.js";
 import escalationRoutes from "./modules/escalation/escalation.routes.js";
 import crossBorderRoutes from "./modules/cross-border/cross-border.routes.js";
 import alertsRoutes from "./modules/alerts/alerts.routes.js";
-import expertRoutes from "./modules/expert/expert.routes.js";
 import chatRoutes from "./modules/chat/chat.routes.js";
 import intelligenceRoutes from "./modules/intelligence/intelligence.routes.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
@@ -118,7 +117,6 @@ app.use("/api/v1", requireAuth, feedbackRouter);
 app.use("/api/v1", crossBorderRoutes);
 app.use("/api/v1/escalations", requireAuth, escalationRoutes);
 app.use("/api/v1/alerts", requireAuth, alertsRoutes);
-app.use("/api/v1/experts", requireAuth, expertRoutes);
 app.use("/api/v1/chat", requireAuth, chatRoutes);
 app.use("/api/v1/intelligence", requireAuth, intelligenceRoutes);
 
