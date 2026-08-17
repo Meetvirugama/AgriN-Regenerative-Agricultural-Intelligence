@@ -22,53 +22,55 @@ export const MyFields = () => {
   const [fields, setFields] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // We are mocking a slightly more detailed data structure to match the mockup
+  const calculateAgeDays = (sowingDate) => {
+    if (!sowingDate) return 0;
+    const sowing = new Date(sowingDate);
+    const today = new Date();
+    const diffTime = Math.abs(today - sowing);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const getGrowthStage = (cropType, ageDays) => {
+    const crop = (cropType || "").toLowerCase();
+    if (crop === "wheat") {
+      if (ageDays < 20) return "Germination";
+      if (ageDays < 45) return "Tillering";
+      if (ageDays < 80) return "Flowering";
+      return "Ripening";
+    }
+    if (crop === "rice") {
+      if (ageDays < 25) return "Seedling";
+      if (ageDays < 55) return "Tillering";
+      if (ageDays < 90) return "Flowering";
+      return "Maturation";
+    }
+    if (ageDays < 30) return "Vegetative";
+    if (ageDays < 60) return "Flowering";
+    return "Maturity";
+  };
+
   useEffect(() => {
     const fetchFields = async () => {
       try {
         const data = await cropApi.getAllFields();
-        // Decorate with mockup data to match the UI precisely
-        const decoratedFields = data.map((field, index) => {
-          if (index === 0) {
-            return {
-              ...field,
-              variety: field.crop_variety || "Variety X",
-              area: field.area_hectares ? `${field.area_hectares} ha` : "1.2 ha",
-              age: "Day 46",
-              status: "moderate",
-              growthStage: "Flowering",
-              irrigation: "Next in 2 days",
-              lastRain: "2 days ago",
-              health: "60%",
-              image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=200&fit=crop"
-            };
-          } else if (index === 1) {
-            return {
-              ...field,
-              variety: field.crop_variety || "Variety J",
-              area: field.area_hectares ? `${field.area_hectares} ha` : "0.8 ha",
-              age: "Day 31",
-              status: "good",
-              growthStage: "Tillering",
-              irrigation: "Not needed",
-              lastRain: "3 days ago",
-              health: "78%",
-              image: "https://images.unsplash.com/photo-1593414902194-e34346bbdbf9?w=400&h=200&fit=crop"
-            };
-          } else {
-            return {
-              ...field,
-              variety: field.crop_variety || "Variety MCU 5",
-              area: field.area_hectares ? `${field.area_hectares} ha` : "1.5 ha",
-              age: "Day 60",
-              status: "moderate",
-              growthStage: "Budding",
-              irrigation: "Tomorrow",
-              lastRain: "1 day ago",
-              health: "55%",
-              image: "https://images.unsplash.com/photo-1587334274328-64186a80aeee?w=400&h=200&fit=crop"
-            };
-          }
+        const decoratedFields = (data || []).map((field) => {
+          const ageDays = calculateAgeDays(field.sowing_date);
+          return {
+            ...field,
+            variety: field.crop_variety || "Standard",
+            area: field.area_hectares ? `${field.area_hectares} ha` : "1.0 ha",
+            age: `Day ${ageDays}`,
+            status: "good",
+            growthStage: getGrowthStage(field.crop_type, ageDays),
+            irrigation: "Optimal",
+            lastRain: "Noted recently",
+            health: "85%",
+            image: field.crop_type?.toLowerCase() === "wheat" 
+              ? "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=200&fit=crop"
+              : field.crop_type?.toLowerCase() === "rice"
+              ? "https://images.unsplash.com/photo-1593414902194-e34346bbdbf9?w=400&h=200&fit=crop"
+              : "https://images.unsplash.com/photo-1587334274328-64186a80aeee?w=400&h=200&fit=crop"
+          };
         });
         
         setFields(decoratedFields);

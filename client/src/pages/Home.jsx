@@ -1,63 +1,56 @@
 import React, { useState, useEffect } from "react";
 import { 
-  Plus, CloudRain, AlertTriangle, Mic, MoreVertical,
-  Info, Droplets, MessageSquare, Bell, Loader2
+  Plus, Mic, MoreVertical,
+  Droplets, MessageSquare, Bell, Loader2
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { cropApi } from "../features/crop-context/api/cropApi";
+
+// Animated Hover Components
+import Cloud2Icon from "../components/hover-ui/cloud-2-icon";
+import TriangleAlertIcon from "../components/hover-ui/triangle-alert-icon";
+import InfoCircleIcon from "../components/hover-ui/info-circle-icon";
+
 import "./Home.css";
 
 export const Home = () => {
   const navigate = useNavigate();
   const [fields, setFields] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFields = async () => {
+    const fetchData = async () => {
       try {
-        const data = await cropApi.getAllFields();
-        setFields(data);
+        const [fieldsData, alertsData] = await Promise.all([
+          cropApi.getAllFields(),
+          cropApi.getAlerts()
+        ]);
+        setFields(fieldsData || []);
+        setAlerts(alertsData || []);
       } catch (err) {
-        console.error("Failed to fetch fields:", err);
+        console.error("Failed to fetch dashboard data:", err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchFields();
+    fetchData();
   }, []);
 
-  const dummyFields = [
-    {
-      id: 'dummy1',
-      name: 'Wheat Field 01',
-      crop_type: 'Wheat',
-      subtitle: '1.2 ha • Day 46',
-      status: 'Moderate',
-      statusClass: 'moderate',
-      img: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop'
-    },
-    {
-      id: 'dummy2',
-      name: 'Rice Field 02',
-      crop_type: 'Rice',
-      subtitle: '0.8 ha • Day 31',
-      status: 'Good',
-      statusClass: 'good',
-      img: 'https://images.unsplash.com/photo-1593414902194-e34346bbdbf9?w=150&h=150&fit=crop'
-    }
-  ];
-
-  const displayFields = fields.length > 0 ? fields.map(f => ({
+  const displayFields = fields.map(f => ({
     id: f.id,
     name: f.name,
     crop_type: f.crop_type,
-    subtitle: `${f.crop_type} • 4.25 acres`,
+    subtitle: f.area_hectares ? `${f.crop_type} • ${f.area_hectares} ha` : `${f.crop_type} • 1.2 ha`,
     status: f.crop_type === 'rice' ? 'Moderate' : 'Good',
     statusClass: f.crop_type === 'rice' ? 'moderate' : 'good',
     img: f.crop_type === 'wheat' ? "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop" 
        : f.crop_type === 'rice' ? "https://images.unsplash.com/photo-1593414902194-e34346bbdbf9?w=150&h=150&fit=crop"
        : "https://images.unsplash.com/photo-1587334274328-64186a80aeee?w=150&h=150&fit=crop"
-  })) : dummyFields;
+  }));
+
+  const activeAlertsCount = alerts.filter(a => !a.resolved).length;
+  const fieldsNeedAttentionCount = displayFields.filter(f => f.statusClass !== 'good').length;
 
   return (
     <div className="home-container">
@@ -79,39 +72,41 @@ export const Home = () => {
                 <Loader2 className="animate-spin text-success" size={32} />
               </div>
             ) : (
-              displayFields.slice(0, 2).map(field => (
-                <div key={field.id} className="home-card">
-                  <div className="home-card-top-content">
-                    <div className="home-card-info-row">
-                      <div className="home-card-image">
-                        <img src={field.img} alt={field.crop_type} />
-                      </div>
-                      <div className="home-card-text-container">
-                        <div className="home-card-title-row">
-                          <h3 className="home-card-title">{field.name}</h3>
-                          <button className="home-card-more-btn"><MoreVertical size={16} /></button>
+              <>
+                {displayFields.slice(0, 2).map(field => (
+                  <div key={field.id} className="home-card">
+                    <div className="home-card-top-content">
+                      <div className="home-card-info-row">
+                        <div className="home-card-image">
+                          <img src={field.img} alt={field.crop_type} />
                         </div>
-                        <p className="home-card-subtitle">{field.subtitle}</p>
+                        <div className="home-card-text-container">
+                          <div className="home-card-title-row">
+                            <h3 className="home-card-title">{field.name}</h3>
+                            <button className="home-card-more-btn"><MoreVertical size={16} /></button>
+                          </div>
+                          <p className="home-card-subtitle">{field.subtitle}</p>
+                        </div>
                       </div>
+                      <span className={`home-card-badge ${field.statusClass}`}>
+                        {field.status}
+                      </span>
                     </div>
-                    <span className={`home-card-badge ${field.statusClass}`}>
-                      {field.status}
-                    </span>
+                    <button 
+                      onClick={() => navigate(`/fields/${field.id}`)} 
+                      className="home-card-button"
+                    >
+                      View Field
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => field.id.startsWith('dummy') ? navigate('/fields') : navigate(`/fields/${field.id}`)} 
-                    className="home-card-button"
-                  >
-                    View Field
-                  </button>
-                </div>
-              ))
-            )}
+                ))}
 
-            <div onClick={() => navigate('/fields/add')} className="home-add-field">
-              <Plus size={32} color="#111827" />
-              <span style={{fontWeight: 600, color: '#111827', marginTop: '8px', fontSize: '14px'}}>Add New Field</span>
-            </div>
+                <div onClick={() => navigate('/fields/add')} className="home-add-field">
+                  <Plus size={32} color="#111827" />
+                  <span style={{fontWeight: 600, color: '#111827', marginTop: '8px', fontSize: '14px'}}>Add New Field</span>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
@@ -119,11 +114,21 @@ export const Home = () => {
           <h2 className="home-section-title">Today's Recommendation</h2>
           <div className="home-recommendation-card">
             <div className="home-recommendation-content">
-              <CloudRain size={40} className="home-recommendation-icon" strokeWidth={1.5} />
+              <Cloud2Icon size={40} className="home-recommendation-icon" strokeWidth={1.5} />
               <div className="home-recommendation-text">
-                <h3>Rain expected in 2 days.</h3>
-                <p>Hold irrigation for now.</p>
-                <div className="subtext">Field: Wheat Field 01</div>
+                {fields.length > 0 ? (
+                  <>
+                    <h3>Irrigation scheduling active</h3>
+                    <p>Keep track of moisture levels.</p>
+                    <div className="subtext">Field: {fields[0].name}</div>
+                  </>
+                ) : (
+                  <>
+                    <h3>No fields added yet</h3>
+                    <p>Add a field to get crop weather insights.</p>
+                    <div className="subtext">Insights ready on field creation</div>
+                  </>
+                )}
               </div>
             </div>
             <button className="home-recommendation-button" onClick={() => navigate('/intelligence')}>
@@ -142,47 +147,36 @@ export const Home = () => {
             </div>
             
             <div className="home-alerts-list">
-              <div className="home-alert-item">
-                <div className="home-alert-content">
-                  <div className="home-alert-icon warning"><AlertTriangle size={20} /></div>
-                  <div className="home-alert-text">
-                    <h4>Rain expected in 2 days</h4>
-                    <p>Wheat Field 01</p>
-                  </div>
+              {isLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+                  <Loader2 className="animate-spin text-success" size={24} />
                 </div>
-                <div className="home-alert-meta">
-                  <span className="home-card-badge moderate" style={{margin: 0}}>Medium</span>
-                  <span>1h ago</span>
+              ) : alerts.length === 0 ? (
+                <div style={{ padding: "32px", textAlign: "center", color: "#6B7280", fontSize: "13px" }}>
+                  No active alerts for your fields.
                 </div>
-              </div>
-
-              <div className="home-alert-item">
-                <div className="home-alert-content">
-                  <div className="home-alert-icon danger"><AlertTriangle size={20} /></div>
-                  <div className="home-alert-text">
-                    <h4>Disease risk increasing</h4>
-                    <p>Rice Field 02</p>
-                  </div>
-                </div>
-                <div className="home-alert-meta">
-                  <span className="home-card-badge poor" style={{margin: 0}}>High</span>
-                  <span>2h ago</span>
-                </div>
-              </div>
-
-              <div className="home-alert-item">
-                <div className="home-alert-content">
-                  <div className="home-alert-icon info"><Info size={20} /></div>
-                  <div className="home-alert-text">
-                    <h4>Satellite: Vegetation improving</h4>
-                    <p>Cotton Field 03</p>
-                  </div>
-                </div>
-                <div className="home-alert-meta">
-                  <span className="home-card-badge good" style={{margin: 0}}>Low</span>
-                  <span>3h ago</span>
-                </div>
-              </div>
+              ) : (
+                alerts.slice(0, 3).map((alert) => {
+                  const priorityClass = alert.priority === "High" ? "poor" : alert.priority === "Medium" ? "moderate" : "good";
+                  const iconClass = alert.priority === "High" ? "danger" : alert.priority === "Medium" ? "warning" : "info";
+                  const IconComponent = alert.priority === "High" || alert.priority === "Medium" ? TriangleAlertIcon : InfoCircleIcon;
+                  return (
+                    <div key={alert.id} className="home-alert-item">
+                      <div className="home-alert-content">
+                        <div className={`home-alert-icon ${iconClass}`}><IconComponent size={20} /></div>
+                        <div className="home-alert-text">
+                          <h4>{alert.title}</h4>
+                          <p>{alert.field || "All Fields"}</p>
+                        </div>
+                      </div>
+                      <div className="home-alert-meta">
+                        <span className={`home-card-badge ${priorityClass}`} style={{margin: 0}}>{alert.priority}</span>
+                        <span>{alert.time || "Just now"}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </section>
         </div>
@@ -194,7 +188,7 @@ export const Home = () => {
             </div>
             <div className="home-stat-text">
               <p>Total Fields</p>
-              <h3>{isLoading ? "-" : displayFields.length}</h3>
+              <h3>{isLoading ? "-" : fields.length}</h3>
             </div>
           </div>
 
@@ -202,7 +196,7 @@ export const Home = () => {
             <div className="home-stat-icon info"><Droplets size={24} /></div>
             <div className="home-stat-text">
               <p>Fields Need Attention</p>
-              <h3>1</h3>
+              <h3>{isLoading ? "-" : fieldsNeedAttentionCount}</h3>
             </div>
           </div>
 
@@ -210,7 +204,7 @@ export const Home = () => {
             <div className="home-stat-icon warning"><Bell size={24} /></div>
             <div className="home-stat-text">
               <p>Active Alerts</p>
-              <h3>3</h3>
+              <h3>{isLoading ? "-" : activeAlertsCount}</h3>
             </div>
           </div>
 
@@ -219,7 +213,7 @@ export const Home = () => {
             <div className="home-stat-text">
               <p>Expert Responses</p>
               <div className="subtext">This Month</div>
-              <h3>2</h3>
+              <h3>0</h3>
             </div>
           </div>
         </div>
