@@ -6,7 +6,9 @@ import {
   Menu, X
 } from "lucide-react";
 import { GlobalMicButton } from "../features/voice/components/GlobalMicButton";
+import { LanguageSwitcher } from "../features/voice/components/LanguageSwitcher";
 import { FieldProvider } from "./providers/FieldProvider";
+import { useAuth } from "./providers/AuthProvider";
 import "./DashboardLayout.css";
 
 const NAV_ITEMS = [
@@ -22,6 +24,7 @@ const NAV_ITEMS = [
 export const FarmerShell = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -128,19 +131,30 @@ export const FarmerShell = () => {
                 <span>Alerts</span>
               </button>
               
-              <button className="dashboard-header-action language" onClick={() => alert('Language settings coming soon!')}>
-                <Globe size={16} />
-                <span>English</span>
-                <ChevronDown size={14} />
-              </button>
+              <LanguageSwitcher />
               
-              <div className="dashboard-header-profile" onClick={() => navigate('/profile')}>
-                <div className="dashboard-header-avatar">
-                  <User size={14} />
+              <div className="dashboard-header-profile">
+                <div className="dashboard-header-profile-trigger">
+                  <div className="dashboard-header-avatar">
+                    <User size={14} />
+                  </div>
+                  <span className="dashboard-header-action">
+                    Ramesh <ChevronDown size={14} />
+                  </span>
                 </div>
-                <span className="dashboard-header-action">
-                  Ramesh <ChevronDown size={14} />
-                </span>
+
+                <div className="profile-dropdown">
+                  <button onClick={() => navigate('/profile')} className="profile-dropdown-option">
+                    View Profile
+                  </button>
+                  <button onClick={() => navigate('/settings')} className="profile-dropdown-option">
+                    Settings
+                  </button>
+                  <div className="profile-dropdown-divider"></div>
+                  <button onClick={logout} className="profile-dropdown-option signout">
+                    Sign Out
+                  </button>
+                </div>
               </div>
             </div>
           </header>
