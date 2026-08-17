@@ -10,20 +10,25 @@ import "./Home.css";
 export const Home = () => {
   const navigate = useNavigate();
   const [fields, setFields] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFields = async () => {
+    const fetchData = async () => {
       try {
-        const data = await cropApi.getAllFields();
-        setFields(data);
+        const [fieldsData, alertsData] = await Promise.all([
+          cropApi.getAllFields(),
+          cropApi.getAlerts()
+        ]);
+        setFields(fieldsData);
+        setAlerts(alertsData.slice(0, 3));
       } catch (err) {
-        console.error("Failed to fetch fields:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchFields();
+    fetchData();
   }, []);
 
   const dummyFields = [
@@ -142,47 +147,31 @@ export const Home = () => {
             </div>
             
             <div className="home-alerts-list">
-              <div className="home-alert-item">
-                <div className="home-alert-content">
-                  <div className="home-alert-icon warning"><AlertTriangle size={20} /></div>
-                  <div className="home-alert-text">
-                    <h4>Rain expected in 2 days</h4>
-                    <p>Wheat Field 01</p>
+              {alerts.length > 0 ? (
+                alerts.map(alert => (
+                  <div key={alert.id} className="home-alert-item">
+                    <div className="home-alert-content">
+                      <div className={`home-alert-icon ${alert.priority === 'High' ? 'danger' : alert.priority === 'Medium' ? 'warning' : 'info'}`}>
+                        {alert.priority === 'Low' ? <Info size={20} /> : <AlertTriangle size={20} />}
+                      </div>
+                      <div className="home-alert-text">
+                        <h4>{alert.title}</h4>
+                        <p>{alert.field}</p>
+                      </div>
+                    </div>
+                    <div className="home-alert-meta">
+                      <span className={`home-card-badge ${alert.priority === 'High' ? 'poor' : alert.priority === 'Medium' ? 'moderate' : 'good'}`} style={{margin: 0}}>
+                        {alert.priority}
+                      </span>
+                      <span>{alert.time}</span>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                  {isLoading ? 'Loading alerts...' : 'No recent alerts.'}
                 </div>
-                <div className="home-alert-meta">
-                  <span className="home-card-badge moderate" style={{margin: 0}}>Medium</span>
-                  <span>1h ago</span>
-                </div>
-              </div>
-
-              <div className="home-alert-item">
-                <div className="home-alert-content">
-                  <div className="home-alert-icon danger"><AlertTriangle size={20} /></div>
-                  <div className="home-alert-text">
-                    <h4>Disease risk increasing</h4>
-                    <p>Rice Field 02</p>
-                  </div>
-                </div>
-                <div className="home-alert-meta">
-                  <span className="home-card-badge poor" style={{margin: 0}}>High</span>
-                  <span>2h ago</span>
-                </div>
-              </div>
-
-              <div className="home-alert-item">
-                <div className="home-alert-content">
-                  <div className="home-alert-icon info"><Info size={20} /></div>
-                  <div className="home-alert-text">
-                    <h4>Satellite: Vegetation improving</h4>
-                    <p>Cotton Field 03</p>
-                  </div>
-                </div>
-                <div className="home-alert-meta">
-                  <span className="home-card-badge good" style={{margin: 0}}>Low</span>
-                  <span>3h ago</span>
-                </div>
-              </div>
+              )}
             </div>
           </section>
         </div>
