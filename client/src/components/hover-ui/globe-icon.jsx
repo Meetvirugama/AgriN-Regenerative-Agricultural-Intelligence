@@ -1,15 +1,15 @@
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useImperativeHandle, useRef , useEffect } from "react";
 
 import { scaledStrokeWidth } from "./types";
 import { motion, useAnimate } from "framer-motion";
 
 const GlobeIcon = forwardRef(
   (
-    { size = 24, color = "currentColor", strokeWidth = 2, className = "" },
+    { size = 24, color = "currentColor", strokeWidth = 2, className = "", isHovered = false },
     ref,
   ) => {
     const [scope, animate] = useAnimate();
-    const animationControls = useRef<Array<ReturnType<typeof animate>>>([]);
+    const animationControls = useRef([]);
 
     const start = async () => {
       animationControls.current.forEach((control) => control.stop());
@@ -35,6 +35,14 @@ const GlobeIcon = forwardRef(
       startAnimation: start,
       stopAnimation: stop,
     }));
+
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered, start, stop]);
 
     return (
       <motion.div

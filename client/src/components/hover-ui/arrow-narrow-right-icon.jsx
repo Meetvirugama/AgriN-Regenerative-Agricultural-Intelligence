@@ -1,10 +1,10 @@
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
 
 const ArrowNarrowRightIcon = forwardRef(
   (
-    { size = 24, color = "currentColor", strokeWidth = 2, className = "" },
+    { size = 24, color = "currentColor", strokeWidth = 2, className = "", isHovered = false },
     ref,
   ) => {
     const [scope, animate] = useAnimate();

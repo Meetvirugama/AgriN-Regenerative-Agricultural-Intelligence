@@ -1,10 +1,10 @@
-import { forwardRef, useImperativeHandle, useCallback } from "react";
+import { forwardRef, useImperativeHandle, useCallback , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
 
 const InfoCircleIcon = forwardRef(
   (
-    { size = 24, color = "currentColor", strokeWidth = 2, className = "" },
+    { size = 24, color = "currentColor", strokeWidth = 2, className = "", isHovered = false },
     ref,
   ) => {
     const [scope, animate] = useAnimate();
@@ -45,6 +45,14 @@ const InfoCircleIcon = forwardRef(
       startAnimation: start,
       stopAnimation: stop,
     }));
+
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered, start, stop]);
 
     return (
       <motion.svg

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Globe, ChevronDown, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { voiceApi } from "../api/voiceApi";
+import GlobeIcon from "../../../components/hover-ui/globe-icon";
+import DownChevron from "../../../components/hover-ui/down-chevron";
 
 const LANGUAGES = [
   { code: "en-US", name: "English" },
@@ -10,6 +12,7 @@ const LANGUAGES = [
 
 export const LanguageSwitcher = () => {
   const [selectedLang, setSelectedLang] = useState("en-US");
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("agri_lang");
@@ -28,11 +31,15 @@ export const LanguageSwitcher = () => {
     LANGUAGES.find((l) => l.code === selectedLang)?.name || "English";
 
   return (
-    <div className="lang-switcher-container">
+    <div 
+      className="lang-switcher-container"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div className="dashboard-header-profile-trigger">
-        <Globe size={16} style={{ color: "#6B7280" }} />
+        <GlobeIcon size={16} style={{ color: "#6B7280" }} isHovered={isHovered} />
         <span className="font-semibold text-[13px]" style={{ color: "#374151" }}>{currentLangName}</span>
-        <ChevronDown size={14} style={{ color: "#9CA3AF" }} />
+        <DownChevron size={14} style={{ color: "#9CA3AF" }} isHovered={isHovered} />
       </div>
 
       <div className="lang-dropdown">

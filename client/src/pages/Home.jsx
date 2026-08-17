@@ -13,11 +13,40 @@ import InfoCircleIcon from "../components/hover-ui/info-circle-icon";
 
 import "./Home.css";
 
+const HomeAlertItem = ({ alert }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const priorityClass = alert.priority === "High" ? "poor" : alert.priority === "Medium" ? "moderate" : "good";
+  const iconClass = alert.priority === "High" ? "danger" : alert.priority === "Medium" ? "warning" : "info";
+  const IconComponent = alert.priority === "High" || alert.priority === "Medium" ? TriangleAlertIcon : InfoCircleIcon;
+  return (
+    <div 
+      className="home-alert-item"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="home-alert-content">
+        <div className={`home-alert-icon ${iconClass}`}>
+          <IconComponent size={20} isHovered={isHovered} />
+        </div>
+        <div className="home-alert-text">
+          <h4>{alert.title}</h4>
+          <p>{alert.field || "All Fields"}</p>
+        </div>
+      </div>
+      <div className="home-alert-meta">
+        <span className={`home-card-badge ${priorityClass}`} style={{margin: 0}}>{alert.priority}</span>
+        <span>{alert.time || "Just now"}</span>
+      </div>
+    </div>
+  );
+};
+
 export const Home = () => {
   const navigate = useNavigate();
   const [fields, setFields] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isWeatherHovered, setIsWeatherHovered] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,9 +141,13 @@ export const Home = () => {
 
         <section className="home-section">
           <h2 className="home-section-title">Today's Recommendation</h2>
-          <div className="home-recommendation-card">
+          <div 
+            className="home-recommendation-card"
+            onMouseEnter={() => setIsWeatherHovered(true)}
+            onMouseLeave={() => setIsWeatherHovered(false)}
+          >
             <div className="home-recommendation-content">
-              <Cloud2Icon size={40} className="home-recommendation-icon" strokeWidth={1.5} />
+              <Cloud2Icon size={40} className="home-recommendation-icon" strokeWidth={1.5} isHovered={isWeatherHovered} />
               <div className="home-recommendation-text">
                 {fields.length > 0 ? (
                   <>
@@ -156,26 +189,9 @@ export const Home = () => {
                   No active alerts for your fields.
                 </div>
               ) : (
-                alerts.slice(0, 3).map((alert) => {
-                  const priorityClass = alert.priority === "High" ? "poor" : alert.priority === "Medium" ? "moderate" : "good";
-                  const iconClass = alert.priority === "High" ? "danger" : alert.priority === "Medium" ? "warning" : "info";
-                  const IconComponent = alert.priority === "High" || alert.priority === "Medium" ? TriangleAlertIcon : InfoCircleIcon;
-                  return (
-                    <div key={alert.id} className="home-alert-item">
-                      <div className="home-alert-content">
-                        <div className={`home-alert-icon ${iconClass}`}><IconComponent size={20} /></div>
-                        <div className="home-alert-text">
-                          <h4>{alert.title}</h4>
-                          <p>{alert.field || "All Fields"}</p>
-                        </div>
-                      </div>
-                      <div className="home-alert-meta">
-                        <span className={`home-card-badge ${priorityClass}`} style={{margin: 0}}>{alert.priority}</span>
-                        <span>{alert.time || "Just now"}</span>
-                      </div>
-                    </div>
-                  );
-                })
+                alerts.slice(0, 3).map((alert) => (
+                  <HomeAlertItem key={alert.id} alert={alert} />
+                ))
               )}
             </div>
           </section>
