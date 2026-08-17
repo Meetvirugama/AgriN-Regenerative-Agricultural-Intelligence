@@ -10,7 +10,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 const VISION_MODEL = "gemini-2.0-flash";
 
 /** Python FastAPI AI service URL (Layer 07 inference) */
-const PYTHON_AI_URL = process.env.PYTHON_AI_URL ?? "http://localhost:8001";
+const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL ?? "http://localhost:8001";
 
 /**
  * ObservationService — Layer 07: Crop Disease & Pest/Stress Diagnosis
@@ -129,7 +129,7 @@ export class ObservationService {
       if (context.satellite) form.append("satellite_json", JSON.stringify(context.satellite));
       if (context.soil) form.append("soil_json", JSON.stringify(context.soil));
 
-      const response = await fetch(`${PYTHON_AI_URL}/api/v1/disease/diagnose`, {
+      const response = await fetch(`${PYTHON_SERVICE_URL}/api/v1/disease/diagnose`, {
         method: "POST",
         body: form,
         headers: form.getHeaders(),

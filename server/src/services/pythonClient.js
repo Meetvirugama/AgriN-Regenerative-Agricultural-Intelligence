@@ -2,7 +2,7 @@ import FormData from "form-data";
 import fetch from "node-fetch";
 
 const PYTHON_API_URL =
-  process.env.PYTHON_API_URL || "http://localhost:8001/api/v1";
+  process.env.PYTHON_SERVICE_URL || "http://localhost:8001/api/v1";
 
 export class PythonClient {
   static async identifyCrop(imageBuffer, mimeType) {
