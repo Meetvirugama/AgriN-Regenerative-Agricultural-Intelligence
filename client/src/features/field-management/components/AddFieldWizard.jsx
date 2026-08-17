@@ -28,7 +28,7 @@ export const AddFieldWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSy_MISSING_KEY_FALLBACK_SO_IT_DOESNT_CRASH",
     libraries
   });
 
