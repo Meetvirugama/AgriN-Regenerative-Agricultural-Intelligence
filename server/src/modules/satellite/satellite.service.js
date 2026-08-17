@@ -1,23 +1,20 @@
 import { MockSatelliteProvider } from "./satellite.provider.js";
-import { weatherRepo } from "../../db/repositories/weatherRepository.js";
-import { query, queryOne, execute } from "../../db/connection.js";
+import { CopernicusProvider } from "./copernicus.provider.js";
+import { query, queryOne } from "../../db/connection.js";
 import { layer1Service } from "../field/field.service.js";
 
 /**
  * Satellite provider factory.
  *
- * When CDSE_CLIENT_ID + CDSE_CLIENT_SECRET are set, this will use the
- * real Copernicus Data Space Ecosystem Sentinel-2 API.
- * Until then, MockSatelliteProvider is used with a clear data badge.
- *
- * TODO Phase 3: import CopernicusProvider and wire here.
+ * Uses the real Copernicus Sentinel-2 provider when CDSE credentials are set.
+ * Falls back to MockSatelliteProvider with a clear data badge if not.
  */
 function createSatelliteProvider() {
   if (process.env.CDSE_CLIENT_ID && process.env.CDSE_CLIENT_SECRET) {
-    // Placeholder — swap in CopernicusProvider when credentials are available
-    console.log("[Satellite] CDSE credentials found — real Sentinel-2 provider TBD");
+    console.log("[Satellite] ✅ Using CopernicusProvider — real Sentinel-2 data");
+    return new CopernicusProvider();
   }
-  console.warn("[Satellite] No CDSE credentials — using MockSatelliteProvider. Data is NOT real.");
+  console.warn("[Satellite] ⚠ No CDSE credentials — using MockSatelliteProvider. Data is NOT real.");
   return new MockSatelliteProvider();
 }
 
@@ -41,7 +38,7 @@ class SatelliteService {
               ndvi_min::float, ndvi_max::float, ndvi_std::float,
               moisture_proxy::float AS ndmi_mean,
               cloud_cover_pct::float, cloud_obstructed,
-              scene_id, band_resolution_m, ingested_at::text
+              scene_id, pixel_count, ingested_at::text
        FROM satellite_tiles
        WHERE field_id = $1
          AND ingested_at > NOW() - INTERVAL '6 days'
@@ -52,11 +49,13 @@ class SatelliteService {
 
     if (cached) return this._formatTile(cached);
 
-    // Fetch from provider (mock or real)
-    const boundary = field.geojson ?? null;
-    const raw = await this.provider.fetchLatestTile(boundary, fieldId);
+    // Use the real PostGIS-derived GeoJSON polygon for the Copernicus API.
+    // For the mock provider, geojson can be null.
+    const geojson = field.geojson ?? null;
 
-    // Persist
+    const raw = await this.provider.fetchLatestTile(geojson, fieldId);
+
+    // Persist all NDVI stats
     const saved = await this._saveTile(fieldId, raw);
     return this._formatTile(saved);
   }
@@ -124,28 +123,40 @@ class SatelliteService {
   }
 
   async _saveTile(fieldId, raw) {
-    const isObstructed = (raw.cloudCoverPct ?? raw.cloud_cover_pct ?? 0) > 60;
+    const cloudPct = raw.cloudCoverPct ?? raw.cloud_cover_pct ?? 0;
+    const isObstructed = raw.cloud_obstructed ?? cloudPct > 60;
+    const captureDate = raw.captureDate ?? raw.capture_date ?? new Date().toISOString().split("T")[0];
+
     return queryOne(
       `INSERT INTO satellite_tiles
-         (field_id, capture_date, provider, ndvi_mean, ndvi_by_subregion,
+         (field_id, capture_date, provider, ndvi_mean, ndvi_median,
+          ndvi_min, ndvi_max, ndvi_std, ndvi_by_subregion,
           moisture_proxy, cloud_cover_pct, tile_url, cloud_obstructed,
-          scene_id, observation_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          scene_id, observation_date, pixel_count)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        RETURNING id, field_id, capture_date::text AS observation_date,
-                 provider, ndvi_mean::float, moisture_proxy::float AS ndmi_mean,
-                 cloud_cover_pct::float, cloud_obstructed, scene_id, ingested_at::text`,
+                 provider, ndvi_mean::float, ndvi_median::float,
+                 ndvi_min::float, ndvi_max::float, ndvi_std::float,
+                 moisture_proxy::float AS ndmi_mean,
+                 cloud_cover_pct::float, cloud_obstructed,
+                 scene_id, pixel_count, ingested_at::text`,
       [
         fieldId,
-        raw.captureDate ?? raw.capture_date ?? new Date().toISOString().split("T")[0],
+        captureDate,
         raw.provider ?? "mock",
-        raw.ndviMean ?? raw.ndvi_mean ?? 0,
+        raw.ndviMean ?? raw.ndvi_mean ?? null,
+        raw.ndviMedian ?? raw.ndvi_median ?? null,
+        raw.ndviMin ?? raw.ndvi_min ?? null,
+        raw.ndviMax ?? raw.ndvi_max ?? null,
+        raw.ndviStd ?? raw.ndvi_std ?? null,
         JSON.stringify(raw.ndviBySubregion ?? raw.ndvi_by_subregion ?? []),
-        raw.moistureProxy ?? raw.moisture_proxy ?? 0,
-        raw.cloudCoverPct ?? raw.cloud_cover_pct ?? 0,
+        raw.moistureProxy ?? raw.moisture_proxy ?? null,
+        cloudPct,
         raw.tileUrl ?? null,
         isObstructed,
         raw.sceneId ?? raw.scene_id ?? null,
-        raw.captureDate ?? raw.capture_date ?? new Date().toISOString().split("T")[0],
+        captureDate,
+        raw.pixel_count ?? null,
       ],
     );
   }
