@@ -29,6 +29,7 @@ import { startScheduler } from "./jobs/scheduler.js";
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1); // Trust first proxy (Render/Vercel)
 const PORT = parseInt(process.env.PORT || "8000", 10);
 
 // ─── Security Middleware ────────────────────────────────────────────────────
