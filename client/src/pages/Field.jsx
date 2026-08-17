@@ -94,41 +94,27 @@ const FieldHealthScoreWrapper = ({ fieldId }) => {
     );
   }
 
+  // Map new API shape (score/category/components/evidence) → UI dimension cards
+  const dimensions = score ? [
+    { title: "Vegetation",   icon: <Leaf size={16} />,           value: score.components?.ndvi?.score,    label: score.components?.ndvi?.satellite_available ? "Sentinel-2" : "unavailable" },
+    { title: "Weather Risk", icon: <CloudLightning size={16} />,  value: score.components?.weather?.score, label: (score.components?.weather?.active_flags ?? []).join(", ") || "clear" },
+    { title: "Soil",         icon: <Mountain size={16} />,        value: score.components?.soil?.score,    label: "SoilGrids" },
+    { title: "Crop Stage",   icon: <ThermometerSun size={16} />,  value: score.components?.stage?.score,   label: "estimated" },
+  ] : [];
+
   return (
     <div className="field-section">
       <FieldHealthHero score={score} loading={loading} />
       {score && !loading && (
         <div className="field-health-grid">
-          <HealthDimensionCard
-            title="Water"
-            dimension={score.water_condition}
-            icon={<Droplets size={16} />}
-          />
-          <HealthDimensionCard
-            title="Soil"
-            dimension={score.soil_condition}
-            icon={<Mountain size={16} />}
-          />
-          <HealthDimensionCard
-            title="Weather"
-            dimension={score.weather_risk}
-            icon={<CloudLightning size={16} />}
-          />
-          <HealthDimensionCard
-            title="Disease"
-            dimension={score.disease_risk}
-            icon={<Bug size={16} />}
-          />
-          <HealthDimensionCard
-            title="Climate"
-            dimension={score.climate_stress}
-            icon={<ThermometerSun size={16} />}
-          />
-          <HealthDimensionCard
-            title="Vegetation"
-            dimension={score.vegetation_trend}
-            icon={<Leaf size={16} />}
-          />
+          {dimensions.map(({ title, icon, value, label }) => (
+            <HealthDimensionCard
+              key={title}
+              title={title}
+              dimension={{ score: value, label }}
+              icon={icon}
+            />
+          ))}
         </div>
       )}
     </div>

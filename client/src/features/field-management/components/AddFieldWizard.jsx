@@ -3,7 +3,7 @@ import {
   ArrowLeft, Search, Crosshair, MapPin, Info, Satellite, CloudRain, 
   Map as MapIcon, Plus, Minus, Check, MousePointer2, PenTool, Edit3, 
   Trash2, Navigation, Calendar, Droplet, Triangle, CloudUpload, 
-  BrainCircuit, Lightbulb, Tag, Bell, Leaf, Loader2, X
+  BrainCircuit, Lightbulb, Tag, Bell, Leaf, Loader2, X, AlertTriangle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { GoogleMap, useJsApiLoader, Marker, Polygon, DrawingManager, Autocomplete } from '@react-google-maps/api';
@@ -17,6 +17,10 @@ const mapContainerStyle = {
   width: '100%',
   height: '100%'
 };
+
+// Safe helpers — only read google.maps enums after isLoaded=true
+const getControlPosition = () => window.google?.maps?.ControlPosition?.TOP_CENTER;
+const getPolygonMode = () => window.google?.maps?.drawing?.OverlayType?.POLYGON;
 
 export const AddFieldWizard = () => {
   const navigate = useNavigate();
@@ -159,8 +163,17 @@ export const AddFieldWizard = () => {
     }
   };
 
-  if (loadError) return <div style={{padding: '2rem'}}>Error loading maps. Please check your API key.</div>;
-  if (!isLoaded) return <div style={{padding: '2rem', display: 'flex', gap: '1rem', alignItems: 'center'}}><Loader2 className="animate-spin" /> Loading Maps...</div>;
+  if (loadError) return (
+    <div style={{padding: '2rem', display: 'flex', gap: '1rem', alignItems: 'center', color: 'var(--danger)'}}>
+      <AlertTriangle size={20} />
+      Maps failed to load. Check your API key and that the Maps JavaScript API + Drawing API are enabled.
+    </div>
+  );
+  if (!isLoaded) return (
+    <div style={{padding: '2rem', display: 'flex', gap: '1rem', alignItems: 'center'}}>
+      <Loader2 className="animate-spin" /> Loading Maps...
+    </div>
+  );
 
   return (
     <div className="wizard-container">
@@ -304,14 +317,14 @@ export const AddFieldWizard = () => {
                     fullscreenControl: false,
                   }}
                 >
-                  {boundaryCoords.length === 0 && (
+                  {boundaryCoords.length === 0 && getControlPosition() && getPolygonMode() && (
                     <DrawingManager
                       onPolygonComplete={onPolygonComplete}
                       options={{
                         drawingControl: true,
                         drawingControlOptions: {
-                          position: window.google.maps.ControlPosition.TOP_CENTER,
-                          drawingModes: [window.google.maps.drawing.OverlayType.POLYGON]
+                          position: getControlPosition(),
+                          drawingModes: [getPolygonMode()]
                         },
                         polygonOptions: {
                           fillColor: '#22c55e',
@@ -373,8 +386,8 @@ export const AddFieldWizard = () => {
 
               <div className="wizard-actions">
                 <button onClick={() => setStep(1)} className="wizard-btn-outline">Previous</button>
-                <button onClick={() => setStep(3)} className="wizard-btn-solid" disabled={boundaryCoords.length === 0}>
-                  Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                <button onClick={() => setStep(3)} className="wizard-btn-solid">
+                  {boundaryCoords.length === 0 ? 'Skip (draw later)' : 'Next'} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </button>
               </div>
             </div>
