@@ -1,8 +1,37 @@
 .home-container {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding-bottom: 48px;
+  height: calc(100vh - 72px - 64px);
+  overflow: hidden;
+  gap: 24px;
+}
+
+.home-scrollable-section {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-right: 8px;
+}
+
+.home-scrollable-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.home-scrollable-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.home-scrollable-section::-webkit-scrollbar-thumb {
+  background-color: #D1D5DB;
+  border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    height: calc(100vh - 72px - 40px);
+  }
 }
 
 .home-header h1 {

@@ -133,97 +133,94 @@ export const Home = () => {
         </section>
       </div>
 
-      <div className="home-grid-row-2">
-        <section className="home-section">
-          <div className="home-section-header">
-            <h2 className="home-section-title">Recent Alerts</h2>
-            <Link to="/alerts" className="home-section-link">View All</Link>
-          </div>
-          
-          <div className="home-alerts-list">
-            <div className="home-alert-item">
-              <div className="home-alert-content">
-                <div className="home-alert-icon warning"><AlertTriangle size={20} /></div>
-                <div className="home-alert-text">
-                  <h4>Rain expected in 2 days</h4>
-                  <p>Wheat Field 01</p>
+      <div className="home-scrollable-section">
+        <div className="home-grid-row-2">
+          <section className="home-section">
+            <div className="home-section-header">
+              <h2 className="home-section-title">Recent Alerts</h2>
+              <Link to="/alerts" className="home-section-link">View All</Link>
+            </div>
+            
+            <div className="home-alerts-list">
+              <div className="home-alert-item">
+                <div className="home-alert-content">
+                  <div className="home-alert-icon warning"><AlertTriangle size={20} /></div>
+                  <div className="home-alert-text">
+                    <h4>Rain expected in 2 days</h4>
+                    <p>Wheat Field 01</p>
+                  </div>
+                </div>
+                <div className="home-alert-meta">
+                  <span className="home-card-badge moderate" style={{margin: 0}}>Medium</span>
+                  <span>1h ago</span>
                 </div>
               </div>
-              <div className="home-alert-meta">
-                <span className="home-card-badge moderate" style={{margin: 0}}>Medium</span>
-                <span>1h ago</span>
-              </div>
-            </div>
 
-            <div className="home-alert-item">
-              <div className="home-alert-content">
-                <div className="home-alert-icon danger"><AlertTriangle size={20} /></div>
-                <div className="home-alert-text">
-                  <h4>Disease risk increasing</h4>
-                  <p>Rice Field 02</p>
+              <div className="home-alert-item">
+                <div className="home-alert-content">
+                  <div className="home-alert-icon danger"><AlertTriangle size={20} /></div>
+                  <div className="home-alert-text">
+                    <h4>Disease risk increasing</h4>
+                    <p>Rice Field 02</p>
+                  </div>
+                </div>
+                <div className="home-alert-meta">
+                  <span className="home-card-badge poor" style={{margin: 0}}>High</span>
+                  <span>2h ago</span>
                 </div>
               </div>
-              <div className="home-alert-meta">
-                <span className="home-card-badge poor" style={{margin: 0}}>High</span>
-                <span>2h ago</span>
-              </div>
-            </div>
 
-            <div className="home-alert-item">
-              <div className="home-alert-content">
-                <div className="home-alert-icon info"><Info size={20} /></div>
-                <div className="home-alert-text">
-                  <h4>Satellite: Vegetation improving</h4>
-                  <p>Cotton Field 03</p>
+              <div className="home-alert-item">
+                <div className="home-alert-content">
+                  <div className="home-alert-icon info"><Info size={20} /></div>
+                  <div className="home-alert-text">
+                    <h4>Satellite: Vegetation improving</h4>
+                    <p>Cotton Field 03</p>
+                  </div>
+                </div>
+                <div className="home-alert-meta">
+                  <span className="home-card-badge good" style={{margin: 0}}>Low</span>
+                  <span>3h ago</span>
                 </div>
               </div>
-              <div className="home-alert-meta">
-                <span className="home-card-badge good" style={{margin: 0}}>Low</span>
-                <span>3h ago</span>
-              </div>
             </div>
-
-            <button className="home-alerts-view-all-btn" onClick={() => navigate('/alerts')}>
-              View All Alerts
-            </button>
-          </div>
-        </section>
-
-      </div>
-
-      <div className="home-grid-row-3">
-        <div className="home-stat-card">
-          <div className="home-stat-icon success">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
-          </div>
-          <div className="home-stat-text">
-            <p>Total Fields</p>
-            <h3>{isLoading ? "-" : displayFields.length}</h3>
-          </div>
+          </section>
         </div>
 
-        <div className="home-stat-card">
-          <div className="home-stat-icon info"><Droplets size={24} /></div>
-          <div className="home-stat-text">
-            <p>Fields Need Attention</p>
-            <h3>1</h3>
+        <div className="home-grid-row-3">
+          <div className="home-stat-card">
+            <div className="home-stat-icon success">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+            </div>
+            <div className="home-stat-text">
+              <p>Total Fields</p>
+              <h3>{isLoading ? "-" : displayFields.length}</h3>
+            </div>
           </div>
-        </div>
 
-        <div className="home-stat-card">
-          <div className="home-stat-icon warning"><Bell size={24} /></div>
-          <div className="home-stat-text">
-            <p>Active Alerts</p>
-            <h3>3</h3>
+          <div className="home-stat-card">
+            <div className="home-stat-icon info"><Droplets size={24} /></div>
+            <div className="home-stat-text">
+              <p>Fields Need Attention</p>
+              <h3>1</h3>
+            </div>
           </div>
-        </div>
 
-        <div className="home-stat-card">
-          <div className="home-stat-icon purple"><MessageSquare size={24} /></div>
-          <div className="home-stat-text">
-            <p>Expert Responses</p>
-            <div className="subtext">This Month</div>
-            <h3>2</h3>
+          <div className="home-stat-card">
+            <div className="home-stat-icon warning"><Bell size={24} /></div>
+            <div className="home-stat-text">
+              <p>Active Alerts</p>
+              <h3>3</h3>
+            </div>
+          </div>
+
+          <div className="home-stat-card">
+            <div className="home-stat-icon purple"><MessageSquare size={24} /></div>
+            <div className="home-stat-text">
+              <p>Expert Responses</p>
+              <div className="subtext">This Month</div>
+              <h3>2</h3>
+            </div>
           </div>
         </div>
       </div>

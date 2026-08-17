@@ -86,17 +86,18 @@
 }
 
 .dashboard-nav-badge {
-  background-color: #DC2626;
-  color: white;
-  font-size: 11px;
+  background-color: rgba(220, 38, 38, 0.09);
+  color: #DC2626;
+  border: 1px solid rgba(220, 38, 38, 0.15);
+  font-size: 10px;
   font-weight: 700;
-  min-width: 20px;
-  height: 20px;
+  height: 16px;
+  min-width: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  padding: 0 6px;
+  padding: 0 5px;
 }
 
 .dashboard-sidebar-footer {
@@ -191,6 +192,31 @@
 
 .dashboard-header-action.alerts svg {
   color: #111827;
+}
+
+.dashboard-bell-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-bell-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #DC2626;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  height: 14px;
+  min-width: 14px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 1px solid #FAFAFA;
 }
 
 .dashboard-header-action.language {
