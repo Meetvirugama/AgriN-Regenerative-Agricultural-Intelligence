@@ -56,10 +56,10 @@ export const Alerts = () => {
         </div>
         <div className="alerts-header-actions">
           <button className="alerts-btn">
-            All Fields <ChevronDown size={16} className="text-text-muted" />
+            All Fields <DownChevron size={16} className="text-text-muted" />
           </button>
           <button className="alerts-btn">
-            <CheckCircle2 size={16} className="text-text-muted" /> Mark all as read
+            <CheckedIcon size={16} className="text-text-muted" /> Mark all as read
           </button>
         </div>
       </div>
