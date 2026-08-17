@@ -1,4 +1,4 @@
-import { db } from "../../models/database.js";
+import { db } from "../../models/Database.js";
 
 export class Layer7Service {
   async getDiagnosisHistory(fieldId) {

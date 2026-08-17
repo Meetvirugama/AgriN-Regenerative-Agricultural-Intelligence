@@ -1,4 +1,4 @@
-import { db } from "../../models/database.js";
+import { db } from "../../models/Database.js";
 import { layer1Service } from "../field/field.service.js";
 import { v4 as uuidv4 } from "uuid";
 import { DocumentParser } from "./document.parser.js";

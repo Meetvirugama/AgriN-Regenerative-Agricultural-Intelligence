@@ -1,4 +1,4 @@
-import { db } from "../../models/database.js";
+import { db } from "../../models/Database.js";
 import { layer1Service } from "../field/field.service.js";
 import { layer4Service } from "../soil/soil.service.js";
 import { regenAI } from "./regen.ai.js";
