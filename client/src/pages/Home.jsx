@@ -26,10 +26,17 @@ export const Home = () => {
           cropApi.getAllFields(),
           cropApi.getAlerts()
         ]);
+<<<<<<< HEAD
         setFields(fieldsData || []);
         setAlerts(alertsData || []);
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
+=======
+        setFields(fieldsData);
+        setAlerts(alertsData.slice(0, 3));
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+>>>>>>> origin/main
       } finally {
         setIsLoading(false);
       }
