@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+ai-service/venv/
+ai-service/.venv/
+
+# Datasets & ML
+dataset/
+data/
+reports/
+*.pt
+*.pth
+*.keras
+

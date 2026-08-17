@@ -18,6 +18,8 @@ import {
   useSatelliteHealth,
 } from "../features/satellite-health";
 import { DiseaseDiagnosisFlow } from "../features/disease-diagnosis/components/DiseaseDiagnosisFlow";
+import { diagnosisApi } from "../features/disease-diagnosis/api/diagnosisApi";
+
 import { RegenPlanningCard } from "../features/regen-ag/components/RegenPlanningCard";
 import {
   FieldHealthHero,
@@ -142,18 +144,22 @@ export const Field = () => {
 
   const [pendingPrompts, setPendingPrompts] = useState([]);
   const [timeline, setTimeline] = useState([]);
+  const [observations, setObservations] = useState([]);
+  const [updatingOutcome, setUpdatingOutcome] = useState(null);
+
 
   useEffect(() => {
     if (!fieldId) return;
 
     async function fetchData() {
       // Non-blocking parallel data fetches for this field
-      const [weatherResult, soilResult, promptsResult, timelineResult] =
+      const [weatherResult, soilResult, promptsResult, timelineResult, obsResult] =
         await Promise.allSettled([
           weatherApi.getForecast(fieldId),
           soilApi.getSoilProfile(fieldId),
           memoryApi.getPendingPrompts(fieldId),
           memoryApi.getTimeline(fieldId),
+          diagnosisApi.getObservations(fieldId, 5),
         ]);
 
       if (weatherResult.status === "fulfilled")
@@ -167,9 +173,12 @@ export const Field = () => {
         setPendingPrompts(promptsResult.value);
       if (timelineResult.status === "fulfilled")
         setTimeline(timelineResult.value);
+      if (obsResult.status === "fulfilled" && Array.isArray(obsResult.value))
+        setObservations(obsResult.value);
     }
     fetchData();
   }, [fieldId]);
+
 
   const handleIdentify = async (blob) => {
     if (!fieldId) return;
@@ -303,6 +312,106 @@ export const Field = () => {
           </FeatureErrorBoundary>
         )}
       </section>
+
+      {/* Crop Health Observations — Layer 07 history */}
+      {observations.length > 0 && (
+        <section className="field-section-spaced">
+          <div className="field-card">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+              <h3 className="field-card-title" style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <Bug size={16} /> Recent Diagnoses
+              </h3>
+              <button
+                onClick={() => setShowDiagnosisFlow(true)}
+                style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--primary)", background: "none", border: "none", cursor: "pointer" }}
+              >
+                + New
+              </button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              {observations.map((obs) => {
+                const pct = Math.round((obs.confidence ?? 0) * 100);
+                const sevColor = { critical: "#dc2626", high: "#f97316", medium: "#eab308", low: "#22c55e", none: "#22c55e" }[obs.severity] ?? "#6b7280";
+                const catEmoji = { disease: "🦠", pest: "🐛", nutrient_deficiency: "⚗️", water_stress: "💧", heat_stress: "🌡️", healthy: "✅", unknown: "❓" }[obs.condition_category] ?? "🔍";
+                const dateStr = obs.submitted_at ? new Date(obs.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "";
+                return (
+                  <div key={obs.id} style={{ background: "var(--surface-raised, var(--surface))", border: "1px solid var(--border)", borderRadius: "0.625rem", padding: "0.625rem 0.75rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.3rem" }}>
+                      <span style={{ fontWeight: 700, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                        {catEmoji} {obs.condition_name ?? "Unknown"}
+                      </span>
+                      <span style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>{dateStr}</span>
+                    </div>
+                    {/* Confidence bar */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+                      <div style={{ flex: 1, height: 4, borderRadius: 99, background: "var(--border)", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct}%`, background: pct >= 70 ? "#22c55e" : pct >= 45 ? "#eab308" : "#ef4444", borderRadius: 99 }} />
+                      </div>
+                      <span style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--text-muted)", flexShrink: 0 }}>{pct}%</span>
+                      <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "0.1rem 0.45rem", borderRadius: 99, background: sevColor + "22", color: sevColor, flexShrink: 0 }}>
+                        {obs.severity}
+                      </span>
+                    </div>
+                    {obs.monitor && (
+                      <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontStyle: "italic", marginTop: "0.15rem" }}>📋 {obs.monitor}</p>
+                    )}
+
+                    {/* Layer 08: Outcome Feedback */}
+                    <div style={{ marginTop: "0.6rem", paddingTop: "0.5rem", borderTop: "1px dashed var(--border)" }}>
+                      {obs.outcome && obs.outcome !== "unknown" ? (
+                        <p style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                          {obs.outcome === "improved" ? <ThumbsUp size={12} color="#22c55e" /> : 
+                           obs.outcome === "worsened" ? <ThumbsDown size={12} color="#ef4444" /> : 
+                           <Equal size={12} />}
+                          Outcome recorded: <strong>{obs.outcome}</strong>
+                        </p>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                          <p style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Did this advice work?</p>
+                          <div style={{ display: "flex", gap: "0.3rem" }}>
+                            {["improved", "unchanged", "worsened"].map(outcome => (
+                              <button
+                                key={outcome}
+                                disabled={updatingOutcome === obs.id}
+                                onClick={async () => {
+                                  setUpdatingOutcome(obs.id);
+                                  try {
+                                    await diagnosisApi.submitObservationFeedback(fieldId, obs.id, outcome);
+                                    setObservations(prev => prev.map(o => o.id === obs.id ? { ...o, outcome } : o));
+                                  } catch (e) {
+                                    console.error("Failed to update outcome:", e);
+                                  } finally {
+                                    setUpdatingOutcome(null);
+                                  }
+                                }}
+                                style={{ 
+                                  flex: 1, 
+                                  padding: "0.25rem", 
+                                  fontSize: "0.65rem", 
+                                  fontWeight: 600,
+                                  background: "var(--surface)", 
+                                  border: "1px solid var(--border)", 
+                                  borderRadius: "0.25rem",
+                                  cursor: "pointer",
+                                  textTransform: "capitalize",
+                                  opacity: updatingOutcome === obs.id ? 0.5 : 1
+                                }}
+                              >
+                                {outcome}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
 
       {/* Regen + Cross-border (Layer 10 / 14) */}
       <section className="field-section-spaced">

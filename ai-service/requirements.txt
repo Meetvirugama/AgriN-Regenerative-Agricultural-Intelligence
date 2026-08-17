@@ -4,3 +4,6 @@ google-genai
 python-multipart
 pydantic
 python-dotenv
+Pillow
+numpy
+httpx
