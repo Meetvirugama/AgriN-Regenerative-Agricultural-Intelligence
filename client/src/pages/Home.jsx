@@ -184,44 +184,11 @@ export const Home = () => {
                 </div>
               </div>
             </div>
+            
+            <button className="home-alerts-view-all-btn" onClick={() => navigate('/alerts')}>
+              View All Alerts
+            </button>
           </section>
-        </div>
-
-        <div className="home-grid-row-3">
-          <div className="home-stat-card">
-            <div className="home-stat-icon success">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
-            </div>
-            <div className="home-stat-text">
-              <p>Total Fields</p>
-              <h3>{isLoading ? "-" : displayFields.length}</h3>
-            </div>
-          </div>
-
-          <div className="home-stat-card">
-            <div className="home-stat-icon info"><Droplets size={24} /></div>
-            <div className="home-stat-text">
-              <p>Fields Need Attention</p>
-              <h3>1</h3>
-            </div>
-          </div>
-
-          <div className="home-stat-card">
-            <div className="home-stat-icon warning"><Bell size={24} /></div>
-            <div className="home-stat-text">
-              <p>Active Alerts</p>
-              <h3>3</h3>
-            </div>
-          </div>
-
-          <div className="home-stat-card">
-            <div className="home-stat-icon purple"><MessageSquare size={24} /></div>
-            <div className="home-stat-text">
-              <p>Expert Responses</p>
-              <div className="subtext">This Month</div>
-              <h3>2</h3>
-            </div>
-          </div>
         </div>
       </div>
     </div>
