@@ -121,9 +121,11 @@ export const FarmerShell = () => {
 
             <div className="dashboard-header-actions">
               <button className="dashboard-header-action alerts" onClick={() => navigate('/alerts')}>
-                <Bell size={18} />
+                <div className="dashboard-bell-wrapper">
+                  <Bell size={18} />
+                  <span className="dashboard-bell-badge">3</span>
+                </div>
                 <span>Alerts</span>
-                <span className="dashboard-nav-badge">3</span>
               </button>
               
               <button className="dashboard-header-action language" onClick={() => alert('Language settings coming soon!')}>

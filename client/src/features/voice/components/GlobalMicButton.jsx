@@ -78,7 +78,7 @@ export const GlobalMicButton = () => {
 
         <button
           onClick={handleToggleRecord}
-          className={`w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
+          className={`w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
             isRecording
               ? "bg-error text-white scale-110 animate-pulse-ring"
               : "bg-primary text-white hover:scale-105"
@@ -86,7 +86,7 @@ export const GlobalMicButton = () => {
           aria-label={isRecording ? "Stop recording" : "Ask a question aloud"}
         >
           <svg
-            className="w-8 h-8"
+            className="w-6 h-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
