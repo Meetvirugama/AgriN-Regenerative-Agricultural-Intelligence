@@ -20,6 +20,11 @@ const RequestOtpSchema = z.object({
     .regex(/^\+?[\d\s\-().]+$/, "Invalid phone number format"),
 });
 
+const LoginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(4, "Password must be at least 4 characters"),
+});
+
 const VerifyOtpSchema = z.object({
   phone_number: z.string().min(7).max(20),
   code: z
@@ -88,6 +93,35 @@ router.post(
         err.message?.includes("expired") ||
         err.message?.includes("attempts")
       ) {
+        res.status(401).json({ error: { message: err.message, status: 401 } });
+      } else {
+        next(err);
+      }
+    }
+  },
+);
+
+/**
+ * POST /api/auth/login
+ *
+ * Email and password login.
+ */
+router.post(
+  "/auth/login",
+  validate({ body: LoginSchema }),
+  async (req, res, next) => {
+    try {
+      const tokens = await AuthService.loginWithPassword(
+        req.body.email,
+        req.body.password,
+        {
+          userAgent: req.headers["user-agent"],
+          ipAddress: req.ip,
+        },
+      );
+      res.json(tokens);
+    } catch (err) {
+      if (err.message?.includes("Invalid email or password") || err.message?.includes("Account does not have a password")) {
         res.status(401).json({ error: { message: err.message, status: 401 } });
       } else {
         next(err);

@@ -22,6 +22,12 @@ export const authApi = {
       body: JSON.stringify({ phone_number: phoneNumber }),
     }),
 
+  login: (email, password) =>
+    apiFetch("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
   verifyOtp: (phoneNumber, code) =>
     apiFetch("/auth/verify-otp", {
       method: "POST",

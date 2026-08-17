@@ -1,266 +1,232 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
-  Plus, 
-  CloudRain, 
-  AlertTriangle, 
-  Mic, 
-  MoreVertical,
-  Info,
-  Droplets,
-  MessageSquare
+  Plus, CloudRain, AlertTriangle, Mic, MoreVertical,
+  Info, Droplets, MessageSquare, Bell, Loader2
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { cropApi } from "../features/crop-context/api/cropApi";
+import "./Home.css";
 
 export const Home = () => {
   const navigate = useNavigate();
+  const [fields, setFields] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFields = async () => {
+      try {
+        const data = await cropApi.getAllFields();
+        setFields(data);
+      } catch (err) {
+        console.error("Failed to fetch fields:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFields();
+  }, []);
+
+  const dummyFields = [
+    {
+      id: 'dummy1',
+      name: 'Wheat Field 01',
+      crop_type: 'Wheat',
+      subtitle: '1.2 ha • Day 46',
+      status: 'Moderate',
+      statusClass: 'moderate',
+      img: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop'
+    },
+    {
+      id: 'dummy2',
+      name: 'Rice Field 02',
+      crop_type: 'Rice',
+      subtitle: '0.8 ha • Day 31',
+      status: 'Good',
+      statusClass: 'good',
+      img: 'https://images.unsplash.com/photo-1593414902194-e34346bbdbf9?w=150&h=150&fit=crop'
+    }
+  ];
+
+  const displayFields = fields.length > 0 ? fields.map(f => ({
+    id: f.id,
+    name: f.name,
+    crop_type: f.crop_type,
+    subtitle: `${f.crop_type} • 4.25 acres`,
+    status: f.crop_type === 'rice' ? 'Moderate' : 'Good',
+    statusClass: f.crop_type === 'rice' ? 'moderate' : 'good',
+    img: f.crop_type === 'wheat' ? "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop" 
+       : f.crop_type === 'rice' ? "https://images.unsplash.com/photo-1593414902194-e34346bbdbf9?w=150&h=150&fit=crop"
+       : "https://images.unsplash.com/photo-1587334274328-64186a80aeee?w=150&h=150&fit=crop"
+  })) : dummyFields;
 
   return (
-    <div className="animate-fade-in-up space-y-8 pb-12">
-      {/* HEADER */}
-      <section>
-        <h1 className="text-3xl font-bold text-text-main">Good morning, Ramesh</h1>
-        <p className="text-text-muted mt-1 text-lg">Here's what's happening in your fields today.</p>
+    <div className="home-container">
+      <section className="home-header">
+        <h1>Good morning, Ramesh</h1>
+        <p>Here's what's happening in your fields today.</p>
       </section>
 
-      {/* MY FIELDS & TODAY'S RECOMMENDATION ROW */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
-        {/* MY FIELDS (Spans 2 columns) */}
-        <section className="xl:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-text-main">My Fields</h2>
-            <Link to="/fields" className="text-sm font-semibold text-primary hover:underline">View All Fields</Link>
+      <div className="home-grid-row-1">
+        <section className="home-section">
+          <div className="home-section-header">
+            <h2 className="home-section-title">My Fields</h2>
+            <Link to="/fields" className="home-section-link">View All Fields</Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            
-            {/* Wheat Field */}
-            <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-border/50">
-                    <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop" alt="Wheat" className="w-full h-full object-cover" />
+          <div className="home-fields-grid">
+            {isLoading ? (
+              <div style={{gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', padding: '48px 0'}}>
+                <Loader2 className="animate-spin text-success" size={32} />
+              </div>
+            ) : (
+              displayFields.slice(0, 2).map(field => (
+                <div key={field.id} className="home-card">
+                  <div className="home-card-top-content">
+                    <div className="home-card-info-row">
+                      <div className="home-card-image">
+                        <img src={field.img} alt={field.crop_type} />
+                      </div>
+                      <div className="home-card-text-container">
+                        <div className="home-card-title-row">
+                          <h3 className="home-card-title">{field.name}</h3>
+                          <button className="home-card-more-btn"><MoreVertical size={16} /></button>
+                        </div>
+                        <p className="home-card-subtitle">{field.subtitle}</p>
+                      </div>
+                    </div>
+                    <span className={`home-card-badge ${field.statusClass}`}>
+                      {field.status}
+                    </span>
                   </div>
-                  <button className="text-text-muted hover:text-text-main">
-                    <MoreVertical size={20} />
+                  <button 
+                    onClick={() => field.id.startsWith('dummy') ? navigate('/fields') : navigate(`/fields/${field.id}`)} 
+                    className="home-card-button"
+                  >
+                    View Field
                   </button>
                 </div>
-                <h3 className="font-bold text-text-main text-lg">Wheat Field 01</h3>
-                <p className="text-sm text-text-muted mt-0.5">Wheat • 1.2 ha • Day 46</p>
-                <div className="mt-3">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-warning/10 text-warning">
-                    Moderate
-                  </span>
-                </div>
-              </div>
-              <button 
-                onClick={() => navigate('/fields/stub')} 
-                className="w-full mt-6 py-2.5 border border-primary text-primary rounded-lg text-sm font-bold hover:bg-primary/5 transition-colors"
-              >
-                View Field
-              </button>
-            </div>
+              ))
+            )}
 
-            {/* Rice Field */}
-            <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-              <div>
-                <div className="flex justify-between items-start mb-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-border/50">
-                    <img src="https://images.unsplash.com/photo-1593414902194-e34346bbdbf9?w=150&h=150&fit=crop" alt="Rice" className="w-full h-full object-cover" />
-                  </div>
-                  <button className="text-text-muted hover:text-text-main">
-                    <MoreVertical size={20} />
-                  </button>
-                </div>
-                <h3 className="font-bold text-text-main text-lg">Rice Field 02</h3>
-                <p className="text-sm text-text-muted mt-0.5">Rice • 0.8 ha • Day 31</p>
-                <div className="mt-3">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-success/10 text-success">
-                    Good
-                  </span>
-                </div>
-              </div>
-              <button 
-                onClick={() => navigate('/fields/stub')} 
-                className="w-full mt-6 py-2.5 border border-primary text-primary rounded-lg text-sm font-bold hover:bg-primary/5 transition-colors"
-              >
-                View Field
-              </button>
+            <div onClick={() => navigate('/fields/add')} className="home-add-field">
+              <Plus size={32} color="#111827" />
+              <span style={{fontWeight: 600, color: '#111827', marginTop: '8px', fontSize: '14px'}}>Add New Field</span>
             </div>
-
-            {/* Add New Field Card */}
-            <div 
-              onClick={() => navigate('/fields/add')}
-              className="bg-background border-2 border-dashed border-border rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors min-h-[220px]"
-            >
-              <div className="text-text-main mb-2">
-                <Plus size={28} strokeWidth={2.5} />
-              </div>
-              <span className="font-bold text-text-main">Add New Field</span>
-            </div>
-
           </div>
         </section>
 
-        {/* TODAY'S RECOMMENDATION (Spans 1 column) */}
-        <section className="space-y-4">
-          <h2 className="text-lg font-bold text-text-main">Today's Recommendation</h2>
-          <div className="bg-surface border border-border rounded-xl p-6 shadow-sm min-h-[220px] flex flex-col justify-between">
-            <div className="flex gap-4">
-              <div className="mt-1">
-                <CloudRain size={40} className="text-text-muted stroke-[1.5]" />
-              </div>
-              <div>
-                <h3 className="font-bold text-text-main text-base leading-tight">Rain expected in 2 days.</h3>
-                <p className="font-medium text-text-main mt-1">Hold irrigation for now.</p>
-                <p className="text-sm text-text-muted mt-4">Field: Wheat Field 01</p>
+        <section className="home-section">
+          <h2 className="home-section-title">Today's Recommendation</h2>
+          <div className="home-recommendation-card">
+            <div className="home-recommendation-content">
+              <CloudRain size={40} className="home-recommendation-icon" strokeWidth={1.5} />
+              <div className="home-recommendation-text">
+                <h3>Rain expected in 2 days.</h3>
+                <p>Hold irrigation for now.</p>
+                <div className="subtext">Field: Wheat Field 01</div>
               </div>
             </div>
-            <button className="w-full py-2.5 mt-4 border border-border text-text-main rounded-lg text-sm font-bold hover:bg-secondary transition-colors">
+            <button className="home-recommendation-button" onClick={() => navigate('/intelligence')}>
               View Details
             </button>
           </div>
         </section>
       </div>
 
-      {/* RECENT ALERTS & QUICK ASK ROW */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pt-2">
-        
-        {/* ALERTS */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-text-main">Recent Alerts</h2>
-            <Link to="/alerts" className="text-sm font-semibold text-primary hover:underline">View All</Link>
+      <div className="home-grid-row-2">
+        <section className="home-section">
+          <div className="home-section-header">
+            <h2 className="home-section-title">Recent Alerts</h2>
+            <Link to="/alerts" className="home-section-link">View All</Link>
           </div>
-          <div className="bg-surface border border-border rounded-xl shadow-sm flex flex-col">
-            
-            {/* Alert 1 */}
-            <div className="p-4 flex items-center justify-between border-b border-border hover:bg-background/50 transition-colors">
-              <div className="flex gap-4 items-center">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-warning/10 text-warning shrink-0">
-                  <AlertTriangle size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-text-main text-sm">Rain expected in 2 days</h4>
-                  <p className="text-sm text-text-muted mt-0.5">Wheat Field 01</p>
+          
+          <div className="home-alerts-list">
+            <div className="home-alert-item">
+              <div className="home-alert-content">
+                <div className="home-alert-icon warning"><AlertTriangle size={20} /></div>
+                <div className="home-alert-text">
+                  <h4>Rain expected in 2 days</h4>
+                  <p>Wheat Field 01</p>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-warning/10 text-warning">Medium</span>
-                <span className="text-xs text-text-muted font-medium w-12 text-right">1h ago</span>
+              <div className="home-alert-meta">
+                <span className="home-card-badge moderate" style={{margin: 0}}>Medium</span>
+                <span>1h ago</span>
               </div>
             </div>
 
-            {/* Alert 2 */}
-            <div className="p-4 flex items-center justify-between border-b border-border hover:bg-background/50 transition-colors">
-              <div className="flex gap-4 items-center">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-danger/10 text-danger shrink-0">
-                  <AlertTriangle size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-text-main text-sm">Disease risk increasing</h4>
-                  <p className="text-sm text-text-muted mt-0.5">Rice Field 02</p>
+            <div className="home-alert-item">
+              <div className="home-alert-content">
+                <div className="home-alert-icon danger"><AlertTriangle size={20} /></div>
+                <div className="home-alert-text">
+                  <h4>Disease risk increasing</h4>
+                  <p>Rice Field 02</p>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-danger/10 text-danger">High</span>
-                <span className="text-xs text-text-muted font-medium w-12 text-right">2h ago</span>
+              <div className="home-alert-meta">
+                <span className="home-card-badge poor" style={{margin: 0}}>High</span>
+                <span>2h ago</span>
               </div>
             </div>
 
-            {/* Alert 3 */}
-            <div className="p-4 flex items-center justify-between border-b border-border hover:bg-background/50 transition-colors">
-              <div className="flex gap-4 items-center">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-success/10 text-success shrink-0">
-                  <Info size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-text-main text-sm">Satellite: Vegetation improving</h4>
-                  <p className="text-sm text-text-muted mt-0.5">Cotton Field 03</p>
+            <div className="home-alert-item">
+              <div className="home-alert-content">
+                <div className="home-alert-icon info"><Info size={20} /></div>
+                <div className="home-alert-text">
+                  <h4>Satellite: Vegetation improving</h4>
+                  <p>Cotton Field 03</p>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-success/10 text-success">Low</span>
-                <span className="text-xs text-text-muted font-medium w-12 text-right">3h ago</span>
+              <div className="home-alert-meta">
+                <span className="home-card-badge good" style={{margin: 0}}>Low</span>
+                <span>3h ago</span>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-3 flex justify-center border-t border-border bg-background/50 rounded-b-xl">
-              <button className="text-sm font-bold text-primary hover:underline">
-                View All Alerts
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* QUICK ASK */}
-        <section className="space-y-4">
-          <h2 className="text-lg font-bold text-text-main">Quick Ask</h2>
-          <div className="bg-surface border border-border rounded-xl p-5 shadow-sm h-full max-h-[290px] flex flex-col">
-            <div className="relative flex-1">
-              <textarea 
-                placeholder="Ask AgriMesh anything about your field..."
-                className="w-full border border-border rounded-xl p-4 pr-14 resize-none h-full focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-background/50"
-              ></textarea>
-              <button className="absolute right-3 top-3 p-2.5 text-text-muted hover:text-primary transition-colors bg-surface rounded-lg shadow-sm border border-border">
-                <Mic size={20} />
-              </button>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <button className="px-8 py-3 bg-text-main text-surface font-bold rounded-lg text-sm hover:bg-text-main/90 transition-colors">
-                Ask
-              </button>
-            </div>
+            <button className="home-alerts-view-all-btn" onClick={() => navigate('/alerts')}>
+              View All Alerts
+            </button>
           </div>
         </section>
 
       </div>
 
-      {/* STATS ROW */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
-        <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-start gap-4 hover:-translate-y-1 transition-transform">
-          <div className="w-12 h-12 rounded-xl bg-success/10 text-success flex items-center justify-center shrink-0">
+      <div className="home-grid-row-3">
+        <div className="home-stat-card">
+          <div className="home-stat-icon success">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-text-main">Total Fields</p>
-            <h3 className="text-2xl font-black text-text-main mt-1">3</h3>
+          <div className="home-stat-text">
+            <p>Total Fields</p>
+            <h3>{isLoading ? "-" : displayFields.length}</h3>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-start gap-4 hover:-translate-y-1 transition-transform">
-          <div className="w-12 h-12 rounded-xl bg-info/10 text-info flex items-center justify-center shrink-0">
-            <Droplets size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-text-main">Fields Need Attention</p>
-            <h3 className="text-2xl font-black text-text-main mt-1">1</h3>
+        <div className="home-stat-card">
+          <div className="home-stat-icon info"><Droplets size={24} /></div>
+          <div className="home-stat-text">
+            <p>Fields Need Attention</p>
+            <h3>1</h3>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-start gap-4 hover:-translate-y-1 transition-transform">
-          <div className="w-12 h-12 rounded-xl bg-warning/10 text-warning flex items-center justify-center shrink-0">
-            <Bell size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-text-main">Active Alerts</p>
-            <h3 className="text-2xl font-black text-text-main mt-1">3</h3>
+        <div className="home-stat-card">
+          <div className="home-stat-icon warning"><Bell size={24} /></div>
+          <div className="home-stat-text">
+            <p>Active Alerts</p>
+            <h3>3</h3>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-5 shadow-sm flex items-start gap-4 hover:-translate-y-1 transition-transform">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <MessageSquare size={24} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-text-main">Expert Responses</p>
-            <p className="text-xs text-text-muted">This Month</p>
-            <h3 className="text-2xl font-black text-text-main mt-0.5">2</h3>
+        <div className="home-stat-card">
+          <div className="home-stat-icon purple"><MessageSquare size={24} /></div>
+          <div className="home-stat-text">
+            <p>Expert Responses</p>
+            <div className="subtext">This Month</div>
+            <h3>2</h3>
           </div>
         </div>
       </div>
-
     </div>
   );
 };

@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
-
+@source "../index.html";
+@source "../src";
 @theme {
   --color-primary: #16a34a; /* Tailwind green-600 */
   --color-primary-content: #ffffff;
@@ -22,23 +22,19 @@
 
 :root {
   --primary: #16a34a;
+  --secondary: #f3f4f6;
   --background: #f9fafb;
   --surface: #ffffff;
   --text-main: #111827;
   --text-muted: #6b7280;
   --border: #e5e7eb;
+  --info: #3b82f6;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --primary: #22c55e;
-    --background: #111827;
-    --surface: #1f2937;
-    --text-main: #f9fafb;
-    --text-muted: #9ca3af;
-    --border: #374151;
-  }
-}
+/* Removed the prefers-color-scheme: dark media query to enforce light theme globally across the app to match mockups */
 
 * {
   box-sizing: border-box;
@@ -83,4 +79,3 @@ a {
 .animate-fade-in-up {
   animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-

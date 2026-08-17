@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Leaf, 
   TrendingUp, 
@@ -10,20 +10,41 @@ import {
   Bug,
   Sun,
   CloudRain,
-  Wind
+  Wind,
+  Loader2
 } from "lucide-react";
+import { cropApi } from "../features/crop-context/api/cropApi";
+
+import "./Intelligence.css";
 
 export const Intelligence = () => {
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchIntelligence = async () => {
+      try {
+        const result = await cropApi.getIntelligence();
+        setData(result);
+      } catch (err) {
+        console.error("Failed to fetch intelligence data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchIntelligence();
+  }, []);
+
   return (
-    <div className="animate-fade-in-up space-y-6 pb-12">
+    <div className="intelligence-container">
       
       {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="intelligence-header">
         <div>
-          <h1 className="text-3xl font-bold text-text-main">Intelligence Dashboard</h1>
-          <p className="text-text-muted mt-1 text-sm font-medium">AI-powered insights and recommendations for your fields</p>
+          <h1 className="intelligence-title">Intelligence Dashboard</h1>
+          <p className="intelligence-subtitle">AI-powered insights and recommendations for your fields</p>
         </div>
-        <button className="flex items-center gap-2 bg-surface border border-border px-4 py-2.5 rounded-lg font-bold text-sm hover:bg-secondary transition-colors shadow-sm">
+        <button className="intelligence-header-btn">
           <CalendarIcon size={16} className="text-text-muted" /> 
           12 Jun - 18 Jun 2025 
           <ChevronDown size={16} className="text-text-muted" />
@@ -31,111 +52,119 @@ export const Intelligence = () => {
       </div>
 
       {/* STATS ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+      <div className="intelligence-stats-grid">
         
-        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm flex gap-4">
-          <div className="w-14 h-14 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0">
+        <div className="intelligence-stat-card">
+          <div className="intelligence-stat-icon-wrapper success">
             <Leaf size={24} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-text-main">Total Fields</p>
-            <h3 className="text-3xl font-black text-text-main mt-1">3</h3>
-            <p className="text-xs text-text-muted font-medium mt-1">Active fields</p>
+            <p className="intelligence-stat-label">Total Fields</p>
+            <h3 className="intelligence-stat-value">{isLoading ? "-" : data?.stats?.totalFields}</h3>
+            <p className="intelligence-stat-desc">Active fields</p>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm flex gap-4">
-          <div className="w-14 h-14 rounded-full bg-info/10 text-info flex items-center justify-center shrink-0">
+        <div className="intelligence-stat-card">
+          <div className="intelligence-stat-icon-wrapper info">
             <TrendingUp size={24} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-text-main">Avg. Field Health</p>
-            <h3 className="text-3xl font-black text-text-main mt-1">78%</h3>
-            <p className="text-xs text-text-muted font-medium mt-1">Good</p>
+            <p className="intelligence-stat-label">Avg. Field Health</p>
+            <h3 className="intelligence-stat-value">{isLoading ? "-" : `${data?.stats?.avgHealth}%`}</h3>
+            <p className="intelligence-stat-desc">Good</p>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm flex gap-4">
-          <div className="w-14 h-14 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0">
+        <div className="intelligence-stat-card">
+          <div className="intelligence-stat-icon-wrapper warning">
             <AlertTriangle size={24} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-text-main">Active Alerts</p>
-            <h3 className="text-3xl font-black text-text-main mt-1">3</h3>
-            <p className="text-xs text-text-muted font-medium mt-1">Needs attention</p>
+            <p className="intelligence-stat-label">Active Alerts</p>
+            <h3 className="intelligence-stat-value">{isLoading ? "-" : data?.stats?.activeAlerts}</h3>
+            <p className="intelligence-stat-desc">Needs attention</p>
           </div>
         </div>
 
-        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm flex gap-4">
-          <div className="w-14 h-14 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] flex items-center justify-center shrink-0">
+        <div className="intelligence-stat-card">
+          <div className="intelligence-stat-icon-wrapper purple">
             <ClipboardList size={24} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-text-main">Recommendations</p>
-            <h3 className="text-3xl font-black text-text-main mt-1">5</h3>
-            <p className="text-xs text-text-muted font-medium mt-1">This week</p>
+            <p className="intelligence-stat-label">Recommendations</p>
+            <h3 className="intelligence-stat-value">{isLoading ? "-" : data?.stats?.recommendations}</h3>
+            <p className="intelligence-stat-desc">This week</p>
           </div>
         </div>
 
       </div>
 
       {/* CHARTS ROW */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="intelligence-charts-grid">
         
         {/* Field Health Overview (Donut Chart placeholder) */}
-        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm flex flex-col">
-          <div className="flex items-center gap-2 mb-6">
-            <h3 className="font-bold text-text-main text-base">Field Health Overview</h3>
+        <div className="intelligence-widget-card">
+          <div className="intelligence-widget-header">
+            <h3 className="intelligence-widget-title">Field Health Overview</h3>
             <Info size={16} className="text-text-muted" />
           </div>
           
-          <div className="flex-1 flex items-center justify-center gap-8">
-            <div className="relative w-40 h-40">
-              <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#ef4444" strokeWidth="4" strokeDasharray="33 67" strokeDashoffset="0"></circle>
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f59e0b" strokeWidth="4" strokeDasharray="33 67" strokeDashoffset="-33"></circle>
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="4" strokeDasharray="34 66" strokeDashoffset="-66"></circle>
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black text-text-main">78%</span>
-                <span className="text-[10px] font-bold text-text-main">Avg. Health</span>
-              </div>
+          <div className="intelligence-donut-area">
+            <div className="intelligence-donut-wrapper">
+              {isLoading ? (
+                <div className="intelligence-donut-spinner-wrapper">
+                  <Loader2 size={32} className="intelligence-donut-spinner" />
+                </div>
+              ) : (
+                <>
+                  <svg viewBox="0 0 36 36" className="intelligence-donut-svg">
+                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#ef4444" strokeWidth="4" strokeDasharray={`${data?.healthDistribution?.poor || 0} ${100 - (data?.healthDistribution?.poor || 0)}`} strokeDashoffset="0"></circle>
+                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f59e0b" strokeWidth="4" strokeDasharray={`${data?.healthDistribution?.moderate || 0} ${100 - (data?.healthDistribution?.moderate || 0)}`} strokeDashoffset={`-${data?.healthDistribution?.poor || 0}`}></circle>
+                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="4" strokeDasharray={`${data?.healthDistribution?.good || 0} ${100 - (data?.healthDistribution?.good || 0)}`} strokeDashoffset={`-${(data?.healthDistribution?.poor || 0) + (data?.healthDistribution?.moderate || 0)}`}></circle>
+                  </svg>
+                  <div className="intelligence-donut-center">
+                    <span className="intelligence-donut-value">{data?.stats?.avgHealth}%</span>
+                    <span className="intelligence-donut-label">Avg. Health</span>
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between w-32"><div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-success"></div><span className="text-sm font-semibold text-text-main">Good</span></div><span className="text-sm font-medium text-text-muted">1 (33%)</span></div>
-              <div className="flex items-center justify-between w-32"><div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-warning"></div><span className="text-sm font-semibold text-text-main">Moderate</span></div><span className="text-sm font-medium text-text-muted">1 (33%)</span></div>
-              <div className="flex items-center justify-between w-32"><div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-danger"></div><span className="text-sm font-semibold text-text-main">Poor</span></div><span className="text-sm font-medium text-text-muted">1 (33%)</span></div>
+            <div className="intelligence-legend">
+              <div className="intelligence-legend-item"><div className="intelligence-legend-label-group"><div className="intelligence-legend-dot success"></div><span className="intelligence-stat-label">Good</span></div><span className="intelligence-legend-value">{isLoading ? "-" : `${data?.healthDistribution?.good}%`}</span></div>
+              <div className="intelligence-legend-item"><div className="intelligence-legend-label-group"><div className="intelligence-legend-dot warning"></div><span className="intelligence-stat-label">Moderate</span></div><span className="intelligence-legend-value">{isLoading ? "-" : `${data?.healthDistribution?.moderate}%`}</span></div>
+              <div className="intelligence-legend-item"><div className="intelligence-legend-label-group"><div className="intelligence-legend-dot danger"></div><span className="intelligence-stat-label">Poor</span></div><span className="intelligence-legend-value">{isLoading ? "-" : `${data?.healthDistribution?.poor}%`}</span></div>
             </div>
           </div>
 
-          <button className="w-full mt-6 py-2.5 border border-border text-text-main rounded-lg text-sm font-bold hover:bg-secondary transition-colors">
+          <button className="intelligence-widget-btn">
             View All Fields
           </button>
         </div>
 
         {/* Health Trend (Line Chart placeholder) */}
-        <div className="xl:col-span-2 bg-surface border border-border rounded-xl p-6 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-text-main text-base">Health Trend</h3>
+        <div className="intelligence-widget-card span-2">
+          <div className="intelligence-widget-header-row">
+            <div className="intelligence-widget-header" style={{marginBottom: 0}}>
+              <h3 className="intelligence-widget-title">Health Trend</h3>
               <Info size={16} className="text-text-muted" />
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm font-semibold hover:bg-secondary transition-colors">
+            <button className="intelligence-filter-btn">
               All Fields <ChevronDown size={16} className="text-text-muted" />
             </button>
           </div>
 
-          <div className="flex-1 relative min-h-[220px] w-full flex items-end">
-            <div className="absolute inset-0 flex flex-col justify-between text-xs text-text-muted font-medium pb-8 pr-12">
-              <div className="border-b border-border/50 w-full text-right h-0 relative"><span className="absolute -top-2.5 -left-10">100%</span></div>
-              <div className="border-b border-border/50 w-full text-right h-0 relative"><span className="absolute -top-2.5 -left-10">75%</span></div>
-              <div className="border-b border-border/50 w-full text-right h-0 relative"><span className="absolute -top-2.5 -left-10">50%</span></div>
-              <div className="border-b border-border/50 w-full text-right h-0 relative"><span className="absolute -top-2.5 -left-10">25%</span></div>
-              <div className="border-b border-border w-full text-right h-0 relative"><span className="absolute -top-2.5 -left-10">0%</span></div>
+          <div className="intelligence-trend-area">
+            <div className="intelligence-trend-y-axis">
+              <div className="intelligence-trend-line"><span className="intelligence-trend-y-label">100%</span></div>
+              <div className="intelligence-trend-line"><span className="intelligence-trend-y-label">75%</span></div>
+              <div className="intelligence-trend-line"><span className="intelligence-trend-y-label">50%</span></div>
+              <div className="intelligence-trend-line"><span className="intelligence-trend-y-label">25%</span></div>
+              <div className="intelligence-trend-line bottom"><span className="intelligence-trend-y-label">0%</span></div>
             </div>
 
-            <svg className="absolute inset-0 w-full h-[calc(100%-2rem)] z-10 pl-10 pr-4" viewBox="0 0 800 200" preserveAspectRatio="none">
+            <svg className="intelligence-trend-svg" viewBox="0 0 800 200" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
@@ -153,149 +182,135 @@ export const Intelligence = () => {
               <circle cx="800" cy="20" r="4" fill="white" stroke="#22c55e" strokeWidth="2" />
             </svg>
 
-            <div className="absolute bottom-0 left-10 right-4 flex justify-between text-[11px] font-medium text-text-muted">
+            <div className="intelligence-trend-x-axis">
               <span>12 Jun</span><span>13 Jun</span><span>14 Jun</span><span>15 Jun</span><span>16 Jun</span><span>17 Jun</span><span>18 Jun</span>
             </div>
           </div>
 
-          <div className="flex justify-center mt-6 pt-4 border-t border-border/50">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-0.5 bg-success relative">
-                <div className="w-2 h-2 rounded-full bg-success absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="intelligence-trend-legend">
+            <div className="intelligence-widget-header" style={{marginBottom: 0}}>
+              <div className="intelligence-trend-legend-line">
+                <div className="intelligence-trend-legend-dot"></div>
               </div>
-              <span className="text-sm font-bold text-text-main">Average Field Health</span>
+              <span className="intelligence-trend-legend-label">Average Field Health</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* BOTTOM WIDGETS ROW */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="intelligence-bottom-grid">
         
         {/* Top Recommendations */}
-        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm flex flex-col">
-          <div className="flex items-center gap-2 mb-6">
-            <h3 className="font-bold text-text-main text-base">Top Recommendations</h3>
+        <div className="intelligence-widget-card">
+          <div className="intelligence-widget-header">
+            <h3 className="intelligence-widget-title">Top Recommendations</h3>
             <Info size={16} className="text-text-muted" />
           </div>
 
-          <div className="space-y-4 flex-1">
-            <div className="flex items-start justify-between pb-4 border-b border-border/50">
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-info/10 text-info flex items-center justify-center shrink-0">
-                  <Droplet size={18} fill="currentColor" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-text-main text-sm">Irrigate Wheat Field 01</h4>
-                  <p className="text-sm text-text-muted font-medium mt-0.5">Soil moisture is low. Irrigation recommended.</p>
-                </div>
+          <div className="intelligence-widget-list">
+            {isLoading ? (
+              <div className="intelligence-loader-wrapper">
+                <Loader2 size={32} className="intelligence-donut-spinner" />
               </div>
-              <div className="flex gap-3">
-                <span className="text-xs font-bold text-success bg-success/10 px-2 py-1 rounded">Wheat Field 01</span>
-                <span className="text-xs font-bold text-warning bg-warning/10 px-2 py-1 rounded">Medium</span>
-              </div>
-            </div>
-
-            <div className="flex items-start justify-between pb-4 border-b border-border/50">
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0">
-                  <Leaf size={18} />
+            ) : data?.topRecommendations?.map((rec) => (
+              <div key={rec.id} className="intelligence-rec-item">
+                <div className="intelligence-rec-info">
+                  <div className={`intelligence-rec-icon ${
+                    rec.type === 'irrigation' ? 'info' : 
+                    rec.type === 'nutrient' ? 'success' : 'purple'
+                  }`}>
+                    {rec.type === 'irrigation' ? <Droplet size={18} fill="currentColor" /> : 
+                     rec.type === 'nutrient' ? <Leaf size={18} /> : <Bug size={18} />}
+                  </div>
+                  <div>
+                    <h4 className="intelligence-rec-title">{rec.title}</h4>
+                    <p className="intelligence-rec-desc">{rec.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-text-main text-sm">Apply Nitrogen to Rice Field 02</h4>
-                  <p className="text-sm text-text-muted font-medium mt-0.5">Nitrogen levels are low. Apply urea.</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <span className="text-xs font-bold text-success bg-success/10 px-2 py-1 rounded">Rice Field 02</span>
-                <span className="text-xs font-bold text-danger bg-danger/10 px-2 py-1 rounded">High</span>
-              </div>
-            </div>
-
-            <div className="flex items-start justify-between pb-2">
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] flex items-center justify-center shrink-0">
-                  <Bug size={18} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-text-main text-sm">Monitor Aphids in Moong Field 03</h4>
-                  <p className="text-sm text-text-muted font-medium mt-0.5">Aphids detected. Monitor closely.</p>
+                <div className="intelligence-rec-meta">
+                  <span className="intelligence-rec-field">{rec.field}</span>
+                  <span className={`intelligence-rec-priority ${
+                    rec.priority === 'High' ? 'high' : 'medium'
+                  }`}>{rec.priority}</span>
                 </div>
               </div>
-              <div className="flex gap-3">
-                <span className="text-xs font-bold text-success bg-success/10 px-2 py-1 rounded">Moong Field 03</span>
-                <span className="text-xs font-bold text-warning bg-warning/10 px-2 py-1 rounded">Medium</span>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <button className="w-full mt-4 py-2.5 border border-border text-text-main rounded-lg text-sm font-bold hover:bg-secondary transition-colors">
+          <button className="intelligence-widget-btn">
             View All Recommendations
           </button>
         </div>
 
         {/* Weather Overview */}
-        <div className="bg-surface border border-border rounded-xl p-6 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-text-main text-base">Weather Overview</h3>
+        <div className="intelligence-widget-card">
+          <div className="intelligence-widget-header-row">
+            <div className="intelligence-widget-header" style={{marginBottom: 0}}>
+              <h3 className="intelligence-widget-title">Weather Overview</h3>
               <Info size={16} className="text-text-muted" />
             </div>
-            <button className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-sm font-semibold hover:bg-secondary transition-colors">
+            <button className="intelligence-filter-btn">
               Madhopur, UP <ChevronDown size={16} className="text-text-muted" />
             </button>
           </div>
 
-          <div className="flex-1 flex gap-8">
-            <div className="w-1/3 flex flex-col justify-center border-r border-border/50 pr-4">
-              <div className="flex items-center gap-4 mb-4">
-                <Sun size={48} className="text-warning stroke-2" />
+          <div className="intelligence-weather-overview">
+            <div className="intelligence-weather-current">
+              <div className="intelligence-weather-main-row">
+                <Sun size={48} className="intelligence-weather-main-icon" />
                 <div>
-                  <h2 className="text-4xl font-black text-text-main">32°C</h2>
-                  <p className="text-base font-bold text-text-muted">Sunny</p>
+                  <h2 className="intelligence-weather-temp">32°C</h2>
+                  <p className="intelligence-weather-desc">Sunny</p>
                 </div>
               </div>
-              <div className="space-y-3 mt-4">
-                <div className="flex justify-between items-center"><div className="flex gap-2 items-center text-text-muted text-sm font-bold"><Droplet size={16} /> Humidity</div><span className="font-bold text-sm">42%</span></div>
-                <div className="flex justify-between items-center"><div className="flex gap-2 items-center text-text-muted text-sm font-bold"><Wind size={16} /> Wind</div><span className="font-bold text-sm">12 km/h</span></div>
+              <div className="intelligence-weather-details">
+                <div className="intelligence-weather-detail-row">
+                  <div className="intelligence-weather-detail-label"><Droplet size={16} /> Humidity</div>
+                  <span className="intelligence-weather-detail-value">42%</span>
+                </div>
+                <div className="intelligence-weather-detail-row">
+                  <div className="intelligence-weather-detail-label"><Wind size={16} /> Wind</div>
+                  <span className="intelligence-weather-detail-value">12 km/h</span>
+                </div>
               </div>
             </div>
 
-            <div className="flex-1 flex justify-between items-center pt-2 px-2">
-              <div className="flex flex-col items-center gap-3">
-                <span className="text-xs font-bold text-text-muted">Thu</span>
+            <div className="intelligence-weather-forecast">
+              <div className="intelligence-weather-forecast-day">
+                <span className="intelligence-weather-day-label">Thu</span>
                 <Sun size={24} className="text-warning" />
-                <div className="text-sm font-black">33°</div>
-                <div className="text-xs font-bold text-text-muted">22°</div>
+                <div className="intelligence-weather-day-high">33°</div>
+                <div className="intelligence-weather-day-label">22°</div>
               </div>
-              <div className="flex flex-col items-center gap-3">
-                <span className="text-xs font-bold text-text-muted">Fri</span>
+              <div className="intelligence-weather-forecast-day">
+                <span className="intelligence-weather-day-label">Fri</span>
                 <Sun size={24} className="text-warning" />
-                <div className="text-sm font-black">34°</div>
-                <div className="text-xs font-bold text-text-muted">23°</div>
+                <div className="intelligence-weather-day-high">34°</div>
+                <div className="intelligence-weather-day-label">23°</div>
               </div>
-              <div className="flex flex-col items-center gap-3">
-                <span className="text-xs font-bold text-text-muted">Sat</span>
+              <div className="intelligence-weather-forecast-day">
+                <span className="intelligence-weather-day-label">Sat</span>
                 <CloudRain size={24} className="text-text-muted" />
-                <div className="text-sm font-black">32°</div>
-                <div className="text-xs font-bold text-text-muted">22°</div>
+                <div className="intelligence-weather-day-high">32°</div>
+                <div className="intelligence-weather-day-label">22°</div>
               </div>
-              <div className="flex flex-col items-center gap-3">
-                <span className="text-xs font-bold text-text-muted">Sun</span>
+              <div className="intelligence-weather-forecast-day">
+                <span className="intelligence-weather-day-label">Sun</span>
                 <CloudRain size={24} className="text-info" />
-                <div className="text-sm font-black">30°</div>
-                <div className="text-xs font-bold text-text-muted">21°</div>
+                <div className="intelligence-weather-day-high">30°</div>
+                <div className="intelligence-weather-day-label">21°</div>
               </div>
-              <div className="flex flex-col items-center gap-3">
-                <span className="text-xs font-bold text-text-muted">Mon</span>
+              <div className="intelligence-weather-forecast-day">
+                <span className="intelligence-weather-day-label">Mon</span>
                 <Sun size={24} className="text-warning" />
-                <div className="text-sm font-black">31°</div>
-                <div className="text-xs font-bold text-text-muted">22°</div>
+                <div className="intelligence-weather-day-high">31°</div>
+                <div className="intelligence-weather-day-label">22°</div>
               </div>
             </div>
           </div>
 
-          <button className="w-full mt-6 py-2.5 border border-border text-text-main rounded-lg text-sm font-bold hover:bg-secondary transition-colors">
+          <button className="intelligence-widget-btn">
             View Detailed Forecast
           </button>
         </div>

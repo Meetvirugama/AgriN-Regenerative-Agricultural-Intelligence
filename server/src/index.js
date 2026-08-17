@@ -3,18 +3,23 @@ import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import { cropRoutes } from "./modules/crop/crop.routes.js";
+import { fieldRoutes } from "./modules/field/field.routes.js";
 import weatherRoutes from "./modules/weather/weather.routes.js";
 import soilRoutes from "./modules/soil/soil.routes.js";
 import diagnosisRoutes from "./modules/disease/disease.routes.js";
 import regenRoutes from "./modules/regen/regen.routes.js";
 import climateRiskRouter from "./modules/climate-risk/climate-risk.routes.js";
 import advisoryRouter from "./modules/advisory/advisory.routes.js";
-import voiceRouter from "./modules/voice/voice.routes.js";
+import voiceRoutes from "./modules/voice/voice.routes.js";
 import feedbackRouter from "./modules/feedback/feedback.routes.js";
 import satelliteRoutes from "./modules/satellite/satellite.routes.js";
 import healthScoreRoutes from "./modules/health-score/health-score.routes.js";
 import escalationRoutes from "./modules/escalation/escalation.routes.js";
 import crossBorderRoutes from "./modules/cross-border/cross-border.routes.js";
+import alertsRoutes from "./modules/alerts/alerts.routes.js";
+import expertRoutes from "./modules/expert/expert.routes.js";
+import chatRoutes from "./modules/chat/chat.routes.js";
+import intelligenceRoutes from "./modules/intelligence/intelligence.routes.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { checkDatabaseHealth } from "./db/connection.js";
@@ -96,6 +101,7 @@ app.get("/health", async (_req, res) => {
 // the client login flow is complete)
 
 // Field-scoped routes
+app.use("/api/v1/fields", fieldRoutes);
 app.use("/api/v1/fields", cropRoutes);
 app.use("/api/v1/fields", requireAuth, weatherRoutes);
 app.use("/api/v1/fields", requireAuth, soilRoutes);
@@ -107,10 +113,14 @@ app.use("/api/v1", requireAuth, satelliteRoutes);
 app.use("/api/v1", requireAuth, healthScoreRoutes);
 app.use("/api/v1", requireAuth, climateRiskRouter);
 app.use("/api/v1", requireAuth, advisoryRouter);
-app.use("/api/v1", voiceRouter);
+app.use("/api/v1", voiceRoutes);
 app.use("/api/v1", requireAuth, feedbackRouter);
 app.use("/api/v1", crossBorderRoutes);
 app.use("/api/v1/escalations", requireAuth, escalationRoutes);
+app.use("/api/v1/alerts", requireAuth, alertsRoutes);
+app.use("/api/v1/experts", requireAuth, expertRoutes);
+app.use("/api/v1/chat", requireAuth, chatRoutes);
+app.use("/api/v1/intelligence", requireAuth, intelligenceRoutes);
 
 // ─── Legacy v0 Compatibility Aliases ─────────────────────────────────────────
 // Keep /api/* working so the existing frontend doesn't break during migration.
@@ -125,7 +135,7 @@ app.use("/api", satelliteRoutes);
 app.use("/api", healthScoreRoutes);
 app.use("/api", climateRiskRouter);
 app.use("/api", advisoryRouter);
-app.use("/api", voiceRouter);
+app.use("/api", voiceRoutes);
 app.use("/api", feedbackRouter);
 app.use("/api", crossBorderRoutes);
 app.use("/api/escalations", escalationRoutes);

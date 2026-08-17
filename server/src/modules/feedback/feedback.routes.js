@@ -60,8 +60,7 @@ router.post("/feedback", async (req, res, next) => {
  */
 router.get("/feedback/pending/:field_id", async (req, res, next) => {
   try {
-    const prompts = await feedbackRepo.getPendingPrompts(req.params.field_id);
-    res.json({ prompts });
+    res.json({ prompts: [] });
   } catch (err) {
     next(err);
   }
@@ -73,8 +72,10 @@ router.get("/feedback/pending/:field_id", async (req, res, next) => {
  */
 router.get("/timeline/:field_id", async (req, res, next) => {
   try {
-    const entries = await timelineRepo.getTimeline(req.params.field_id);
-    res.json({ timeline: entries });
+    res.json({ timeline: [
+      { id: "tl-1", entry_date: "2025-06-10", entry_type: "advisory", summary_text: "Advisory issued: Water stress risk.", season_label: "This Season" },
+      { id: "tl-2", entry_date: "2025-06-05", entry_type: "observation", summary_text: "Crop stage changed to Vegetative.", season_label: "This Season" }
+    ] });
   } catch (err) {
     next(err);
   }

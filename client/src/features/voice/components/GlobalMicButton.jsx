@@ -43,7 +43,7 @@ export const GlobalMicButton = () => {
   return (
     <>
       {/* Floating Action Button */}
-      <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-4">
+      <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4">
         {/* Processing State or Response Text */}
         {(isProcessing || response) && (
           <div className="bg-surface border-2 border-primary p-4 rounded-2xl shadow-xl max-w-xs animate-fade-in-up">

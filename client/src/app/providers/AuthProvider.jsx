@@ -14,6 +14,7 @@ const AuthContext = createContext({
   isAuthenticated: false,
   requestOtp: async () => {},
   verifyOtp: async () => {},
+  loginWithPassword: async () => {},
   logout: async () => {},
 });
 
@@ -90,6 +91,19 @@ export const AuthProvider = ({ children }) => {
     setFarmer(tokens.farmer);
   }, []);
 
+  // ─── Email/Password Login ─────────────────────────────────────────────────
+  const loginWithPassword = useCallback(async (email, password) => {
+    const tokens = await authApi.login(email, password);
+    const session = {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      farmer: tokens.farmer,
+    };
+    saveSession(session);
+    setAccessToken(tokens.accessToken);
+    setFarmer(tokens.farmer);
+  }, []);
+
   // ─── Logout ───────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     const session = loadSession();
@@ -114,6 +128,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!farmer,
         requestOtp,
         verifyOtp,
+        loginWithPassword,
         logout,
       }}
     >

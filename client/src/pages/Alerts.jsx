@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   AlertTriangle, 
   Info, 
@@ -11,350 +11,360 @@ import {
   Droplet,
   Leaf,
   CloudRain,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { cropApi } from "../features/crop-context/api/cropApi";
+
+import "./Alerts.css";
 
 export const Alerts = () => {
+  const [alerts, setAlerts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const data = await cropApi.getAlerts();
+        
+        // Decorate with mockup data to match Image 3 perfectly
+        const decoratedAlerts = data.map((alert, index) => {
+          if (index === 0) {
+            return {
+              id: "1",
+              title: "Aphids detected in Moong Field 03",
+              description: "Aphid population is above threshold level.",
+              field: "Moong Field 03",
+              priority: "High",
+              time: "1h ago",
+              resolved: false
+            };
+          } else if (index === 1) {
+            return {
+              id: "2",
+              title: "Low soil moisture in Wheat Field 01",
+              description: "Soil moisture level is below optimal range.",
+              field: "Wheat Field 01",
+              priority: "Medium",
+              time: "3h ago",
+              resolved: false
+            };
+          } else if (index === 2) {
+            return {
+              id: "3",
+              title: "Nitrogen deficiency in Rice Field 02",
+              description: "Recommended to apply nitrogen fertilizer.",
+              field: "Rice Field 02",
+              priority: "Medium",
+              time: "5h ago",
+              resolved: false
+            };
+          } else if (index === 3) {
+            return {
+              id: "4",
+              title: "Weather alert: Heavy rainfall expected",
+              description: "Heavy rainfall expected in next 24 hours.",
+              field: "All Fields",
+              priority: "Low",
+              time: "8h ago",
+              resolved: false
+            };
+          } else {
+            return {
+              id: "5",
+              title: "Irrigation completed",
+              description: "Scheduled irrigation completed successfully.",
+              field: "Wheat Field 01",
+              priority: "Resolved",
+              time: "Yesterday",
+              resolved: true
+            };
+          }
+        });
+        
+        setAlerts(decoratedAlerts.slice(0, 5)); // ensure max 5 items for exact match
+      } catch (err) {
+        console.error("Failed to fetch alerts", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAlerts();
+  }, []);
+
   return (
-    <div className="animate-fade-in-up space-y-6 pb-12">
+    <div className="alerts-container">
       
       {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="alerts-header">
         <div>
-          <h1 className="text-3xl font-bold text-text-main">Alerts</h1>
-          <p className="text-text-muted mt-1 text-sm font-medium">Stay updated with important alerts for your fields</p>
+          <h1 className="alerts-title">Alerts</h1>
+          <p className="alerts-subtitle">Stay updated with important alerts for your fields</p>
         </div>
-        <div className="flex items-center gap-4">
-          <button className="flex items-center gap-2 bg-surface border border-border px-4 py-2.5 rounded-lg font-bold text-sm hover:bg-secondary transition-colors shadow-sm">
+        <div className="alerts-header-actions">
+          <button className="alerts-btn">
             All Fields <ChevronDown size={16} className="text-text-muted" />
           </button>
-          <button className="flex items-center gap-2 bg-surface border border-border px-4 py-2.5 rounded-lg font-bold text-sm hover:bg-secondary transition-colors shadow-sm">
+          <button className="alerts-btn">
             <CheckCircle2 size={16} className="text-text-muted" /> Mark all as read
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-6">
+      <div className="alerts-content">
         
         {/* Main Content (Left) */}
-        <div className="flex-1 flex flex-col space-y-6">
+        <div className="alerts-main">
           
           {/* Top Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="alerts-stats-grid">
             
-            <div className="bg-surface border border-danger/20 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-danger/10 text-danger flex items-center justify-center shrink-0">
+            <div className="alerts-stat-card danger">
+              <div className="alerts-stat-header">
+                <div className="alerts-stat-icon danger">
                   <AlertTriangle size={16} strokeWidth={2.5} />
                 </div>
-                <span className="text-danger font-bold text-sm">High Priority</span>
+                <span className="alerts-stat-title danger">High Priority</span>
               </div>
-              <h3 className="text-3xl font-black text-text-main mt-1">1</h3>
-              <p className="text-xs text-text-muted font-medium mt-1">Needs immediate action</p>
+              <h3 className="alerts-stat-value">1</h3>
+              <p className="alerts-stat-desc">Needs immediate action</p>
             </div>
 
-            <div className="bg-surface border border-warning/20 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0">
+            <div className="alerts-stat-card warning">
+              <div className="alerts-stat-header">
+                <div className="alerts-stat-icon warning">
                   <AlertTriangle size={16} strokeWidth={2.5} />
                 </div>
-                <span className="text-warning font-bold text-sm">Medium Priority</span>
+                <span className="alerts-stat-title warning">Medium Priority</span>
               </div>
-              <h3 className="text-3xl font-black text-text-main mt-1">2</h3>
-              <p className="text-xs text-text-muted font-medium mt-1">Needs attention</p>
+              <h3 className="alerts-stat-value">2</h3>
+              <p className="alerts-stat-desc">Needs attention</p>
             </div>
 
-            <div className="bg-surface border border-info/20 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-info/10 text-info flex items-center justify-center shrink-0">
+            <div className="alerts-stat-card info">
+              <div className="alerts-stat-header">
+                <div className="alerts-stat-icon info">
                   <Info size={16} strokeWidth={2.5} />
                 </div>
-                <span className="text-info font-bold text-sm">Low Priority</span>
+                <span className="alerts-stat-title info">Low Priority</span>
               </div>
-              <h3 className="text-3xl font-black text-text-main mt-1">0</h3>
-              <p className="text-xs text-text-muted font-medium mt-1">For your information</p>
+              <h3 className="alerts-stat-value">0</h3>
+              <p className="alerts-stat-desc">For your information</p>
             </div>
 
-            <div className="bg-surface border border-success/20 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0">
+            <div className="alerts-stat-card success">
+              <div className="alerts-stat-header">
+                <div className="alerts-stat-icon success">
                   <CheckCircle2 size={16} strokeWidth={2.5} />
                 </div>
-                <span className="text-success font-bold text-sm">Resolved</span>
+                <span className="alerts-stat-title success">Resolved</span>
               </div>
-              <h3 className="text-3xl font-black text-text-main mt-1">12</h3>
-              <p className="text-xs text-text-muted font-medium mt-1">Last 7 days</p>
+              <h3 className="alerts-stat-value">12</h3>
+              <p className="alerts-stat-desc">Last 7 days</p>
             </div>
             
           </div>
 
           {/* List Area */}
-          <div className="bg-surface border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
+          <div className="alerts-list-card">
             
             {/* Tabs */}
-            <div className="flex items-center border-b border-border/60 px-2 overflow-x-auto">
-              <button className="px-4 py-4 text-sm font-bold text-primary border-b-2 border-primary whitespace-nowrap">All Alerts</button>
-              <button className="px-4 py-4 text-sm font-semibold text-text-muted hover:text-text-main transition-colors whitespace-nowrap">Unread (3)</button>
-              <button className="px-4 py-4 text-sm font-semibold text-text-muted hover:text-text-main transition-colors whitespace-nowrap">High (1)</button>
-              <button className="px-4 py-4 text-sm font-semibold text-text-muted hover:text-text-main transition-colors whitespace-nowrap">Medium (2)</button>
-              <button className="px-4 py-4 text-sm font-semibold text-text-muted hover:text-text-main transition-colors whitespace-nowrap">Low (0)</button>
-              <button className="px-4 py-4 text-sm font-semibold text-text-muted hover:text-text-main transition-colors whitespace-nowrap">Resolved</button>
+            <div className="alerts-tabs">
+              <button className="alerts-tab active">All Alerts</button>
+              <button className="alerts-tab inactive">Unread (3)</button>
+              <button className="alerts-tab inactive">High (1)</button>
+              <button className="alerts-tab inactive">Medium (2)</button>
+              <button className="alerts-tab inactive">Low (0)</button>
+              <button className="alerts-tab inactive">Resolved</button>
             </div>
 
             {/* Table Header */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-border/60 bg-secondary/30">
-              <div className="col-span-6 md:col-span-6 text-xs font-bold text-text-muted uppercase tracking-wider">Alert</div>
-              <div className="col-span-2 hidden md:block text-xs font-bold text-text-muted uppercase tracking-wider">Field</div>
-              <div className="col-span-2 hidden md:block text-xs font-bold text-text-muted uppercase tracking-wider">Priority</div>
-              <div className="col-span-4 md:col-span-2 text-xs font-bold text-text-muted uppercase tracking-wider text-right pr-8">Time</div>
+            <div className="alerts-table-header">
+              <div className="alerts-th alerts-th-main">Alert</div>
+              <div className="alerts-th alerts-th-hidden">Field</div>
+              <div className="alerts-th alerts-th-hidden">Priority</div>
+              <div className="alerts-th alerts-th-right">Time</div>
             </div>
 
             {/* List Items */}
-            <div className="divide-y divide-border/60">
+            <div className="alerts-list">
               
-              {/* Alert 1 */}
-              <div className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-secondary/20 transition-colors items-center">
-                <div className="col-span-8 md:col-span-6 flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-danger/10 text-danger flex items-center justify-center shrink-0 mt-0.5">
-                    <AlertTriangle size={20} />
+              {isLoading ? (
+                <div className="alerts-loader">
+                  <Loader2 className="alerts-spinner" />
+                </div>
+              ) : alerts.map((alert) => (
+                <div key={alert.id} className={`alerts-item ${alert.resolved ? 'resolved' : ''}`}>
+                  <div className="alerts-item-main">
+                    <div className={`alerts-item-icon ${
+                      alert.resolved ? 'resolved' :
+                      alert.priority === 'High' ? 'high' :
+                      alert.priority === 'Medium' ? 'medium' : 'info'
+                    }`}>
+                      {alert.resolved ? <CheckCircle2 size={20} /> :
+                       alert.priority === 'High' || alert.priority === 'Medium' ? <AlertTriangle size={20} /> :
+                       <Info size={20} />}
+                    </div>
+                    <div>
+                      <h4 className={`alerts-item-title ${alert.resolved ? 'resolved' : 'active'}`}>
+                        {alert.title}
+                      </h4>
+                      <p className="alerts-item-desc">{alert.description}</p>
+                      {!alert.resolved && (
+                        <button className="alerts-item-link" onClick={() => navigate('/fields')}>
+                          View Details <ArrowRight size={12} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-text-main text-sm">Aphids detected in Moong Field 03</h4>
-                    <p className="text-xs text-text-muted font-medium mt-1">Aphid population is above threshold level.</p>
-                    <button className="text-xs font-bold text-primary hover:underline mt-2 flex items-center gap-1">View Details <ArrowRight size={12} /></button>
+                  <div className="alerts-item-col">
+                    <span className={`alerts-badge ${
+                      alert.field === 'All Fields' ? 'all' : 'success'
+                    }`}>
+                      {alert.field}
+                    </span>
                   </div>
-                </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-success/10 text-success text-xs font-bold rounded">Moong Field 03</span>
-                </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-danger/10 text-danger text-xs font-bold rounded">High</span>
-                </div>
-                <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-4 text-right">
-                  <span className="text-xs font-semibold text-text-muted">1h ago</span>
-                  <button className="text-text-muted hover:text-text-main"><MoreVertical size={18} /></button>
-                </div>
-              </div>
-
-              {/* Alert 2 */}
-              <div className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-secondary/20 transition-colors items-center">
-                <div className="col-span-8 md:col-span-6 flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0 mt-0.5">
-                    <AlertTriangle size={20} />
+                  <div className="alerts-item-col">
+                    <span className={`alerts-badge ${
+                      alert.resolved ? 'success' :
+                      alert.priority === 'High' ? 'danger' :
+                      alert.priority === 'Medium' ? 'warning' : 'info'
+                    }`}>
+                      {alert.resolved ? 'Resolved' : alert.priority}
+                    </span>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-text-main text-sm">Low soil moisture in Wheat Field 01</h4>
-                    <p className="text-xs text-text-muted font-medium mt-1">Soil moisture level is below optimal range.</p>
-                    <button className="text-xs font-bold text-primary hover:underline mt-2 flex items-center gap-1">View Details <ArrowRight size={12} /></button>
-                  </div>
-                </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-success/10 text-success text-xs font-bold rounded">Wheat Field 01</span>
-                </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-warning/10 text-warning text-xs font-bold rounded">Medium</span>
-                </div>
-                <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-4 text-right">
-                  <span className="text-xs font-semibold text-text-muted">3h ago</span>
-                  <button className="text-text-muted hover:text-text-main"><MoreVertical size={18} /></button>
-                </div>
-              </div>
-
-              {/* Alert 3 */}
-              <div className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-secondary/20 transition-colors items-center">
-                <div className="col-span-8 md:col-span-6 flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0 mt-0.5">
-                    <AlertTriangle size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-text-main text-sm">Nitrogen deficiency in Rice Field 02</h4>
-                    <p className="text-xs text-text-muted font-medium mt-1">Recommended to apply nitrogen fertilizer.</p>
-                    <button className="text-xs font-bold text-primary hover:underline mt-2 flex items-center gap-1">View Details <ArrowRight size={12} /></button>
+                  <div className="alerts-item-time-col">
+                    <span className="alerts-item-time">{alert.time}</span>
+                    <button className="alerts-item-more"><MoreVertical size={18} /></button>
                   </div>
                 </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-success/10 text-success text-xs font-bold rounded">Rice Field 02</span>
-                </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-warning/10 text-warning text-xs font-bold rounded">Medium</span>
-                </div>
-                <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-4 text-right">
-                  <span className="text-xs font-semibold text-text-muted">5h ago</span>
-                  <button className="text-text-muted hover:text-text-main"><MoreVertical size={18} /></button>
-                </div>
-              </div>
-
-              {/* Alert 4 */}
-              <div className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-secondary/20 transition-colors items-center">
-                <div className="col-span-8 md:col-span-6 flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0 mt-0.5">
-                    <Info size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-text-main text-sm">Weather alert: Heavy rainfall expected</h4>
-                    <p className="text-xs text-text-muted font-medium mt-1">Heavy rainfall expected in next 24 hours.</p>
-                    <button className="text-xs font-bold text-primary hover:underline mt-2 flex items-center gap-1">View Details <ArrowRight size={12} /></button>
-                  </div>
-                </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-secondary text-text-muted border border-border/50 text-xs font-bold rounded">All Fields</span>
-                </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-info/10 text-info text-xs font-bold rounded">Low</span>
-                </div>
-                <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-4 text-right">
-                  <span className="text-xs font-semibold text-text-muted">8h ago</span>
-                  <button className="text-text-muted hover:text-text-main"><MoreVertical size={18} /></button>
-                </div>
-              </div>
-
-              {/* Alert 5 */}
-              <div className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-secondary/20 transition-colors items-center opacity-70">
-                <div className="col-span-8 md:col-span-6 flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-success/10 text-success flex items-center justify-center shrink-0 mt-0.5">
-                    <CheckCircle2 size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-text-main text-sm line-through decoration-text-muted/30">Irrigation completed</h4>
-                    <p className="text-xs text-text-muted font-medium mt-1">Scheduled irrigation completed successfully.</p>
-                  </div>
-                </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-success/10 text-success text-xs font-bold rounded">Wheat Field 01</span>
-                </div>
-                <div className="col-span-2 hidden md:block">
-                  <span className="inline-block px-2.5 py-1 bg-success/10 text-success text-xs font-bold rounded">Resolved</span>
-                </div>
-                <div className="col-span-4 md:col-span-2 flex items-center justify-end gap-4 text-right">
-                  <span className="text-xs font-semibold text-text-muted">Yesterday</span>
-                  <button className="text-text-muted hover:text-text-main"><MoreVertical size={18} /></button>
-                </div>
-              </div>
+              ))}
 
             </div>
 
             {/* Pagination Footer */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border/60 bg-secondary/10">
-              <span className="text-xs font-medium text-text-muted">Showing 1 to 5 of 15 alerts</span>
-              <div className="flex items-center gap-1">
-                <button className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-text-main disabled:opacity-50"><ChevronLeft size={16} /></button>
-                <button className="w-8 h-8 flex items-center justify-center text-primary bg-primary/10 rounded font-bold text-xs">1</button>
-                <button className="w-8 h-8 flex items-center justify-center text-text-muted hover:bg-secondary rounded font-bold text-xs">2</button>
-                <button className="w-8 h-8 flex items-center justify-center text-text-muted hover:bg-secondary rounded font-bold text-xs">3</button>
-                <button className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-text-main"><ChevronRight size={16} /></button>
+            <div className="alerts-pagination">
+              <span className="alerts-pagination-info">Showing 1 to 5 of 15 alerts</span>
+              <div className="alerts-pagination-controls">
+                <button className="alerts-page-btn icon"><ChevronLeft size={16} /></button>
+                <button className="alerts-page-btn active">1</button>
+                <button className="alerts-page-btn inactive">2</button>
+                <button className="alerts-page-btn inactive">3</button>
+                <button className="alerts-page-btn icon"><ChevronRight size={16} /></button>
               </div>
             </div>
 
           </div>
 
           {/* Footer Info Banner */}
-          <div className="bg-info/5 border border-info/20 rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex gap-3 text-info items-start">
+          <div className="alerts-footer-banner">
+            <div className="alerts-footer-text">
               <Info size={18} className="shrink-0 mt-0.5" />
-              <p className="text-xs text-text-muted font-medium mt-0.5">Alerts are generated based on AI analysis and real-time data. Always verify conditions in your field.</p>
+              <p className="alerts-footer-desc">Alerts are generated based on AI analysis and real-time data. Always verify conditions in your field.</p>
             </div>
-            <div className="text-xs font-medium text-text-muted shrink-0">
-              Need help? Contact <Link to="/expert" className="font-bold text-primary hover:underline">Expert Support</Link>
+            <div className="alerts-footer-link-container">
+              Need help? Contact <Link to="/expert" className="alerts-footer-link">Expert Support</Link>
             </div>
           </div>
 
         </div>
 
         {/* Sidebar (Right) */}
-        <div className="w-full xl:w-80 flex flex-col gap-6 shrink-0">
+        <div className="alerts-sidebar">
           
           {/* Alerts Summary */}
-          <div className="bg-surface border border-border rounded-xl p-6 shadow-sm flex flex-col">
-            <h3 className="font-bold text-text-main text-base mb-6">Alerts Summary</h3>
+          <div className="alerts-summary-card">
+            <h3 className="alerts-sidebar-title">Alerts Summary</h3>
             
-            <div className="flex flex-col items-center mb-6">
-              <div className="relative w-40 h-40 mb-6">
-                {/* SVG Donut Chart Placeholder */}
-                <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="4" strokeDasharray="80 20" strokeDashoffset="0"></circle>
-                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3b82f6" strokeWidth="4" strokeDasharray="0 100" strokeDashoffset="-80"></circle>
-                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f59e0b" strokeWidth="4" strokeDasharray="13 87" strokeDashoffset="-80"></circle>
-                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#ef4444" strokeWidth="4" strokeDasharray="7 93" strokeDashoffset="-93"></circle>
+            <div className="alerts-chart-container">
+              <div className="alerts-chart-wrapper">
+                {/* SVG Donut Chart Match Image 3 */}
+                <svg viewBox="0 0 36 36" className="alerts-chart-svg">
+                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#ef4444" strokeWidth="4" strokeDasharray="7 93" strokeDashoffset="25"></circle>
+                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f59e0b" strokeWidth="4" strokeDasharray="13 87" strokeDashoffset="18"></circle>
+                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3b82f6" strokeWidth="4" strokeDasharray="0 100" strokeDashoffset="5"></circle>
+                  <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="4" strokeDasharray="80 20" strokeDashoffset="5"></circle>
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-black text-text-main">15</span>
-                  <span className="text-[10px] font-bold text-text-main">Total</span>
+                <div className="alerts-chart-center">
+                  <span className="alerts-chart-total">15</span>
+                  <span className="alerts-chart-label">Total</span>
                 </div>
               </div>
 
-              <div className="w-full space-y-3">
-                <div className="flex items-center justify-between"><div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-danger"></div><span className="text-xs font-semibold text-text-main">High</span></div><span className="text-xs font-medium text-text-muted">1 (7%)</span></div>
-                <div className="flex items-center justify-between"><div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-warning"></div><span className="text-xs font-semibold text-text-main">Medium</span></div><span className="text-xs font-medium text-text-muted">2 (13%)</span></div>
-                <div className="flex items-center justify-between"><div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-info"></div><span className="text-xs font-semibold text-text-main">Low</span></div><span className="text-xs font-medium text-text-muted">0 (0%)</span></div>
-                <div className="flex items-center justify-between"><div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-success"></div><span className="text-xs font-semibold text-text-main">Resolved</span></div><span className="text-xs font-medium text-text-muted">12 (80%)</span></div>
+              <div className="alerts-legend">
+                <div className="alerts-legend-item"><div className="alerts-legend-label"><div className="alerts-legend-dot danger"></div><span className="alerts-legend-text">High</span></div><span className="alerts-legend-value">1 (7%)</span></div>
+                <div className="alerts-legend-item"><div className="alerts-legend-label"><div className="alerts-legend-dot warning"></div><span className="alerts-legend-text">Medium</span></div><span className="alerts-legend-value">2 (13%)</span></div>
+                <div className="alerts-legend-item"><div className="alerts-legend-label"><div className="alerts-legend-dot info"></div><span className="alerts-legend-text">Low</span></div><span className="alerts-legend-value">0 (0%)</span></div>
+                <div className="alerts-legend-item"><div className="alerts-legend-label"><div className="alerts-legend-dot success"></div><span className="alerts-legend-text">Resolved</span></div><span className="alerts-legend-value">12 (80%)</span></div>
               </div>
             </div>
 
-            <button className="w-full py-2.5 border border-border text-text-main rounded-lg text-xs font-bold hover:bg-secondary transition-colors flex items-center justify-center gap-2 mt-auto">
+            <button className="alerts-sidebar-btn">
               View Alert Analytics <ArrowRight size={14} />
             </button>
           </div>
 
           {/* Recommended Actions */}
-          <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
-            <h3 className="font-bold text-text-main text-base mb-4">Recommended Actions</h3>
+          <div className="alerts-actions-card">
+            <h3 className="alerts-actions-title">Recommended Actions</h3>
             
-            <div className="space-y-1">
-              <button className="w-full flex items-center justify-between p-3 hover:bg-secondary rounded-lg transition-colors group text-left">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-danger/10 text-danger flex items-center justify-center shrink-0">
+            <div className="alerts-actions-list">
+              <button className="alerts-action-btn">
+                <div className="alerts-action-content">
+                  <div className="alerts-action-icon danger">
                     <Bug size={14} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-text-main group-hover:text-primary transition-colors leading-tight">Check Moong Field 03</h4>
-                    <p className="text-[10px] font-medium text-text-muted mt-0.5">Inspect aphid infestation</p>
+                    <h4 className="alerts-action-title">Check Moong Field 03</h4>
+                    <p className="alerts-action-desc">Inspect aphid infestation</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-text-muted shrink-0" />
+                <ChevronRight size={16} className="alerts-action-chevron" />
               </button>
 
-              <button className="w-full flex items-center justify-between p-3 hover:bg-secondary rounded-lg transition-colors group text-left">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0">
+              <button className="alerts-action-btn">
+                <div className="alerts-action-content">
+                  <div className="alerts-action-icon warning">
                     <Droplet size={14} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-text-main group-hover:text-primary transition-colors leading-tight">Irrigate Wheat Field 01</h4>
-                    <p className="text-[10px] font-medium text-text-muted mt-0.5">Soil moisture is low</p>
+                    <h4 className="alerts-action-title">Irrigate Wheat Field 01</h4>
+                    <p className="alerts-action-desc">Soil moisture is low</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-text-muted shrink-0" />
+                <ChevronRight size={16} className="alerts-action-chevron" />
               </button>
 
-              <button className="w-full flex items-center justify-between p-3 hover:bg-secondary rounded-lg transition-colors group text-left">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0">
+              <button className="alerts-action-btn">
+                <div className="alerts-action-content">
+                  <div className="alerts-action-icon warning">
                     <Leaf size={14} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-text-main group-hover:text-primary transition-colors leading-tight">Add Nitrogen to Rice Field 02</h4>
-                    <p className="text-[10px] font-medium text-text-muted mt-0.5">Improve plant growth</p>
+                    <h4 className="alerts-action-title">Add Nitrogen to Rice Field 02</h4>
+                    <p className="alerts-action-desc">Improve plant growth</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-text-muted shrink-0" />
+                <ChevronRight size={16} className="alerts-action-chevron" />
               </button>
 
-              <button className="w-full flex items-center justify-between p-3 hover:bg-secondary rounded-lg transition-colors group text-left">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-info/10 text-info flex items-center justify-center shrink-0">
+              <button className="alerts-action-btn">
+                <div className="alerts-action-content">
+                  <div className="alerts-action-icon info">
                     <CloudRain size={14} />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-text-main group-hover:text-primary transition-colors leading-tight">View Weather Forecast</h4>
-                    <p className="text-[10px] font-medium text-text-muted mt-0.5">Heavy rain expected</p>
+                    <h4 className="alerts-action-title">View Weather Forecast</h4>
+                    <p className="alerts-action-desc">Heavy rain expected</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-text-muted shrink-0" />
+                <ChevronRight size={16} className="alerts-action-chevron" />
               </button>
             </div>
 
-            <button className="w-full mt-4 py-2.5 border border-border text-text-main rounded-lg text-xs font-bold hover:bg-secondary transition-colors flex items-center justify-center gap-2">
+            <button className="alerts-actions-view-all">
               View All Recommendations <ArrowRight size={14} />
             </button>
           </div>

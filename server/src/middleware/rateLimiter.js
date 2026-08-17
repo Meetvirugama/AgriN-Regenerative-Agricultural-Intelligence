@@ -40,7 +40,7 @@ export const aiLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 100, // Increased for development testing
   standardHeaders: true,
   legacyHeaders: false,
   message: {

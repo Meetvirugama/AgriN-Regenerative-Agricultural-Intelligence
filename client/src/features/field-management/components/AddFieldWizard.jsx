@@ -1,122 +1,276 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   ArrowLeft, Search, Crosshair, MapPin, Info, Satellite, CloudRain, 
   Map as MapIcon, Plus, Minus, Check, MousePointer2, PenTool, Edit3, 
   Trash2, Navigation, Calendar, Droplet, Triangle, CloudUpload, 
-  BrainCircuit, Lightbulb, Tag, Bell
+  BrainCircuit, Lightbulb, Tag, Bell, Leaf, Loader2, X
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { GoogleMap, useJsApiLoader, Marker, Polygon, DrawingManager, Autocomplete } from '@react-google-maps/api';
+import { cropApi } from "../../crop-context/api/cropApi";
+
+import "./AddFieldWizard.css";
+
+const libraries = ['places', 'drawing', 'geometry'];
+
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%'
+};
 
 export const AddFieldWizard = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form State for Step 3
-  const [formData, setFormData] = useState({
-    name: "Wheat Field 01",
-    crop: "Wheat",
-    variety: "Variety X",
-    date: "12 Jun 2025",
-    area: "1.25 ha",
-    irrigation: "Tube Well",
-    soil: "Loamy Soil",
-    description: "Good productivity field. Regular irrigation."
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    libraries
   });
 
+  // Location State
+  const [location, setLocation] = useState({
+    lat: 29.7310,
+    lng: 78.2650,
+    address: "Madhopur, Uttar Pradesh, India"
+  });
+  
+  // Maps State
+  const mapRef = useRef(null);
+  const autocompleteRef = useRef(null);
+  const [mapCenter, setMapCenter] = useState({ lat: 29.7310, lng: 78.2650 });
+
+  // Boundary State
+  const [boundaryCoords, setBoundaryCoords] = useState([]);
+  const [areaHectares, setAreaHectares] = useState(0);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    name: "",
+    crop: "Wheat",
+    variety: "",
+    date: new Date().toISOString().split('T')[0],
+    irrigation: "Tube Well",
+    soil: "Loamy Soil",
+    description: ""
+  });
+
+  const onMapLoad = useCallback((map) => {
+    mapRef.current = map;
+  }, []);
+
+  const onMapUnmount = useCallback(() => {
+    mapRef.current = null;
+  }, []);
+
+  const reverseGeocode = (lat, lng) => {
+    if (!window.google) return;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === "OK" && results[0]) {
+        setLocation({ lat, lng, address: results[0].formatted_address });
+        setMapCenter({ lat, lng });
+      } else {
+        setLocation({ lat, lng, address: "Unknown Location" });
+        setMapCenter({ lat, lng });
+      }
+    });
+  };
+
+  const useMyLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+      });
+    }
+  };
+
+  const onMapClick = (e) => {
+    if (step === 1) {
+      reverseGeocode(e.latLng.lat(), e.latLng.lng());
+    }
+  };
+
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current !== null) {
+      const place = autocompleteRef.current.getPlace();
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        setLocation({ lat, lng, address: place.formatted_address });
+        setMapCenter({ lat, lng });
+      }
+    }
+  };
+
+  const onPolygonComplete = (polygon) => {
+    const path = polygon.getPath().getArray();
+    const coords = path.map(p => ({ lat: p.lat(), lng: p.lng() }));
+    
+    // We want to keep just one polygon, so we remove the drawn one and render our own <Polygon>
+    polygon.setMap(null);
+    setBoundaryCoords(coords);
+
+    if (window.google && window.google.maps.geometry) {
+      const sqMeters = window.google.maps.geometry.spherical.computeArea(polygon.getPath());
+      setAreaHectares((sqMeters / 10000).toFixed(2));
+    }
+  };
+  
+  const clearBoundary = () => {
+    setBoundaryCoords([]);
+    setAreaHectares(0);
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      // Build GeoJSON format for the backend
+      const ring = boundaryCoords.map(c => [c.lng, c.lat]);
+      if (ring.length > 0) {
+        ring.push([boundaryCoords[0].lng, boundaryCoords[0].lat]); // close the polygon
+      }
+      const geojson = boundaryCoords.length > 0 ? {
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [ring]
+        },
+        properties: {}
+      } : null;
+
+      await cropApi.createField({
+        name: formData.name,
+        cropType: formData.crop,
+        sowingDate: formData.date,
+        cropVariety: formData.variety,
+        lat: location.lat,
+        lng: location.lng,
+        locationName: location.address,
+        areaHectares: parseFloat(areaHectares) || 0,
+        boundaryGeojson: geojson
+      });
+      setStep(4);
+    } catch (err) {
+      console.error("Failed to create field", err);
+      alert("Failed to create field. Check console.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loadError) return <div style={{padding: '2rem'}}>Error loading maps. Please check your API key.</div>;
+  if (!isLoaded) return <div style={{padding: '2rem', display: 'flex', gap: '1rem', alignItems: 'center'}}><Loader2 className="animate-spin" /> Loading Maps...</div>;
+
   return (
-    <div className="animate-fade-in-up flex flex-col h-[calc(100vh-6rem)]">
-      
-      <div className="max-w-[1400px] w-full mx-auto flex flex-col h-full overflow-y-auto pb-8">
+    <div className="wizard-container">
+      <div className="wizard-content-wrapper">
         
         {/* HEADER */}
-        <div className="relative flex items-center justify-center mb-8 shrink-0 pt-4">
+        <div className="wizard-header">
           <button 
-            onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)}
-            className="absolute left-0 flex items-center gap-2 text-sm font-bold text-text-main hover:opacity-80 transition-opacity"
+            onClick={() => step > 1 && step < 4 ? setStep(step - 1) : navigate(-1)}
+            className="wizard-back-btn"
           >
             <ArrowLeft size={20} /> Back
           </button>
-          <h1 className="text-2xl font-bold text-text-main">Add New Field</h1>
+          <h1 className="wizard-title">Add New Field</h1>
         </div>
         
         {/* STEPPER */}
-        <div className="flex items-center justify-center gap-4 mb-10 w-full max-w-3xl mx-auto shrink-0">
-          <StepIndicator active={step >= 1} current={step === 1} completed={step > 1} num={1} label="Location" />
-          <div className={`flex-1 h-px max-w-[80px] ${step > 1 ? 'bg-primary' : 'bg-border'}`}></div>
-          <StepIndicator active={step >= 2} current={step === 2} completed={step > 2} num={2} label="Boundary" />
-          <div className={`flex-1 h-px max-w-[80px] ${step > 2 ? 'bg-primary' : 'bg-border'}`}></div>
-          <StepIndicator active={step >= 3} current={step === 3} completed={step > 3} num={3} label="Details" />
-          <div className={`flex-1 h-px max-w-[80px] ${step > 3 ? 'bg-primary' : 'bg-border'}`}></div>
-          <StepIndicator active={step >= 4} current={step === 4} completed={step > 4} num={4} label="Confirm" />
-        </div>
+        {step < 4 && (
+          <div className="wizard-stepper">
+            <StepIndicator active={step >= 1} current={step === 1} completed={step > 1} num={1} label="Location" />
+            <div className={`wizard-step-line ${step > 1 ? 'active' : 'inactive'}`}></div>
+            <StepIndicator active={step >= 2} current={step === 2} completed={step > 2} num={2} label="Boundary" />
+            <div className={`wizard-step-line ${step > 2 ? 'active' : 'inactive'}`}></div>
+            <StepIndicator active={step >= 3} current={step === 3} completed={step > 3} num={3} label="Details" />
+          </div>
+        )}
 
         {/* STEP 1: LOCATION */}
         {step === 1 && (
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column (Map & Search) */}
-            <div className="lg:col-span-2 flex flex-col h-[600px] space-y-4">
+          <div className="wizard-step-content cols-3">
+            <div className="wizard-main-col wizard-col-flex">
               <div>
-                <h2 className="text-xl font-bold text-text-main">Step 1: Location</h2>
-                <p className="text-sm font-medium text-text-muted mt-1">Search or select your field location</p>
+                <h2 className="wizard-step-title">Step 1: Location</h2>
+                <p className="wizard-step-subtitle">Search for your field or use your current location</p>
               </div>
 
-              <div className="flex gap-3">
-                <div className="relative flex-1">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" />
-                  <input 
-                    type="text" 
-                    placeholder="Search location..." 
-                    className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
-                  />
+              <div className="wizard-search-bar" style={{ position: 'relative' }}>
+                <div className="wizard-search-input-wrapper">
+                  <Search size={18} className="wizard-search-icon" />
+                  <Autocomplete
+                    onLoad={autocomplete => { autocompleteRef.current = autocomplete; }}
+                    onPlaceChanged={onPlaceChanged}
+                  >
+                    <input 
+                      type="text" 
+                      placeholder="Search location (e.g. Madhopur)..." 
+                      className="wizard-input wizard-form-input with-icon"
+                      style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', paddingLeft: '2.75rem' }}
+                    />
+                  </Autocomplete>
                 </div>
-                <button className="w-12 h-12 bg-surface border border-border rounded-xl flex items-center justify-center text-text-main hover:bg-secondary transition-colors shadow-sm shrink-0">
+                <button className="wizard-target-btn" onClick={useMyLocation} title="Use My Location" style={{ color: 'var(--primary)'}}>
                   <Crosshair size={20} />
                 </button>
               </div>
 
-              <div className="flex-1 bg-[#f0f3f4] relative rounded-xl border border-border overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1200" alt="Map" className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-luminosity" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                  <div className="w-12 h-12 bg-primary text-surface rounded-full flex items-center justify-center shadow-lg"><MapPin size={24} fill="currentColor" className="text-primary-content" /></div>
-                  <div className="w-2 h-2 bg-primary/40 rounded-full mt-1"></div>
-                </div>
-                <div className="absolute bottom-4 right-4 flex flex-col bg-surface border border-border rounded-lg shadow-sm overflow-hidden">
-                  <button className="w-10 h-10 flex items-center justify-center hover:bg-secondary border-b border-border"><Plus size={20} /></button>
-                  <button className="w-10 h-10 flex items-center justify-center hover:bg-secondary"><Minus size={20} /></button>
-                </div>
+              <div className="wizard-map-wrapper" style={{ height: '400px', zIndex: 1 }}>
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={mapCenter}
+                  zoom={15}
+                  onLoad={onMapLoad}
+                  onUnmount={onMapUnmount}
+                  onClick={onMapClick}
+                  options={{
+                    mapTypeId: 'satellite',
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: false,
+                  }}
+                >
+                  <Marker position={{ lat: location.lat, lng: location.lng }} />
+                </GoogleMap>
               </div>
 
-              <div className="bg-info/5 border border-info/20 rounded-xl p-4 flex gap-3 text-info items-start">
-                <Info size={20} className="shrink-0 mt-0.5" />
+              <div className="wizard-info-banner">
+                <Info size={20} className="wizard-info-banner-icon" />
                 <div>
-                  <h4 className="font-bold text-sm text-text-main">Tips</h4>
-                  <p className="text-sm text-text-muted mt-0.5">Zoom in and tap on the exact location of your field.</p>
+                  <h4 className="wizard-info-banner-title">Tips</h4>
+                  <p className="wizard-info-banner-desc">Click on the map to place a pin at your field's exact location, or click the Crosshair icon to use your GPS.</p>
                 </div>
               </div>
             </div>
 
-            {/* Right Column (Info Panel) */}
-            <div className="flex flex-col h-[600px] justify-between">
-              <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
-                <h3 className="font-bold text-text-main text-base mb-6">Why Location is Important?</h3>
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4"><div className="text-primary mt-0.5 shrink-0"><Satellite size={24} strokeWidth={1.5} /></div><p className="text-sm text-text-muted font-medium">Helps us get accurate satellite data</p></div>
-                  <div className="flex items-start gap-4"><div className="text-primary mt-0.5 shrink-0"><CloudRain size={24} strokeWidth={1.5} /></div><p className="text-sm text-text-muted font-medium">Provides precise weather forecasts</p></div>
-                  <div className="flex items-start gap-4"><div className="text-primary mt-0.5 shrink-0"><MapIcon size={24} strokeWidth={1.5} /></div><p className="text-sm text-text-muted font-medium">Enables field-specific recommendations</p></div>
+            <div className="wizard-side-col">
+              <div className="wizard-side-card">
+                <h3 className="wizard-card-title">Why we need your field location</h3>
+                <div className="wizard-feature-list">
+                  <div className="wizard-feature-item"><div className="wizard-feature-icon"><Satellite size={24} strokeWidth={1.5} /></div><p className="wizard-feature-text">Accurate field satellite imagery</p></div>
+                  <div className="wizard-feature-item"><div className="wizard-feature-icon"><CloudRain size={24} strokeWidth={1.5} /></div><p className="wizard-feature-text">Field-local weather forecasts</p></div>
+                  <div className="wizard-feature-item"><div className="wizard-feature-icon"><MapIcon size={24} strokeWidth={1.5} /></div><p className="wizard-feature-text">Advice specific to your field context</p></div>
                 </div>
-                <div className="w-full h-px bg-border my-8"></div>
-                <h3 className="font-bold text-text-main text-base mb-4">Selected Location</h3>
-                <div className="bg-success/5 border border-success/20 rounded-xl p-4 flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="text-success shrink-0"><MapPin size={24} fill="currentColor" className="text-success-content" /></div>
-                    <div><p className="text-sm font-bold text-text-main">Madhopur, Uttar Pradesh, India</p><p className="text-xs text-text-muted mt-0.5">29.7310° N, 78.2650° E</p></div>
+                
+                <div className="wizard-divider"></div>
+                
+                <h3 className="wizard-card-title">Selected Location</h3>
+                <div className="wizard-selected-location">
+                  <div className="wizard-selected-info">
+                    <div className="wizard-selected-icon"><MapPin size={24} fill="currentColor" /></div>
+                    <div>
+                      <p className="wizard-selected-title">{location.address}</p>
+                      <p className="wizard-selected-coords">{location.lat.toFixed(4)}° N, {location.lng.toFixed(4)}° E</p>
+                    </div>
                   </div>
-                  <button className="text-sm font-bold text-info hover:underline shrink-0 pl-2">Change</button>
                 </div>
               </div>
-              <div className="flex justify-end gap-4 mt-6">
-                <button onClick={() => navigate('/fields')} className="px-8 py-3 bg-surface border border-border text-text-main font-bold rounded-lg text-sm hover:bg-secondary transition-colors">Cancel</button>
-                <button onClick={() => setStep(2)} className="px-10 py-3 bg-text-main text-surface font-bold rounded-lg text-sm hover:bg-text-main/90 transition-colors shadow-md">Next</button>
+              
+              <div className="wizard-actions">
+                <button onClick={() => navigate('/fields')} className="wizard-btn-outline">Cancel</button>
+                <button onClick={() => setStep(2)} className="wizard-btn-solid">Next</button>
               </div>
             </div>
           </div>
@@ -124,102 +278,104 @@ export const AddFieldWizard = () => {
 
         {/* STEP 2: BOUNDARY */}
         {step === 2 && (
-          <div className="flex-1 grid grid-cols-1 xl:grid-cols-4 gap-8">
-            <div className="xl:col-span-3 flex flex-col h-[650px] space-y-4">
-              
-              <div className="flex justify-between items-end">
+          <div className="wizard-step-content cols-4">
+            <div className="wizard-main-col-xl wizard-col-flex tall">
+              <div className="wizard-step-header-row">
                 <div>
-                  <h2 className="text-xl font-bold text-text-main">Step 2: Draw Field Boundary</h2>
-                  <p className="text-sm font-medium text-text-muted mt-1">Mark the exact boundary of your field on the map</p>
+                  <h2 className="wizard-step-title">Step 2: Draw Field Boundary</h2>
+                  <p className="wizard-step-subtitle">Use the polygon tool to draw the boundary of your field</p>
                 </div>
-                <div className="bg-info/10 text-info px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 border border-info/20">
+                <div className="wizard-inline-info">
                   <Info size={16} /> Draw the boundary as close as possible for accurate insights
                 </div>
               </div>
 
-              <div className="flex-1 relative rounded-xl border border-border overflow-hidden">
-                {/* Satellite Map */}
-                <img src="https://images.unsplash.com/photo-1595180436402-2ebde09a32c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" alt="Satellite" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="wizard-map-wrapper" style={{ height: '500px', zIndex: 1, position: 'relative' }}>
+                <GoogleMap
+                  mapContainerStyle={mapContainerStyle}
+                  center={mapCenter}
+                  zoom={18}
+                  onLoad={onMapLoad}
+                  onUnmount={onMapUnmount}
+                  options={{
+                    mapTypeId: 'satellite',
+                    mapTypeControl: true,
+                    streetViewControl: false,
+                    fullscreenControl: false,
+                  }}
+                >
+                  {boundaryCoords.length === 0 && (
+                    <DrawingManager
+                      onPolygonComplete={onPolygonComplete}
+                      options={{
+                        drawingControl: true,
+                        drawingControlOptions: {
+                          position: window.google.maps.ControlPosition.TOP_CENTER,
+                          drawingModes: [window.google.maps.drawing.OverlayType.POLYGON]
+                        },
+                        polygonOptions: {
+                          fillColor: '#22c55e',
+                          fillOpacity: 0.4,
+                          strokeWeight: 2,
+                          strokeColor: '#22c55e',
+                          clickable: false,
+                          editable: false,
+                          zIndex: 1
+                        }
+                      }}
+                    />
+                  )}
+                  {boundaryCoords.length > 0 && (
+                    <Polygon
+                      paths={boundaryCoords}
+                      options={{
+                        fillColor: '#22c55e',
+                        fillOpacity: 0.4,
+                        strokeColor: '#22c55e',
+                        strokeOpacity: 1,
+                        strokeWeight: 2
+                      }}
+                    />
+                  )}
+                </GoogleMap>
                 
-                {/* Faux Polygon */}
-                <svg className="absolute inset-0 w-full h-full z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <polygon points="35,45 55,50 62,75 30,70" fill="rgba(34, 197, 94, 0.3)" stroke="#22c55e" strokeWidth="0.5" />
-                  <circle cx="35" cy="45" r="1.5" fill="white" stroke="#22c55e" strokeWidth="0.5" />
-                  <circle cx="55" cy="50" r="1.5" fill="white" stroke="#22c55e" strokeWidth="0.5" />
-                  <circle cx="62" cy="75" r="1.5" fill="white" stroke="#22c55e" strokeWidth="0.5" />
-                  <circle cx="30" cy="70" r="1.5" fill="white" stroke="#22c55e" strokeWidth="0.5" />
-                </svg>
-
-                {/* Map Overlay Controls */}
-                <div className="absolute top-4 left-4 bg-surface rounded-lg shadow-sm border border-border flex overflow-hidden z-20">
-                  <button className="px-4 py-2 text-sm font-semibold text-text-muted hover:bg-secondary">Map</button>
-                  <button className="px-4 py-2 text-sm font-bold bg-background text-text-main shadow-sm border-l border-border">Satellite</button>
-                </div>
-
-                <div className="absolute top-4 right-4 z-20">
-                  <div className="relative w-64">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-                    <input type="text" placeholder="Search location" className="w-full pl-9 pr-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none shadow-sm" />
-                  </div>
-                </div>
-
-                {/* Drawing Toolbar */}
-                <div className="absolute top-16 left-4 bg-surface rounded-xl shadow-lg border border-border flex flex-col p-2 gap-2 z-20">
-                  <button className="flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-primary/10 text-primary font-semibold text-xs gap-1 border border-primary/20"><MousePointer2 size={18} /> Select</button>
-                  <button className="flex flex-col items-center justify-center w-14 h-14 rounded-lg text-text-muted hover:bg-secondary hover:text-text-main font-semibold text-xs gap-1 transition-colors"><PenTool size={18} /> Draw</button>
-                  <button className="flex flex-col items-center justify-center w-14 h-14 rounded-lg text-text-muted hover:bg-secondary hover:text-text-main font-semibold text-xs gap-1 transition-colors"><Edit3 size={18} /> Edit</button>
-                  <button className="flex flex-col items-center justify-center w-14 h-14 rounded-lg text-text-muted hover:bg-secondary hover:text-text-main font-semibold text-xs gap-1 transition-colors"><Trash2 size={18} /> Clear</button>
-                </div>
-
-                {/* Bottom Controls */}
-                <div className="absolute bottom-4 left-4 bg-surface rounded-lg shadow-lg border border-border p-2 z-20">
-                  <Navigation size={20} className="text-text-main" />
-                </div>
-                <div className="absolute bottom-4 right-4 flex flex-col bg-surface border border-border rounded-lg shadow-lg overflow-hidden z-20">
-                  <button className="w-10 h-10 flex items-center justify-center hover:bg-secondary border-b border-border"><Plus size={20} /></button>
-                  <button className="w-10 h-10 flex items-center justify-center hover:bg-secondary"><Minus size={20} /></button>
-                </div>
+                {boundaryCoords.length > 0 && (
+                  <button 
+                    onClick={clearBoundary}
+                    style={{ position: 'absolute', bottom: '1rem', left: '1rem', zIndex: 10, background: 'var(--surface)', border: '1px solid var(--border)', padding: '0.5rem 1rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', color: 'var(--danger)', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'}}
+                  >
+                    <Trash2 size={16} /> Clear Drawing
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="flex flex-col h-[650px] justify-between xl:pt-14">
-              <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
-                <p className="text-sm font-bold text-text-main">Field Area</p>
-                <h3 className="text-3xl font-black text-text-main mt-1">1.23 Hectares</h3>
-                <p className="text-xs font-medium text-text-muted mt-1">(12,300 m²)</p>
+            <div className="wizard-side-col tall">
+              <div className="wizard-side-card">
+                <p className="wizard-area-label">Field Area</p>
+                <h3 className="wizard-area-value">{areaHectares} Hectares</h3>
+                <p className="wizard-area-sub">({Math.round(areaHectares * 10000)} m²)</p>
 
-                <div className="mt-6 mb-6 p-4 border border-border rounded-xl bg-background flex items-center justify-center h-32 relative">
-                  {/* Grid background */}
-                  <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)', backgroundSize: '10px 10px' }}></div>
-                  <svg className="w-full h-full z-10" viewBox="0 0 100 100">
-                    <polygon points="30,40 70,40 85,70 20,80" fill="rgba(34, 197, 94, 0.2)" stroke="#22c55e" strokeWidth="1" />
-                    <circle cx="30" cy="40" r="2" fill="white" stroke="#22c55e" strokeWidth="1" />
-                    <circle cx="70" cy="40" r="2" fill="white" stroke="#22c55e" strokeWidth="1" />
-                    <circle cx="85" cy="70" r="2" fill="white" stroke="#22c55e" strokeWidth="1" />
-                    <circle cx="20" cy="80" r="2" fill="white" stroke="#22c55e" strokeWidth="1" />
-                  </svg>
+                <div className="wizard-stats-list" style={{marginTop: '2rem'}}>
+                  <div className="wizard-stat-row"><div className="wizard-stat-label"><MapPin size={16} className="icon"/> Latitude</div><span className="wizard-stat-value">{location.lat.toFixed(4)}° N</span></div>
+                  <div className="wizard-stat-row"><div className="wizard-stat-label"><MapPin size={16} className="icon"/> Longitude</div><span className="wizard-stat-value">{location.lng.toFixed(4)}° E</span></div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center"><div className="flex items-center gap-2 text-text-muted text-sm font-medium"><MapPin size={16} /> Perimeter</div><span className="font-bold text-sm">462 m</span></div>
-                  <div className="flex justify-between items-center"><div className="flex items-center gap-2 text-text-muted text-sm font-medium"><MapPin size={16} /> Latitude</div><span className="font-bold text-sm">23.0225° N</span></div>
-                  <div className="flex justify-between items-center"><div className="flex items-center gap-2 text-text-muted text-sm font-medium"><MapPin size={16} /> Longitude</div><span className="font-bold text-sm">72.5714° E</span></div>
-                </div>
-
-                <div className="mt-6 bg-success/5 border border-success/20 rounded-xl p-4">
-                  <h4 className="font-bold text-sm text-text-main mb-3">Boundary Tips</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-success"><Check size={16} /> Include your whole field area</div>
-                    <div className="flex items-center gap-2 text-sm font-medium text-success"><Check size={16} /> Avoid including nearby roads/houses</div>
-                    <div className="flex items-center gap-2 text-sm font-medium text-success"><Check size={16} /> You can adjust points anytime</div>
+                <div className="wizard-success-banner">
+                  <h4 className="wizard-success-banner-title">Boundary Tips</h4>
+                  <div className="wizard-success-banner-list">
+                    <div className="wizard-success-banner-item"><div className="wizard-check-circle"><Check size={12} strokeWidth={3} /></div> Use the polygon tool on the map menu</div>
+                    <div className="wizard-success-banner-item"><div className="wizard-check-circle"><Check size={12} strokeWidth={3} /></div> Click corners of your field</div>
+                    <div className="wizard-success-banner-item"><div className="wizard-check-circle"><Check size={12} strokeWidth={3} /></div> Click the first point again to finish</div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-4 mt-6">
-                <button onClick={() => setStep(1)} className="px-8 py-3 bg-surface border border-border text-text-main font-bold rounded-lg text-sm hover:bg-secondary transition-colors">Previous</button>
-                <button onClick={() => setStep(3)} className="px-10 py-3 bg-text-main text-surface font-bold rounded-lg text-sm hover:bg-text-main/90 transition-colors shadow-md">Next</button>
+              <div className="wizard-actions">
+                <button onClick={() => setStep(1)} className="wizard-btn-outline">Previous</button>
+                <button onClick={() => setStep(3)} className="wizard-btn-solid" disabled={boundaryCoords.length === 0}>
+                  Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
               </div>
             </div>
           </div>
@@ -227,131 +383,121 @@ export const AddFieldWizard = () => {
 
         {/* STEP 3: DETAILS */}
         {step === 3 && (
-          <div className="flex-1 grid grid-cols-1 xl:grid-cols-3 gap-8">
-            {/* Left Column (Form) */}
-            <div className="xl:col-span-2 flex flex-col">
+          <div className="wizard-step-content xl-cols-3">
+            <div className="wizard-main-col-xl-2 wizard-col-flex auto">
               <div>
-                <h2 className="text-xl font-bold text-text-main">Step 3: Field Details</h2>
-                <p className="text-sm font-medium text-text-muted mt-1">Provide basic information about your field</p>
+                <h2 className="wizard-step-title">Step 3: Field Details</h2>
+                <p className="wizard-step-subtitle">Provide basic information about your field</p>
               </div>
 
-              <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-text-main">Field Name <span className="text-danger">*</span></label>
-                  <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm" />
+              <div className="wizard-form-grid">
+                <div className="wizard-form-group">
+                  <label className="wizard-form-label">Field Name <span className="wizard-form-asterisk">*</span></label>
+                  <input type="text" placeholder="e.g. Main Plot" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="wizard-form-input" />
                 </div>
                 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-text-main">Crop Type <span className="text-danger">*</span></label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-warning"><Leaf size={18} /></div>
-                    <select className="w-full pl-11 pr-10 py-3 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm appearance-none cursor-pointer">
-                      <option>Wheat</option>
-                      <option>Rice</option>
-                      <option>Cotton</option>
+                <div className="wizard-form-group">
+                  <label className="wizard-form-label">Crop Type <span className="wizard-form-asterisk">*</span></label>
+                  <div className="wizard-form-icon-wrapper">
+                    <div className="wizard-form-icon warning"><Leaf size={18} /></div>
+                    <select className="wizard-form-input with-icon wizard-form-select" value={formData.crop} onChange={(e) => setFormData({...formData, crop: e.target.value})}>
+                      <option value="wheat">Wheat</option>
+                      <option value="rice">Rice</option>
+                      <option value="cotton">Cotton</option>
+                      <option value="maize">Maize</option>
+                      <option value="moong">Moong</option>
                     </select>
-                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-text-main">Variety / Hybrid</label>
-                  <input type="text" value={formData.variety} onChange={(e) => setFormData({...formData, variety: e.target.value})} className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm" />
+                <div className="wizard-form-group">
+                  <label className="wizard-form-label">Variety / Hybrid</label>
+                  <input type="text" value={formData.variety} onChange={(e) => setFormData({...formData, variety: e.target.value})} className="wizard-form-input" />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-text-main">Sowing Date <span className="text-danger">*</span></label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"><Calendar size={18} /></div>
-                    <input type="text" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full pl-11 pr-4 py-3 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm" />
+                <div className="wizard-form-group">
+                  <label className="wizard-form-label">Sowing Date <span className="wizard-form-asterisk">*</span></label>
+                  <div className="wizard-form-icon-wrapper">
+                    <div className="wizard-form-icon muted"><Calendar size={18} /></div>
+                    <input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="wizard-form-input with-icon" />
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-text-main">Area</label>
-                  <input type="text" value={formData.area} disabled className="w-full px-4 py-3 bg-secondary/50 border border-border/50 text-text-muted rounded-xl text-sm shadow-sm cursor-not-allowed" />
+                <div className="wizard-form-group">
+                  <label className="wizard-form-label">Calculated Area</label>
+                  <input type="text" value={`${areaHectares} ha`} disabled className="wizard-form-input" />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-text-main">Irrigation Source</label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-info"><Droplet size={18} /></div>
-                    <select className="w-full pl-11 pr-10 py-3 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm appearance-none cursor-pointer">
+                <div className="wizard-form-group">
+                  <label className="wizard-form-label">Irrigation Source</label>
+                  <div className="wizard-form-icon-wrapper">
+                    <div className="wizard-form-icon info"><Droplet size={18} /></div>
+                    <select className="wizard-form-input with-icon wizard-form-select" value={formData.irrigation} onChange={(e) => setFormData({...formData, irrigation: e.target.value})}>
                       <option>Tube Well</option>
                       <option>Canal</option>
                       <option>Rainfed</option>
                     </select>
-                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
                   </div>
                 </div>
 
-                <div className="col-span-2 space-y-1.5">
-                  <label className="text-sm font-bold text-text-main">Soil Type <span className="text-text-muted font-medium text-xs ml-1">(Optional)</span></label>
-                  <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"><Triangle size={18} /></div>
-                    <select className="w-full pl-11 pr-10 py-3 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm appearance-none cursor-pointer">
-                      <option>Loamy Soil</option>
-                      <option>Clay</option>
-                      <option>Sandy</option>
-                    </select>
-                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-                  </div>
-                </div>
-
-                <div className="col-span-2 space-y-1.5">
-                  <label className="text-sm font-bold text-text-main">Description <span className="text-text-muted font-medium text-xs ml-1">(Optional)</span></label>
+                <div className="wizard-form-group full">
+                  <label className="wizard-form-label">Description <span className="wizard-form-optional">(Optional)</span></label>
                   <textarea 
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                     rows="3" 
-                    className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm resize-none"
+                    className="wizard-form-textarea"
                   ></textarea>
-                  <div className="text-right text-xs text-text-muted font-medium mt-1">
-                    {formData.description.length}/200
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 bg-info/5 border border-info/20 rounded-xl p-5 flex gap-3 text-info items-start">
-                <Info size={20} className="shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-bold text-sm text-text-main">Why these details matter?</h4>
-                  <p className="text-sm text-text-muted mt-0.5">Accurate details help AgriMesh provide precise insights and recommendations for your field.</p>
                 </div>
               </div>
             </div>
 
-            {/* Right Column (Summary) */}
-            <div className="flex flex-col justify-between h-[800px]">
-              <div className="bg-surface border border-border rounded-xl p-6 shadow-sm">
-                <h3 className="font-bold text-text-main text-base mb-4">Field Summary</h3>
+            <div className="wizard-side-col taller">
+              <div className="wizard-side-card">
+                <h3 className="wizard-card-title">Field Summary</h3>
                 
-                <div className="w-full h-40 rounded-xl overflow-hidden relative border border-border mb-6">
-                  <img src="https://images.unsplash.com/photo-1595180436402-2ebde09a32c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Satellite" className="absolute inset-0 w-full h-full object-cover" />
-                  <svg className="absolute inset-0 w-full h-full z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <polygon points="35,45 55,50 62,75 30,70" fill="rgba(255, 255, 255, 0.1)" stroke="white" strokeWidth="0.5" />
-                    <circle cx="35" cy="45" r="1.5" fill="white" />
-                    <circle cx="55" cy="50" r="1.5" fill="white" />
-                    <circle cx="62" cy="75" r="1.5" fill="white" />
-                    <circle cx="30" cy="70" r="1.5" fill="white" />
-                  </svg>
+                <div className="wizard-summary-map" style={{ zIndex: 1}}>
+                  <GoogleMap
+                    mapContainerStyle={mapContainerStyle}
+                    center={mapCenter}
+                    zoom={16}
+                    options={{
+                      mapTypeId: 'satellite',
+                      disableDefaultUI: true,
+                      draggable: false,
+                      zoomControl: false,
+                      scrollwheel: false,
+                      disableDoubleClickZoom: true
+                    }}
+                  >
+                    {boundaryCoords.length > 0 && (
+                      <Polygon
+                        paths={boundaryCoords}
+                        options={{
+                          fillColor: '#22c55e',
+                          fillOpacity: 0.4,
+                          strokeColor: '#22c55e',
+                          strokeOpacity: 1,
+                          strokeWeight: 2
+                        }}
+                      />
+                    )}
+                  </GoogleMap>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><MapPin size={16} className="text-text-muted"/> Location</div><span className="font-bold text-sm">Madhopur, UP, India</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Crosshair size={16} className="text-text-muted"/> Area</div><span className="font-bold text-sm">1.25 ha</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><PenTool size={16} className="text-text-muted"/> Perimeter</div><span className="font-bold text-sm">528 m</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Leaf size={16} className="text-text-muted"/> Crop</div><span className="font-bold text-sm">Wheat</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Sprout size={16} className="text-text-muted"/> Variety</div><span className="font-bold text-sm">Variety X</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Calendar size={16} className="text-text-muted"/> Sowing Date</div><span className="font-bold text-sm">12 Jun 2025</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Droplet size={16} className="text-text-muted"/> Irrigation</div><span className="font-bold text-sm">Tube Well</span></div>
-                  <div className="flex justify-between items-center"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Triangle size={16} className="text-text-muted"/> Soil Type</div><span className="font-bold text-sm">Loamy Soil</span></div>
+                <div className="wizard-summary-stats">
+                  <div className="wizard-stat-row bordered"><div className="wizard-stat-label"><MapPin size={16} className="icon"/> Location</div><span className="wizard-stat-value" style={{textAlign: 'right', maxWidth: '150px'}}>{location.address}</span></div>
+                  <div className="wizard-stat-row bordered"><div className="wizard-stat-label"><Crosshair size={16} className="icon"/> Area</div><span className="wizard-stat-value">{areaHectares} ha</span></div>
+                  <div className="wizard-stat-row bordered"><div className="wizard-stat-label"><Leaf size={16} className="icon"/> Crop</div><span className="wizard-stat-value">{formData.crop}</span></div>
+                  <div className="wizard-stat-row bordered"><div className="wizard-stat-label"><Calendar size={16} className="icon"/> Sowing Date</div><span className="wizard-stat-value">{formData.date}</span></div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-4 mt-6">
-                <button onClick={() => setStep(2)} className="px-8 py-3 bg-surface border border-border text-text-main font-bold rounded-lg text-sm hover:bg-secondary transition-colors">Cancel</button>
-                <button onClick={() => setStep(4)} className="px-10 py-3 bg-text-main text-surface font-bold rounded-lg text-sm hover:bg-text-main/90 transition-colors shadow-md">Next</button>
+              <div className="wizard-actions">
+                <button onClick={() => setStep(2)} className="wizard-btn-outline" disabled={isSubmitting}>Back</button>
+                <button onClick={handleSubmit} className="wizard-btn-solid" disabled={!formData.name || !formData.date || isSubmitting}>
+                  {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : "Save Field"}
+                </button>
               </div>
             </div>
           </div>
@@ -359,112 +505,49 @@ export const AddFieldWizard = () => {
 
         {/* STEP 4: CONFIRM */}
         {step === 4 && (
-          <div className="flex-1 grid grid-cols-1 xl:grid-cols-3 gap-8">
-            
-            {/* Left Column (Success State) */}
-            <div className="xl:col-span-2 flex flex-col justify-center">
-              <div className="bg-surface border border-border rounded-xl p-8 shadow-sm">
-                
-                {/* Success Header */}
-                <div className="flex items-center gap-6">
-                  <div className="w-20 h-20 bg-success/10 text-success rounded-full flex items-center justify-center shrink-0">
+          <div className="wizard-step-content xl-cols-3">
+            <div className="wizard-main-col-xl-2" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+              <div className="wizard-side-card">
+                <div className="wizard-success-header">
+                  <div className="wizard-success-icon-wrapper">
                     <Check size={40} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-text-main">Field Created Successfully!</h2>
-                    <p className="text-text-muted mt-2 font-medium">Your field has been added to AgriMesh.</p>
+                    <h2 className="wizard-success-title">Field Registered Successfully!</h2>
+                    <p className="wizard-success-subtitle">The geographical boundary of {formData.name} is now locked in AgriMesh.</p>
                   </div>
                 </div>
 
-                <div className="w-full h-px bg-border my-8"></div>
+                <div className="wizard-divider"></div>
 
-                {/* What's Next */}
-                <h3 className="text-lg font-bold text-text-main mb-1">What's Next?</h3>
-                <p className="text-sm text-text-muted font-medium mb-6">AgriMesh will now start collecting and analyzing data for your field.</p>
+                <h3 className="wizard-next-title">Layer 01 Active</h3>
+                <p className="wizard-next-subtitle">AgriMesh will now use this precise polygon to fetch satellite and weather intelligence.</p>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="border border-border rounded-xl p-4 flex flex-col items-center text-center gap-2">
-                    <CloudUpload size={28} className="text-success mb-1" strokeWidth={1.5} />
-                    <h4 className="font-bold text-xs text-text-main">Data Collection</h4>
-                    <p className="text-[10px] text-text-muted font-medium">We will collect satellite, weather and soil data.</p>
+                <div className="wizard-next-grid">
+                  <div className="wizard-next-card">
+                    <CloudUpload size={28} className="wizard-next-icon" strokeWidth={1.5} />
+                    <h4 className="wizard-next-card-title">Copernicus Sentinel-2</h4>
+                    <p className="wizard-next-card-desc">We are analyzing pixels that intersect your field boundary.</p>
                   </div>
-                  <div className="border border-border rounded-xl p-4 flex flex-col items-center text-center gap-2">
-                    <BrainCircuit size={28} className="text-success mb-1" strokeWidth={1.5} />
-                    <h4 className="font-bold text-xs text-text-main">AI Analysis</h4>
-                    <p className="text-[10px] text-text-muted font-medium">Our AI will analyze the data and generate insights.</p>
-                  </div>
-                  <div className="border border-border rounded-xl p-4 flex flex-col items-center text-center gap-2">
-                    <Lightbulb size={28} className="text-success mb-1" strokeWidth={1.5} />
-                    <h4 className="font-bold text-xs text-text-main">Smart Insights</h4>
-                    <p className="text-[10px] text-text-muted font-medium">You will receive personalized recommendations.</p>
-                  </div>
-                  <div className="border border-border rounded-xl p-4 flex flex-col items-center text-center gap-2">
-                    <Bell size={28} className="text-success mb-1" strokeWidth={1.5} />
-                    <h4 className="font-bold text-xs text-text-main">Alerts</h4>
-                    <p className="text-[10px] text-text-muted font-medium">We will notify you about important updates.</p>
+                  <div className="wizard-next-card">
+                    <BrainCircuit size={28} className="wizard-next-icon" strokeWidth={1.5} />
+                    <h4 className="wizard-next-card-title">Micro-climate Weather</h4>
+                    <p className="wizard-next-card-desc">Weather data snapped to your exact GPS coordinates.</p>
                   </div>
                 </div>
 
-                {/* Tip */}
-                <div className="mt-8 bg-info/5 border border-info/20 rounded-xl p-5 flex gap-3 text-info items-start">
-                  <Info size={20} className="shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-bold text-sm text-text-main">Tip</h4>
-                    <p className="text-sm text-text-muted mt-0.5 font-medium">You can view and manage this field from My Fields dashboard.</p>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex justify-end gap-4 mt-8">
-                  <button 
-                    onClick={() => { setStep(1); setFormData({...formData, name: ""}) }} 
-                    className="px-8 py-3 bg-surface border border-border text-text-main font-bold rounded-lg text-sm hover:bg-secondary transition-colors"
-                  >
-                    Add Another Field
-                  </button>
+                <div className="wizard-actions" style={{marginTop: '2rem'}}>
                   <button 
                     onClick={() => navigate('/fields')} 
-                    className="px-10 py-3 bg-text-main text-surface font-bold rounded-lg text-sm hover:bg-text-main/90 transition-colors shadow-md"
+                    className="wizard-btn-solid"
                   >
-                    Go to My Fields
+                    View Field Dashboard
                   </button>
                 </div>
               </div>
             </div>
-
-            {/* Right Column (Summary) */}
-            <div className="flex flex-col h-[750px]">
-              <div className="bg-surface border border-border rounded-xl p-6 shadow-sm h-full flex flex-col">
-                <h3 className="font-bold text-text-main text-base mb-4">Field Summary</h3>
-                
-                <div className="w-full h-40 rounded-xl overflow-hidden relative border border-border mb-6">
-                  <img src="https://images.unsplash.com/photo-1595180436402-2ebde09a32c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Satellite" className="absolute inset-0 w-full h-full object-cover" />
-                  <svg className="absolute inset-0 w-full h-full z-10" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <polygon points="35,45 55,50 62,75 30,70" fill="rgba(255, 255, 255, 0.1)" stroke="white" strokeWidth="0.5" />
-                    <circle cx="35" cy="45" r="1.5" fill="white" />
-                    <circle cx="55" cy="50" r="1.5" fill="white" />
-                    <circle cx="62" cy="75" r="1.5" fill="white" />
-                    <circle cx="30" cy="70" r="1.5" fill="white" />
-                  </svg>
-                </div>
-
-                <div className="space-y-4 flex-1">
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Tag size={16} className="text-text-muted"/> Field Name</div><span className="font-bold text-sm">{formData.name}</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><MapPin size={16} className="text-text-muted"/> Location</div><span className="font-bold text-sm">Madhopur, UP, India</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Crosshair size={16} className="text-text-muted"/> Area</div><span className="font-bold text-sm">{formData.area}</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><PenTool size={16} className="text-text-muted"/> Perimeter</div><span className="font-bold text-sm">528 m</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Leaf size={16} className="text-text-muted"/> Crop</div><span className="font-bold text-sm">{formData.crop}</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Sprout size={16} className="text-text-muted"/> Variety</div><span className="font-bold text-sm">{formData.variety}</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Calendar size={16} className="text-text-muted"/> Sowing Date</div><span className="font-bold text-sm">{formData.date}</span></div>
-                  <div className="flex justify-between items-center border-b border-border/50 pb-3"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Droplet size={16} className="text-text-muted"/> Irrigation</div><span className="font-bold text-sm">{formData.irrigation}</span></div>
-                  <div className="flex justify-between items-center"><div className="flex items-center gap-2 text-text-main text-sm font-bold"><Triangle size={16} className="text-text-muted"/> Soil Type</div><span className="font-bold text-sm">{formData.soil}</span></div>
-                </div>
-              </div>
-            </div>
-
           </div>
         )}
-
       </div>
     </div>
   );
@@ -472,32 +555,13 @@ export const AddFieldWizard = () => {
 
 const StepIndicator = ({ active, current, completed, num, label }) => {
   return (
-    <div className={`flex items-center gap-3 ${active ? "text-primary" : "text-text-muted"}`}>
-      <div className={`
-        w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors
-        ${current ? "bg-primary border-primary text-surface" : completed ? "bg-primary border-primary text-surface" : "border-border bg-surface text-text-muted"}
-      `}>
+    <div className={`wizard-step-indicator ${active ? "active" : "inactive"}`}>
+      <div className={`wizard-step-circle ${current ? "current" : completed ? "completed" : "pending"}`}>
         {completed ? <Check size={16} strokeWidth={3} /> : num}
       </div>
-      <span className={`text-sm ${current ? "font-bold text-text-main" : active ? "font-semibold text-text-main" : "font-medium"}`}>
+      <span className={`wizard-step-label ${current ? "current" : active ? "active" : "pending"}`}>
         {label}
       </span>
     </div>
   );
 };
-
-// Mock icon for Sprout since we didn't import it in this file
-const Sprout = ({ size, className }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M7 20h10" />
-    <path d="M10 20c5.5-2.5.8-6.4 3-10" />
-    <path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z" />
-    <path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 .5-4.9 2z" />
-  </svg>
-);
-
-const ChevronDown = ({ size, className }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <polyline points="6 9 12 15 18 9"></polyline>
-  </svg>
-);

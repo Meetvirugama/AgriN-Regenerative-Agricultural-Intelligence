@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
 import { authRepo } from "../../db/repositories/authRepository.js";
 import { farmerRepo } from "../../db/repositories/farmerRepository.js";
 
@@ -61,6 +62,37 @@ export class AuthService {
     await authRepo.logEvent("otp_verified", {
       farmerId: farmer.id,
       phoneNumber,
+      ...meta,
+    });
+
+    return tokens;
+  }
+
+  // ─── Email / Password ────────────────────────────────────────────────────
+
+  static async loginWithPassword(email, password, meta = {}) {
+    const farmer = await farmerRepo.findFarmerByEmail(email);
+    if (!farmer) {
+      throw new Error("Invalid email or password");
+    }
+
+    if (!farmer.password_hash) {
+      throw new Error("Account does not have a password set. Please use OTP.");
+    }
+
+    const isValid = await bcrypt.compare(password, farmer.password_hash);
+    if (!isValid) {
+      throw new Error("Invalid email or password");
+    }
+
+    // Issue tokens
+    const tokens = await AuthService.issueTokens(farmer, meta);
+
+    // Using otp_verified as a generic login success event for now
+    await authRepo.logEvent("otp_verified", {
+      farmerId: farmer.id,
+      email,
+      loginMethod: "password",
       ...meta,
     });
 

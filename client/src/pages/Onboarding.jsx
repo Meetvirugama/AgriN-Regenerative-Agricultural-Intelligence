@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Check, ChevronRight, Leaf, MapPin, Calendar } from "lucide-react";
 import { useAuth } from "../app/providers/AuthProvider";
 
+import "./Onboarding.css";
+
 export const Onboarding = () => {
   const { farmer } = useAuth();
   const navigate = useNavigate();
@@ -34,36 +36,36 @@ export const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-color)] flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] overflow-hidden">
+    <div className="onboarding-container">
+      <div className="onboarding-card">
         {/* Header */}
-        <div className="bg-[var(--primary)] p-6 text-[var(--bg-color)] text-center">
-          <h1 className="text-2xl font-bold mb-1">Welcome to AgriMesh</h1>
-          <p className="text-sm opacity-90">
+        <div className="onboarding-header">
+          <h1 className="onboarding-title">Welcome to AgriMesh</h1>
+          <p className="onboarding-subtitle">
             Let's set up your first field profile.
           </p>
         </div>
 
         {/* Form Body */}
         <div className="p-6">
-          <div className="flex items-center gap-2 mb-8">
+          <div className="onboarding-progress-container">
             <div
-              className={`h-2 flex-1 rounded-full ${step >= 1 ? "bg-[var(--primary)]" : "bg-[var(--border-color)]"}`}
+              className={`onboarding-progress-bar ${step >= 1 ? "active" : "inactive"}`}
             />
             <div
-              className={`h-2 flex-1 rounded-full ${step >= 2 ? "bg-[var(--primary)]" : "bg-[var(--border-color)]"}`}
+              className={`onboarding-progress-bar ${step >= 2 ? "active" : "inactive"}`}
             />
           </div>
 
           {step === 1 && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+            <div className="onboarding-step-content">
+              <h2 className="onboarding-step-title">
                 <MapPin className="text-[var(--primary)]" /> Field Details
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                  <label className="onboarding-label">
                     Field Name
                   </label>
                   <input
@@ -71,13 +73,13 @@ export const Onboarding = () => {
                     value={fieldName}
                     onChange={(e) => setFieldName(e.target.value)}
                     placeholder="e.g. North Plot"
-                    className="w-full bg-[var(--bg-color)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                    className="onboarding-input"
                   />
                 </div>
                 <button
                   onClick={() => setStep(2)}
                   disabled={!fieldName.trim()}
-                  className="w-full bg-[var(--primary)] text-[var(--bg-color)] rounded-xl px-4 py-3 font-bold mt-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--primary-hover)] transition-colors"
+                  className="onboarding-btn-primary"
                 >
                   Continue <ChevronRight size={18} />
                 </button>
@@ -86,20 +88,20 @@ export const Onboarding = () => {
           )}
 
           {step === 2 && (
-            <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+            <div className="onboarding-step-content">
+              <h2 className="onboarding-step-title">
                 <Leaf className="text-[var(--primary)]" /> Crop Context
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                  <label className="onboarding-label">
                     Primary Crop
                   </label>
                   <select
                     value={cropType}
                     onChange={(e) => setCropType(e.target.value)}
-                    className="w-full bg-[var(--bg-color)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                    className="onboarding-input"
                   >
                     <option value="wheat">Wheat</option>
                     <option value="rice">Rice</option>
@@ -109,31 +111,31 @@ export const Onboarding = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1 flex items-center gap-1">
+                  <label className="onboarding-label">
                     <Calendar size={14} /> Sowing Date
                   </label>
                   <input
                     type="date"
                     value={sowingDate}
                     onChange={(e) => setSowingDate(e.target.value)}
-                    className="w-full bg-[var(--bg-color)] border border-[var(--border-color)] rounded-xl px-4 py-3 text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                    className="onboarding-input"
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="onboarding-btn-group">
                   <button
                     onClick={() => setStep(1)}
-                    className="flex-1 bg-[var(--bg-color)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-xl px-4 py-3 font-bold hover:bg-[var(--card-bg)] transition-colors"
+                    className="onboarding-btn-secondary"
                   >
                     Back
                   </button>
                   <button
                     onClick={handleComplete}
                     disabled={!sowingDate || isSubmitting}
-                    className="flex-[2] bg-[var(--primary)] text-[var(--bg-color)] rounded-xl px-4 py-3 font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--primary-hover)] transition-colors"
+                    className="onboarding-btn-primary-flex"
                   >
                     {isSubmitting ? (
-                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span className="onboarding-spinner"></span>
                     ) : (
                       <>
                         Complete Setup <Check size={18} />

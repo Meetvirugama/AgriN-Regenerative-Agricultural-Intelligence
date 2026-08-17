@@ -24,6 +24,14 @@ export class FarmerRepository {
     );
   }
 
+  async findFarmerByEmail(email) {
+    return queryOne(
+      `SELECT id, phone_number, name, preferred_language, email, password_hash, created_at::text
+       FROM farmers WHERE email = $1`,
+      [email],
+    );
+  }
+
   async upsertFarmer(farmer) {
     const row = await queryOne(
       `INSERT INTO farmers (id, phone_number, name, preferred_language)
@@ -51,7 +59,8 @@ export class FieldRepository {
   async findFieldsByFarmer(farmerId) {
     return query(
       `SELECT id, farmer_id, name, crop_type, crop_variety,
-              sowing_date::text, created_at::text, updated_at::text
+              sowing_date::text, created_at::text, updated_at::text,
+              lat, lng, location_name, area_hectares, boundary_geojson
        FROM fields WHERE farmer_id = $1
        ORDER BY created_at ASC`,
       [farmerId],
@@ -60,16 +69,22 @@ export class FieldRepository {
 
   async upsertField(field) {
     const row = await queryOne(
-      `INSERT INTO fields (id, farmer_id, name, crop_type, crop_variety, sowing_date)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO fields (id, farmer_id, name, crop_type, crop_variety, sowing_date, lat, lng, location_name, area_hectares, boundary_geojson)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        ON CONFLICT (id) DO UPDATE
          SET name = EXCLUDED.name,
              crop_type = EXCLUDED.crop_type,
              crop_variety = EXCLUDED.crop_variety,
              sowing_date = EXCLUDED.sowing_date,
+             lat = EXCLUDED.lat,
+             lng = EXCLUDED.lng,
+             location_name = EXCLUDED.location_name,
+             area_hectares = EXCLUDED.area_hectares,
+             boundary_geojson = EXCLUDED.boundary_geojson,
              updated_at = NOW()
        RETURNING id, farmer_id, name, crop_type, crop_variety,
-                 sowing_date::text, created_at::text, updated_at::text`,
+                 sowing_date::text, created_at::text, updated_at::text,
+                 lat, lng, location_name, area_hectares, boundary_geojson`,
       [
         field.id,
         field.farmer_id,
@@ -77,18 +92,24 @@ export class FieldRepository {
         field.crop_type,
         field.crop_variety,
         field.sowing_date,
+        field.lat,
+        field.lng,
+        field.location_name,
+        field.area_hectares,
+        field.boundary_geojson ? JSON.stringify(field.boundary_geojson) : null,
       ],
     );
     return row;
   }
 
-  async createField(farmerId, name, cropType, sowingDate, cropVariety) {
+  async createField(farmerId, name, cropType, sowingDate, cropVariety, lat, lng, locationName, areaHectares, boundaryGeojson) {
     const row = await queryOne(
-      `INSERT INTO fields (farmer_id, name, crop_type, crop_variety, sowing_date)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO fields (farmer_id, name, crop_type, crop_variety, sowing_date, lat, lng, location_name, area_hectares, boundary_geojson)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id, farmer_id, name, crop_type, crop_variety,
-                 sowing_date::text, created_at::text, updated_at::text`,
-      [farmerId, name, cropType, cropVariety ?? null, sowingDate],
+                 sowing_date::text, created_at::text, updated_at::text,
+                 lat, lng, location_name, area_hectares, boundary_geojson`,
+      [farmerId, name, cropType, cropVariety ?? null, sowingDate, lat, lng, locationName, areaHectares, boundaryGeojson ? JSON.stringify(boundaryGeojson) : null],
     );
     return row;
   }

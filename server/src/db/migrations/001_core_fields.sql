@@ -2,7 +2,6 @@
 -- Run order: first
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "postgis";
 
 -- ─── Farmers ─────────────────────────────────────────────────────────────────
 
@@ -23,15 +22,13 @@ CREATE TABLE IF NOT EXISTS fields (
   crop_type      VARCHAR(100) NOT NULL,
   crop_variety   VARCHAR(100),
   sowing_date    DATE         NOT NULL,
-  -- PostGIS geometry for field boundary (SRID 4326 = WGS-84 lat/lng)
-  boundary       GEOMETRY(Polygon, 4326),
+  lat            FLOAT,
+  lng            FLOAT,
   created_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_fields_farmer_id ON fields(farmer_id);
--- Spatial index for boundary queries
-CREATE INDEX IF NOT EXISTS idx_fields_boundary ON fields USING GIST(boundary);
 
 -- ─── Crop Calendars ──────────────────────────────────────────────────────────
 

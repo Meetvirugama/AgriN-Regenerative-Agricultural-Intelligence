@@ -43,6 +43,8 @@ import {
 import { ErrorState } from "../components/ui/ErrorState";
 import { FeatureErrorBoundary } from "../components/ui/FeatureErrorBoundary";
 
+import "./Field.css";
+
 const FieldSatelliteWrapper = ({ fieldId }) => {
   const [showDetail, setShowDetail] = useState(false);
   const { data, loading, error } = useSatelliteHealth(fieldId);
@@ -93,10 +95,10 @@ const FieldHealthScoreWrapper = ({ fieldId }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="field-section">
       <FieldHealthHero score={score} loading={loading} />
       {score && !loading && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="field-health-grid">
           <HealthDimensionCard
             title="Water"
             dimension={score.water_condition}
@@ -203,8 +205,8 @@ export const Field = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-text-muted">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+      <div className="field-loading-container">
+        <div className="field-spinner"></div>
         <p>Loading field dashboard...</p>
       </div>
     );
@@ -215,7 +217,7 @@ export const Field = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="field-container">
       {/* Pending feedback prompt */}
       {pendingPrompts.length > 0 && (
         <FeedbackPrompt
@@ -250,7 +252,7 @@ export const Field = () => {
       )}
 
       {/* Crop Context (Layer 02) */}
-      <section className="flex flex-col gap-6 mt-2">
+      <section className="field-section-mt">
         <FeatureErrorBoundary sectionName="Crop Stage">
           <GrowthStageBanner
             cropState={cropState}
@@ -258,12 +260,12 @@ export const Field = () => {
             onOverrideClick={() => setShowOverride(true)}
           />
 
-          <div className="bg-surface border border-neutral p-6 rounded-xl shadow-sm">
-            <h3 className="font-bold mb-6 tracking-wide text-sm text-text-muted uppercase">
+          <div className="field-card">
+            <h3 className="field-card-title">
               Season Progress
             </h3>
             {isLoading ? (
-              <div className="h-16 animate-pulse bg-neutral/20 rounded"></div>
+              <div className="field-card-skeleton"></div>
             ) : (
               <StageProgressIndicator currentStage={cropState?.current_stage} />
             )}
@@ -272,7 +274,7 @@ export const Field = () => {
       </section>
 
       {/* Weather (Layer 03) */}
-      <section className="flex flex-col gap-4 mt-6">
+      <section className="field-section-spaced">
         <FeatureErrorBoundary sectionName="Weather">
           <WeatherStrip
             forecasts={weatherData?.forecasts || []}
@@ -288,7 +290,7 @@ export const Field = () => {
       </section>
 
       {/* Climate Risk (Layer 08) */}
-      <section className="flex flex-col gap-4 mt-6">
+      <section className="field-section-spaced">
         {fieldId && (
           <FeatureErrorBoundary sectionName="Climate Risk">
             <ClimateRiskWidget fieldId={fieldId} />
@@ -297,7 +299,7 @@ export const Field = () => {
       </section>
 
       {/* Soil (Layer 04) */}
-      <section className="flex flex-col gap-4 mt-6">
+      <section className="field-section-spaced">
         <FeatureErrorBoundary sectionName="Soil Intelligence">
           <SoilSummaryCard
             profile={soilProfile}
@@ -308,7 +310,7 @@ export const Field = () => {
       </section>
 
       {/* Satellite (Layer 05) */}
-      <section className="flex flex-col gap-4 mt-6">
+      <section className="field-section-spaced">
         {fieldId && (
           <FeatureErrorBoundary sectionName="Satellite Health">
             <FieldSatelliteWrapper fieldId={fieldId} />
@@ -317,7 +319,7 @@ export const Field = () => {
       </section>
 
       {/* Regen + Cross-border (Layer 10 / 14) */}
-      <section className="flex flex-col gap-4 mt-6">
+      <section className="field-section-spaced">
         {fieldId && (
           <FeatureErrorBoundary sectionName="Regenerative Planning">
             <RegenPlanningCard fieldId={fieldId} />
@@ -331,7 +333,7 @@ export const Field = () => {
       </section>
 
       {/* Field History Timeline (Layer 12) */}
-      <section className="mt-8 mb-24 border-t-2 border-neutral/30 pt-4">
+      <section className="field-timeline-container">
         <FeatureErrorBoundary sectionName="Field Timeline" compact>
           <FieldTimeline entries={timeline} />
         </FeatureErrorBoundary>
@@ -341,7 +343,7 @@ export const Field = () => {
       {fieldId && !showDiagnosisFlow && (
         <button
           onClick={() => setShowDiagnosisFlow(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-primary text-primary-content rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-primary z-40"
+          className="field-fab"
           aria-label="Inspect Crop"
         >
           <Camera size={32} />

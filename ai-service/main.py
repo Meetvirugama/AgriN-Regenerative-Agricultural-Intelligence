@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import crop, disease, advisory, climate, phenology, weather_rules, health, satellite, regen, vision, cross_border, voice
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(
     title="AgriMesh AI Service",
