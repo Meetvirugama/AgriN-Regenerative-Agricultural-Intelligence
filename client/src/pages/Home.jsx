@@ -184,10 +184,6 @@ export const Home = () => {
                 </div>
               </div>
             </div>
-            
-            <button className="home-alerts-view-all-btn" onClick={() => navigate('/alerts')}>
-              View All Alerts
-            </button>
           </section>
         </div>
       </div>
