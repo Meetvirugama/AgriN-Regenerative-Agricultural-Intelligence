@@ -14,7 +14,6 @@ import { Intelligence } from "./pages/Intelligence";
 import { Ask } from "./pages/Ask";
 import { Alerts } from "./pages/Alerts";
 import { Diagnosis } from "./pages/Diagnosis";
-import { Expert } from "./pages/Expert";
 import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/Settings";
 import { AddFieldWizard } from "./features/field-management/components/AddFieldWizard";
@@ -66,7 +65,6 @@ function AppRoutes() {
           <Route path="ask" element={<Ask />} />
           <Route path="alerts" element={<Alerts />} />
           <Route path="diagnosis" element={<Diagnosis />} />
-          <Route path="expert" element={<Expert />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="fields">

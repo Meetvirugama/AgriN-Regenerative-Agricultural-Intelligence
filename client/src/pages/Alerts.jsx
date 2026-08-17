@@ -114,10 +114,10 @@ export const Alerts = () => {
   const resolvedCount = alerts.filter(a => a.resolved).length;
   const totalAlerts = alerts.length;
 
-  const highPct = totalAlerts === 0 ? 0 : Math.round((highPriorityCount / totalAlerts) * 100);
-  const medPct = totalAlerts === 0 ? 0 : Math.round((mediumPriorityCount / totalAlerts) * 100);
-  const lowPct = totalAlerts === 0 ? 0 : Math.round((lowPriorityCount / totalAlerts) * 100);
-  const resPct = totalAlerts === 0 ? 0 : Math.round((resolvedCount / totalAlerts) * 100);
+  const highPct = totalAlerts > 0 ? Math.round((highPriorityCount / totalAlerts) * 100) : 0;
+  const medPct = totalAlerts > 0 ? Math.round((mediumPriorityCount / totalAlerts) * 100) : 0;
+  const lowPct = totalAlerts > 0 ? Math.round((lowPriorityCount / totalAlerts) * 100) : 0;
+  const resPct = totalAlerts > 0 ? Math.round((resolvedCount / totalAlerts) * 100) : 0;
 
   return (
     <div className="alerts-container">
@@ -125,15 +125,15 @@ export const Alerts = () => {
       {/* HEADER */}
       <div className="alerts-header">
         <div>
-          <h1>Alert Center</h1>
-          <p>Real-time updates and recommendations for your crops.</p>
+          <h1 className="alerts-title">Alerts</h1>
+          <p className="alerts-subtitle">Stay updated with important alerts for your fields</p>
         </div>
         <div className="alerts-header-actions">
           <button className="alerts-btn">
-            All Fields <ChevronDown size={16} className="text-text-muted" />
+            Filter Alerts
           </button>
-          <button className="alerts-btn">
-            <CheckCircle2 size={16} className="text-text-muted" /> Mark all as read
+          <button className="alerts-btn primary">
+            Mark All as Read
           </button>
         </div>
       </div>
@@ -241,7 +241,7 @@ export const Alerts = () => {
               <p className="alerts-footer-desc">Alerts are generated based on AI analysis and real-time data. Always verify conditions in your field.</p>
             </div>
             <div className="alerts-footer-link-container">
-              Need help? Contact <Link to="/expert" className="alerts-footer-link">Expert Support</Link>
+              Need help? Contact <Link to="/ask" className="alerts-footer-link">Ask AgriMesh</Link>
             </div>
           </div>
 
