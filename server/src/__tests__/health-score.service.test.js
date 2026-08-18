@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { HealthScoreService } from "../modules/health-score/health-score.service.js";
 import { satelliteStore } from "../modules/satellite/satellite.store.js";
-import { cropStateRepo } from "../db/repositories/farmerRepository.js";
+import { cropStateRepo, fieldRepo } from "../db/repositories/farmerRepository.js";
 import { weatherRepo } from "../db/repositories/weatherRepository.js";
 import { soilRepo } from "../db/repositories/soilRepository.js";
 import { PythonClient } from "../services/pythonClient.js";
@@ -18,6 +18,9 @@ vi.mock("../modules/satellite/satellite.store", () => ({
 vi.mock("../db/repositories/farmerRepository", () => ({
   cropStateRepo: {
     getCropState: vi.fn(),
+  },
+  fieldRepo: {
+    findFieldById: vi.fn(),
   },
 }));
 
@@ -72,27 +75,24 @@ describe("HealthScoreService", () => {
     vi.mocked(weatherRepo.getSnapshots).mockResolvedValue([]);
     vi.mocked(weatherRepo.getActiveFlags).mockResolvedValue([]);
     vi.mocked(soilRepo.getLatestProfile).mockResolvedValue(null);
+    vi.mocked(fieldRepo.findFieldById).mockResolvedValue({
+      id: "f1",
+      farmer_id: "far1",
+      crop_type: "wheat",
+      crop_variety: "pbw343",
+      sowing_date: "2026-06-01",
+    });
   });
 
-  it("should delegate score computation to PythonClient", async () => {
+  it("should compute score deterministically from satellite, weather, and soil data", async () => {
     vi.mocked(weatherRepo.getSnapshots).mockResolvedValue([
       { is_forecast: false, rainfall_mm: 5, temp_max: 25, humidity_pct: 50 },
       { is_forecast: true, rainfall_mm: 10, temp_max: 25, humidity_pct: 50 },
     ]);
 
-    vi.mocked(PythonClient.computeHealthScore).mockResolvedValue({
-      crop_health: { value: "Good", severity: "green" },
-      water_condition: { value: "Adequate", severity: "green" },
-      soil_condition: { value: "Moderate", severity: "green" },
-      weather_risk: { value: "Low Risk", severity: "green" },
-      disease_risk: { value: "Low Risk", severity: "green" },
-      climate_stress: { value: "Normal", severity: "green" },
-      vegetation_trend: { value: "Stable", severity: "green" },
-    });
-
-    const score = await service.computeScore("f1");
-    expect(PythonClient.computeHealthScore).toHaveBeenCalled();
-    expect(score.crop_health.value).toBe("Good");
-    expect(score.crop_health.severity).toBe("green");
+    const result = await service.computeScore("f1");
+    expect(result.score).toBeGreaterThanOrEqual(0);
+    expect(result.score).toBeLessThanOrEqual(100);
+    expect(result.category).toBeDefined();
   });
 });

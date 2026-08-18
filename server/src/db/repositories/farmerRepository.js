@@ -57,7 +57,7 @@ export class FieldRepository {
     location_name, area_hectares, boundary_geojson,
     COALESCE(ST_Y(centroid), lat) AS lat,
     COALESCE(ST_X(centroid), lng) AS lng,
-    CASE WHEN geometry IS NOT NULL THEN ST_AsGeoJSON(geometry)::json ELSE boundary_geojson END AS geojson
+    CASE WHEN geometry IS NOT NULL THEN ST_AsGeoJSON(geometry)::jsonb ELSE boundary_geojson END AS geojson
   `;
 
   async findFieldById(id) {

@@ -18,6 +18,7 @@ import FilledBellIcon from "../components/hover-ui/filled-bell-icon";
 import UserIcon from "../components/hover-ui/user-icon";
 import DownChevron from "../components/hover-ui/down-chevron";
 import GearIcon from "../components/hover-ui/gear-icon";
+import AgriMeshLogo from "../components/AgriMeshLogo";
 
 import "./DashboardLayout.css";
 
@@ -114,7 +115,7 @@ export const FarmerShell = () => {
           <div className="dashboard-sidebar-header">
             <div className="dashboard-logo">
               <div className="dashboard-logo-icon">
-                <Sprout size={24} strokeWidth={2.5} />
+                <AgriMeshLogo size={28} />
               </div>
               <span>AgriMesh</span>
             </div>
