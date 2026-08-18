@@ -22,6 +22,10 @@ const timeSince = (date) => {
 // Endpoint to get alerts
 router.get("/", async (req, res) => {
   try {
+    // No auth on legacy /api/alerts — return empty array gracefully
+    if (!req.user?.id) {
+      return res.json([]);
+    }
     const farmerId = req.user.id;
     const dbAlerts = await alertsRepository.findAlertsByFarmerId(farmerId);
     

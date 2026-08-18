@@ -48,16 +48,15 @@ export class FarmerRepository {
 
 export class FieldRepository {
   /**
-   * Select clause that extracts lat/lng from the PostGIS centroid column.
-   * Falls back to the legacy lat/lng float columns if centroid is null.
+   * Select clause — uses simple lat/lng floats to avoid PostGIS dependency.
+   * PostGIS geometry columns are updated asynchronously after insert.
    */
   #SELECT_FIELDS = `
     id, farmer_id, name, crop_type, crop_variety, irrigation_type,
     sowing_date::text, created_at::text, updated_at::text,
     location_name, area_hectares, boundary_geojson,
-    COALESCE(ST_Y(centroid), lat) AS lat,
-    COALESCE(ST_X(centroid), lng) AS lng,
-    CASE WHEN geometry IS NOT NULL THEN ST_AsGeoJSON(geometry)::json ELSE boundary_geojson END AS geojson
+    lat, lng,
+    boundary_geojson AS geojson
   `;
 
   async findFieldById(id) {
@@ -77,17 +76,12 @@ export class FieldRepository {
   }
 
   async upsertField(field) {
-    // Build geometry + centroid from boundaryGeojson if provided
-    const hasPolygon = field.boundary_geojson != null;
+    // Plain INSERT without PostGIS geometry columns — works on any PostgreSQL instance
     const row = await queryOne(
       `INSERT INTO fields
          (id, farmer_id, name, crop_type, crop_variety, sowing_date,
-          lat, lng, location_name, area_hectares, boundary_geojson,
-          geometry, centroid)
-       VALUES
-         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-          ${hasPolygon ? "ST_GeomFromGeoJSON($12)" : "NULL"},
-          ${hasPolygon ? "ST_Centroid(ST_GeomFromGeoJSON($12))" : "CASE WHEN $7::float IS NOT NULL THEN ST_SetSRID(ST_MakePoint($8::float,$7::float),4326) ELSE NULL END"})
+          lat, lng, location_name, area_hectares, boundary_geojson)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        ON CONFLICT (id) DO UPDATE
          SET name = EXCLUDED.name,
              crop_type = EXCLUDED.crop_type,
@@ -98,16 +92,14 @@ export class FieldRepository {
              location_name = EXCLUDED.location_name,
              area_hectares = EXCLUDED.area_hectares,
              boundary_geojson = EXCLUDED.boundary_geojson,
-             geometry = EXCLUDED.geometry,
-             centroid = EXCLUDED.centroid,
              updated_at = NOW()
        RETURNING ${this.#SELECT_FIELDS}`,
       [
         field.id, field.farmer_id, field.name, field.crop_type,
-        field.crop_variety, field.sowing_date,
-        field.lat, field.lng, field.location_name, field.area_hectares,
-        hasPolygon ? JSON.stringify(field.boundary_geojson) : null,
-        ...(hasPolygon ? [JSON.stringify(field.boundary_geojson)] : []),
+        field.crop_variety ?? null, field.sowing_date,
+        field.lat ?? null, field.lng ?? null, field.location_name ?? null,
+        field.area_hectares ?? null,
+        field.boundary_geojson ? JSON.stringify(field.boundary_geojson) : null,
       ],
     );
     return row;
@@ -133,27 +125,44 @@ export class FieldRepository {
   }
 
   async createField(farmerId, name, cropType, sowingDate, cropVariety, lat, lng, locationName, areaHectares, boundaryGeojson, irrigationType) {
-    const hasPolygon = boundaryGeojson != null;
-    const geojsonStr = hasPolygon ? JSON.stringify(boundaryGeojson) : null;
+    const geojsonStr = boundaryGeojson ? JSON.stringify(boundaryGeojson) : null;
+    // Base INSERT — no PostGIS functions, works on any PostgreSQL instance
     const row = await queryOne(
       `INSERT INTO fields
          (farmer_id, name, crop_type, crop_variety, sowing_date,
-          lat, lng, location_name, area_hectares, boundary_geojson,
-          irrigation_type, geometry, centroid)
-       VALUES
-         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-          ${hasPolygon ? "ST_GeomFromGeoJSON($12)" : "NULL"},
-          ${hasPolygon
-            ? "ST_Centroid(ST_GeomFromGeoJSON($12))"
-            : "CASE WHEN $6::float IS NOT NULL THEN ST_SetSRID(ST_MakePoint($7::float,$6::float),4326) ELSE NULL END"})
+          lat, lng, location_name, area_hectares, boundary_geojson, irrigation_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING ${this.#SELECT_FIELDS}`,
       [
         farmerId, name, cropType, cropVariety ?? null, sowingDate,
-        lat, lng, locationName, areaHectares, geojsonStr,
-        irrigationType ?? null,
-        ...(hasPolygon ? [geojsonStr] : []),
+        lat ?? null, lng ?? null, locationName ?? null,
+        areaHectares ?? null, geojsonStr, irrigationType ?? null,
       ],
     );
+    // Best-effort PostGIS update — silently skipped if extension is not installed
+    if (row?.id) {
+      try {
+        if (geojsonStr) {
+          await execute(
+            `UPDATE fields
+             SET geometry = ST_GeomFromGeoJSON($1),
+                 centroid = ST_Centroid(ST_GeomFromGeoJSON($1))
+             WHERE id = $2`,
+            [geojsonStr, row.id],
+          );
+        } else if (lat != null && lng != null) {
+          await execute(
+            `UPDATE fields
+             SET centroid = ST_SetSRID(ST_MakePoint($1::float, $2::float), 4326)
+             WHERE id = $3`,
+            [lng, lat, row.id],
+          );
+        }
+      } catch (_postgisErr) {
+        // PostGIS not installed — geometry stays null, field still usable
+        console.warn('[DB] PostGIS geometry update skipped (extension not available)');
+      }
+    }
     return row;
   }
 }
