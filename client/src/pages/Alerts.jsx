@@ -293,61 +293,41 @@ export const Alerts = () => {
             <h3 className="alerts-actions-title">Recommended Actions</h3>
             
             <div className="alerts-actions-list">
-              <button className="alerts-action-btn">
-                <div className="alerts-action-content">
-                  <div className="alerts-action-icon danger">
-                    <Bug size={14} />
-                  </div>
-                  <div>
-                    <h4 className="alerts-action-title">Check Moong Field 03</h4>
-                    <p className="alerts-action-desc">Inspect aphid infestation</p>
-                  </div>
+              {alerts.filter(a => !a.resolved).length === 0 ? (
+                <div style={{ padding: "1.5rem 0.5rem", textAlign: "center", color: "#6B7280" }}>
+                  <p style={{ fontWeight: 600, fontSize: "0.85rem" }}>All Actions Completed</p>
+                  <p style={{ fontSize: "0.75rem", color: "#9CA3AF", marginTop: "2px" }}>No immediate interventions required on your parcels.</p>
                 </div>
-                <ArrowNarrowRightIcon size={16} className="alerts-action-chevron" />
-              </button>
-
-              <button className="alerts-action-btn">
-                <div className="alerts-action-content">
-                  <div className="alerts-action-icon warning">
-                    <Droplet size={14} />
-                  </div>
-                  <div>
-                    <h4 className="alerts-action-title">Irrigate Wheat Field 01</h4>
-                    <p className="alerts-action-desc">Soil moisture is low</p>
-                  </div>
-                </div>
-                <ArrowNarrowRightIcon size={16} className="alerts-action-chevron" />
-              </button>
-
-              <button className="alerts-action-btn">
-                <div className="alerts-action-content">
-                  <div className="alerts-action-icon warning">
-                    <Leaf size={14} />
-                  </div>
-                  <div>
-                    <h4 className="alerts-action-title">Add Nitrogen to Rice Field 02</h4>
-                    <p className="alerts-action-desc">Improve plant growth</p>
-                  </div>
-                </div>
-                <ArrowNarrowRightIcon size={16} className="alerts-action-chevron" />
-              </button>
-
-              <button className="alerts-action-btn">
-                <div className="alerts-action-content">
-                  <div className="alerts-action-icon info">
-                    <CloudRain size={14} />
-                  </div>
-                  <div>
-                    <h4 className="alerts-action-title">View Weather Forecast</h4>
-                    <p className="alerts-action-desc">Heavy rain expected</p>
-                  </div>
-                </div>
-                <ArrowNarrowRightIcon size={16} className="alerts-action-chevron" />
-              </button>
+              ) : (
+                alerts.filter(a => !a.resolved).slice(0, 4).map((alert) => (
+                  <button 
+                    key={alert.id} 
+                    className="alerts-action-btn"
+                    onClick={() => navigate('/fields')}
+                  >
+                    <div className="alerts-action-content">
+                      <div className={`alerts-action-icon ${
+                        alert.priority === 'High' ? 'danger' :
+                        alert.priority === 'Medium' ? 'warning' : 'info'
+                      }`}>
+                        {alert.type === 'pest' ? <Bug size={14} /> :
+                         alert.type === 'irrigation' ? <Droplet size={14} /> :
+                         alert.type === 'weather' ? <CloudRain size={14} /> :
+                         <Leaf size={14} />}
+                      </div>
+                      <div>
+                        <h4 className="alerts-action-title">{alert.title}</h4>
+                        <p className="alerts-action-desc">{alert.field} • {alert.description}</p>
+                      </div>
+                    </div>
+                    <ArrowNarrowRightIcon size={16} className="alerts-action-chevron" />
+                  </button>
+                ))
+              )}
             </div>
 
-            <button className="alerts-actions-view-all">
-              View All Recommendations <ArrowNarrowRightIcon size={14} />
+            <button className="alerts-actions-view-all" onClick={() => navigate('/intelligence')}>
+              View Intelligence Hub <ArrowNarrowRightIcon size={14} />
             </button>
           </div>
 
