@@ -256,9 +256,6 @@
 }
 
 @media (max-width: 768px) {
-  .dashboard-sidebar {
-    transform: translateX(-100%);
-  }
   .dashboard-main {
     margin-left: 0;
     width: 100%;
