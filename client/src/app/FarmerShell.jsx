@@ -148,76 +148,86 @@ export const FarmerShell = () => {
         </aside>
 
         <main className="dashboard-main">
-          <header className="dashboard-header">
-            <div className="dashboard-header-search">
+          {location.pathname !== '/profile' && (
+            <header className="dashboard-header">
+              {/* Mobile Menu Toggle - Always visible on mobile */}
               <button 
-                className="md:hidden p-2 -ml-2 mr-2 text-text-main hover:bg-secondary rounded-lg"
+                className="md:hidden p-2 -ml-4 mr-2 text-text-main hover:bg-secondary rounded-lg flex-shrink-0"
                 onClick={() => setIsMobileMenuOpen(true)}
               >
                 <Menu size={24} />
               </button>
-              <Search size={16} />
-              <input 
-                type="text" 
-                placeholder="Search fields, crops, recommendations..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim()) {
-                    navigate(`/fields?search=${encodeURIComponent(searchQuery)}`);
-                    setSearchQuery("");
-                  }
-                }}
-              />
-            </div>
 
-            <div className="dashboard-header-actions">
-              <button 
-                className="dashboard-header-action alerts" 
-                onClick={() => navigate('/alerts')}
-                onMouseEnter={() => setIsAlertsHovered(true)}
-                onMouseLeave={() => setIsAlertsHovered(false)}
-              >
-                <div className="dashboard-bell-wrapper">
-                  <FilledBellIcon size={18} isHovered={isAlertsHovered} />
-                  {activeAlertsCount > 0 && (
-                    <span className="dashboard-bell-badge">{activeAlertsCount}</span>
-                  )}
-                </div>
-                <span>Alerts</span>
-              </button>
-              
-              <LanguageSwitcher />
-              
-              <div 
-                className="dashboard-header-profile"
-                onMouseEnter={() => setIsProfileHovered(true)}
-                onMouseLeave={() => setIsProfileHovered(false)}
-              >
-                <div className="dashboard-header-profile-trigger">
-                  <div className="dashboard-header-avatar">
-                    <UserIcon size={14} isHovered={isProfileHovered} />
+              {location.pathname === '/alerts' ? (
+                <div id="alerts-header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
+              ) : (
+                <>
+                  <div className="dashboard-header-search">
+                    <Search size={16} />
+                    <input 
+                      type="text" 
+                      placeholder="Search fields, crops, recommendations..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && searchQuery.trim()) {
+                          navigate(`/fields?search=${encodeURIComponent(searchQuery)}`);
+                          setSearchQuery("");
+                        }
+                      }}
+                    />
                   </div>
-                  <span className="dashboard-header-action">
-                    Ramesh <DownChevron size={14} isHovered={isProfileHovered} />
-                  </span>
-                </div>
 
-                <div className="profile-dropdown">
-                  <button onClick={() => navigate('/profile')} className="profile-dropdown-option">
-                    View Profile
-                  </button>
-                  <button onClick={() => navigate('/settings')} className="profile-dropdown-option">
-                    Settings
-                  </button>
-                  <div className="profile-dropdown-divider"></div>
-                  <button onClick={logout} className="profile-dropdown-option signout">
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            </div>
-          </header>
+                  <div className="dashboard-header-actions">
+                    <button 
+                      className="dashboard-header-action alerts" 
+                      onClick={() => navigate('/alerts')}
+                      onMouseEnter={() => setIsAlertsHovered(true)}
+                      onMouseLeave={() => setIsAlertsHovered(false)}
+                    >
+                      <div className="dashboard-bell-wrapper">
+                        <FilledBellIcon size={18} isHovered={isAlertsHovered} />
+                        {activeAlertsCount > 0 && (
+                          <span className="dashboard-bell-badge">{activeAlertsCount}</span>
+                        )}
+                      </div>
+                      <span>Alerts</span>
+                    </button>
+                    
+                    <LanguageSwitcher />
+                    
+                    <div 
+                      className="dashboard-header-profile"
+                      onMouseEnter={() => setIsProfileHovered(true)}
+                      onMouseLeave={() => setIsProfileHovered(false)}
+                    >
+                      <div className="dashboard-header-profile-trigger">
+                        <div className="dashboard-header-avatar">
+                          <UserIcon size={14} isHovered={isProfileHovered} />
+                        </div>
+                        <span className="dashboard-header-action">
+                          Ramesh <DownChevron size={14} isHovered={isProfileHovered} />
+                        </span>
+                      </div>
+
+                      <div className="profile-dropdown">
+                        <button onClick={() => navigate('/profile')} className="profile-dropdown-option">
+                          View Profile
+                        </button>
+                        <button onClick={() => navigate('/settings')} className="profile-dropdown-option">
+                          Settings
+                        </button>
+                        <div className="profile-dropdown-divider"></div>
+                        <button onClick={logout} className="profile-dropdown-option signout">
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </header>
+          )}
 
           <div className="dashboard-content">
             <Outlet />
