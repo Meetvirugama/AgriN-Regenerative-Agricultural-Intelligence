@@ -125,6 +125,7 @@ app.use("/api/v1/intelligence", requireAuth, intelligenceRoutes);
 // Keep /api/* working so the existing frontend doesn't break during migration.
 // These will be removed once the frontend is updated to use /api/v1/*.
 
+app.use("/api/fields", fieldRoutes);   // ← was missing — POST/PUT/DELETE /api/fields needs this
 app.use("/api/fields", cropRoutes);
 app.use("/api/fields", weatherRoutes);
 app.use("/api/fields", soilRoutes);
