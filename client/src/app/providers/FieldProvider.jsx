@@ -25,29 +25,40 @@ export const FieldProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      // 1. Check sessionStorage first — avoids creating a new field on every refresh
       const cachedFieldId = sessionStorage.getItem(FIELD_ID_SESSION_KEY);
 
       let fieldId;
 
       if (cachedFieldId) {
-        // Use the cached field ID — no new stub-init call needed
         fieldId = cachedFieldId;
       } else {
-        // First load — call stub-init (idempotent — returns existing or creates once)
-        const { field } = await cropApi.initStub();
-        fieldId = field.id;
-        sessionStorage.setItem(FIELD_ID_SESSION_KEY, fieldId);
+        // First load — call stub-init (idempotent)
+        try {
+          const { field } = await cropApi.initStub();
+          fieldId = field.id;
+          sessionStorage.setItem(FIELD_ID_SESSION_KEY, fieldId);
+        } catch (stubErr) {
+          // stub-init failed (network error, missing route, etc.)
+          // Don't crash the shell — pages like /fields/add work without an active field.
+          console.warn("[FieldProvider] stub-init failed (non-fatal):", stubErr.message);
+          setIsLoading(false);
+          return;
+        }
       }
 
       setActiveFieldId(fieldId);
-      const state = await cropApi.fetchCropState(fieldId);
-      setCropState(state);
+
+      // Fetch crop state — also non-fatal
+      try {
+        const state = await cropApi.fetchCropState(fieldId);
+        setCropState(state);
+      } catch (stateErr) {
+        console.warn("[FieldProvider] fetchCropState failed (non-fatal):", stateErr.message);
+      }
     } catch (err) {
-      console.error("Initialization failed", err);
-      // Clear stale cached ID if initialization fails so we retry cleanly
+      console.error("[FieldProvider] Initialization failed:", err);
       sessionStorage.removeItem(FIELD_ID_SESSION_KEY);
-      setError("Failed to load field data. Please try again.");
+      // Don't set error — just leave state null so pages still render
     } finally {
       setIsLoading(false);
     }

@@ -3,7 +3,7 @@ import {
   ArrowLeft, Search, Crosshair, MapPin, Info, Satellite, CloudRain, 
   Map as MapIcon, Plus, Minus, Check, MousePointer2, PenTool, Edit3, 
   Trash2, Navigation, Calendar, Droplet, Triangle, CloudUpload, 
-  BrainCircuit, Lightbulb, Tag, Bell, Leaf, Loader2, X
+  BrainCircuit, Lightbulb, Tag, Bell, Leaf, Loader2, X, AlertTriangle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { GoogleMap, useJsApiLoader, Marker, Polygon, DrawingManager, Autocomplete } from '@react-google-maps/api';
@@ -18,13 +18,18 @@ const mapContainerStyle = {
   height: '100%'
 };
 
+// Safe helpers — only read google.maps enums after isLoaded=true
+const getControlPosition = () => window.google?.maps?.ControlPosition?.TOP_CENTER;
+const getPolygonMode = () => window.google?.maps?.drawing?.OverlayType?.POLYGON;
+
 export const AddFieldWizard = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdFieldId, setCreatedFieldId] = useState(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSy_MISSING_KEY_FALLBACK_SO_IT_DOESNT_CRASH",
     libraries
   });
 
@@ -139,7 +144,7 @@ export const AddFieldWizard = () => {
         properties: {}
       } : null;
 
-      await cropApi.createField({
+      const newField = await cropApi.createField({
         name: formData.name,
         cropType: formData.crop,
         sowingDate: formData.date,
@@ -148,8 +153,10 @@ export const AddFieldWizard = () => {
         lng: location.lng,
         locationName: location.address,
         areaHectares: parseFloat(areaHectares) || 0,
-        boundaryGeojson: geojson
+        boundaryGeojson: geojson,
+        irrigationType: formData.irrigation,
       });
+      setCreatedFieldId(newField?.id ?? null);
       setStep(4);
     } catch (err) {
       console.error("Failed to create field", err);
@@ -159,8 +166,17 @@ export const AddFieldWizard = () => {
     }
   };
 
-  if (loadError) return <div style={{padding: '2rem'}}>Error loading maps. Please check your API key.</div>;
-  if (!isLoaded) return <div style={{padding: '2rem', display: 'flex', gap: '1rem', alignItems: 'center'}}><Loader2 className="animate-spin" /> Loading Maps...</div>;
+  if (loadError) return (
+    <div style={{padding: '2rem', display: 'flex', gap: '1rem', alignItems: 'center', color: 'var(--danger)'}}>
+      <AlertTriangle size={20} />
+      Maps failed to load. Check your API key and that the Maps JavaScript API + Drawing API are enabled.
+    </div>
+  );
+  if (!isLoaded) return (
+    <div style={{padding: '2rem', display: 'flex', gap: '1rem', alignItems: 'center'}}>
+      <Loader2 className="animate-spin" /> Loading Maps...
+    </div>
+  );
 
   return (
     <div className="wizard-container">
@@ -304,14 +320,14 @@ export const AddFieldWizard = () => {
                     fullscreenControl: false,
                   }}
                 >
-                  {boundaryCoords.length === 0 && (
+                  {boundaryCoords.length === 0 && getControlPosition() && getPolygonMode() && (
                     <DrawingManager
                       onPolygonComplete={onPolygonComplete}
                       options={{
                         drawingControl: true,
                         drawingControlOptions: {
-                          position: window.google.maps.ControlPosition.TOP_CENTER,
-                          drawingModes: [window.google.maps.drawing.OverlayType.POLYGON]
+                          position: getControlPosition(),
+                          drawingModes: [getPolygonMode()]
                         },
                         polygonOptions: {
                           fillColor: '#22c55e',
@@ -373,8 +389,8 @@ export const AddFieldWizard = () => {
 
               <div className="wizard-actions">
                 <button onClick={() => setStep(1)} className="wizard-btn-outline">Previous</button>
-                <button onClick={() => setStep(3)} className="wizard-btn-solid" disabled={boundaryCoords.length === 0}>
-                  Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                <button onClick={() => setStep(3)} className="wizard-btn-solid">
+                  {boundaryCoords.length === 0 ? 'Skip (draw later)' : 'Next'} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </button>
               </div>
             </div>
@@ -401,11 +417,18 @@ export const AddFieldWizard = () => {
                   <div className="wizard-form-icon-wrapper">
                     <div className="wizard-form-icon warning"><Leaf size={18} /></div>
                     <select className="wizard-form-input with-icon wizard-form-select" value={formData.crop} onChange={(e) => setFormData({...formData, crop: e.target.value})}>
-                      <option value="wheat">Wheat</option>
-                      <option value="rice">Rice</option>
-                      <option value="cotton">Cotton</option>
-                      <option value="maize">Maize</option>
-                      <option value="moong">Moong</option>
+                       <option value="wheat">🌾 Wheat</option>
+                       <option value="rice">🍚 Rice</option>
+                       <option value="cotton">🪡 Cotton</option>
+                       <option value="maize">🌽 Maize</option>
+                       <option value="moong">🫘 Moong</option>
+                       <option value="groundnut">🥜 Groundnut</option>
+                       <option value="sugarcane">🎋 Sugarcane</option>
+                       <option value="soybean">🫘 Soybean</option>
+                       <option value="tomato">🍅 Tomato</option>
+                       <option value="chili">🌶️ Chili</option>
+                       <option value="onion">🧅 Onion</option>
+                       <option value="potato">🥔 Potato</option>
                     </select>
                   </div>
                 </div>
@@ -432,11 +455,15 @@ export const AddFieldWizard = () => {
                   <label className="wizard-form-label">Irrigation Source</label>
                   <div className="wizard-form-icon-wrapper">
                     <div className="wizard-form-icon info"><Droplet size={18} /></div>
-                    <select className="wizard-form-input with-icon wizard-form-select" value={formData.irrigation} onChange={(e) => setFormData({...formData, irrigation: e.target.value})}>
-                      <option>Tube Well</option>
-                      <option>Canal</option>
-                      <option>Rainfed</option>
-                    </select>
+                     <select className="wizard-form-input with-icon wizard-form-select" value={formData.irrigation} onChange={(e) => setFormData({...formData, irrigation: e.target.value})}>
+                       <option value="Tube Well">Tube Well</option>
+                       <option value="Borewell">Borewell</option>
+                       <option value="Canal">Canal</option>
+                       <option value="Well">Well</option>
+                       <option value="Drip">Drip Irrigation</option>
+                       <option value="Sprinkler">Sprinkler</option>
+                       <option value="Rainfed">Rainfed (no irrigation)</option>
+                     </select>
                   </div>
                 </div>
 
@@ -536,14 +563,20 @@ export const AddFieldWizard = () => {
                   </div>
                 </div>
 
-                <div className="wizard-actions" style={{marginTop: '2rem'}}>
-                  <button 
-                    onClick={() => navigate('/fields')} 
-                    className="wizard-btn-solid"
-                  >
-                    View Field Dashboard
-                  </button>
-                </div>
+                 <div className="wizard-actions" style={{marginTop: '2rem', flexDirection: 'column', gap: '0.75rem'}}>
+                   <button 
+                     onClick={() => navigate(createdFieldId ? `/fields/${createdFieldId}` : '/fields')} 
+                     className="wizard-btn-solid"
+                   >
+                     View My Field Dashboard
+                   </button>
+                   <button
+                     onClick={() => navigate('/fields')}
+                     className="wizard-btn-outline"
+                   >
+                     Back to All Fields
+                   </button>
+                 </div>
               </div>
             </div>
           </div>

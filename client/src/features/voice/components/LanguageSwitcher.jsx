@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
+import { Check } from "lucide-react";
 import { voiceApi } from "../api/voiceApi";
+import GlobeIcon from "../../../components/hover-ui/globe-icon";
+import DownChevron from "../../../components/hover-ui/down-chevron";
 
 const LANGUAGES = [
   { code: "en-US", name: "English" },
   { code: "hi-IN", name: "हिन्दी" },
-  { code: "mr-IN", name: "मराठी" },
-  { code: "te-IN", name: "తెలుగు (Text Only)" }, // Mocking graceful degradation for Text-only fallback
+  { code: "gu-IN", name: "ગુજરાતી" },
 ];
 
 export const LanguageSwitcher = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState("en-US");
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("agri_lang");
@@ -22,70 +24,102 @@ export const LanguageSwitcher = () => {
   const handleSelect = async (code) => {
     setSelectedLang(code);
     localStorage.setItem("agri_lang", code);
-    setIsOpen(false);
-    // Update backend (Layer 01)
     await voiceApi.setLanguage(code);
-
-    // In a real app we might reload or trigger context update so upstream layers fetch translated text
   };
 
   const currentLangName =
     LANGUAGES.find((l) => l.code === selectedLang)?.name || "English";
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-neutral/10 hover:bg-neutral/20 border border-neutral/30 px-3 py-1.5 rounded-full transition-colors"
-      >
-        <svg
-          className="w-5 h-5 text-text-muted"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-          />
-        </svg>
-        <span className="font-bold text-sm tracking-wide">
-          {currentLangName.split(" ")[0]}
-        </span>
-      </button>
+    <div 
+      className="lang-switcher-container"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="dashboard-header-profile-trigger">
+        <GlobeIcon size={16} style={{ color: "#6B7280" }} isHovered={isHovered} />
+        <span className="font-semibold text-[13px]" style={{ color: "#374151" }}>{currentLangName}</span>
+        <DownChevron size={14} style={{ color: "#9CA3AF" }} isHovered={isHovered} />
+      </div>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-surface border-2 border-black rounded-xl shadow-xl z-50 overflow-hidden">
-          <div className="p-3 bg-neutral/10 border-b border-black">
-            <h4 className="text-xs font-black uppercase tracking-widest text-text-muted">
-              Select Language
-            </h4>
-          </div>
-          <div className="flex flex-col">
-            {LANGUAGES.map((lang) => {
-              const isTextOnly = lang.name.includes("Text Only");
-              return (
-                <button
-                  key={lang.code}
-                  onClick={() => handleSelect(lang.code)}
-                  className={`flex flex-col text-left p-4 border-b border-neutral/20 last:border-b-0 hover:bg-neutral/10 transition-colors ${selectedLang === lang.code ? "bg-primary/5 text-primary" : ""}`}
-                >
-                  <span className="font-bold text-lg">
-                    {lang.name.replace(" (Text Only)", "")}
-                  </span>
-                  {isTextOnly && (
-                    <span className="text-xs font-semibold text-warning mt-1">
-                      Audio features not yet supported
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <div className="lang-dropdown">
+        {LANGUAGES.map((lang) => {
+          const isSelected = selectedLang === lang.code;
+          return (
+            <button
+              key={lang.code}
+              onClick={() => handleSelect(lang.code)}
+              className={`lang-dropdown-option ${isSelected ? "selected" : ""}`}
+            >
+              <span>{lang.name}</span>
+              {isSelected && (
+                <Check size={14} style={{ color: "#16A34A", strokeWidth: "2.5" }} />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Scoped CSS matching the user profile dropdown style */}
+      <style>{`
+        .lang-switcher-container {
+          position: relative;
+        }
+
+        .lang-dropdown {
+          position: absolute;
+          right: 0;
+          top: calc(100% + 8px);
+          width: 140px;
+          background-color: #ffffff;
+          border: 1px solid #E5E7EB;
+          border-radius: 12px;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+          display: flex;
+          flex-direction: column;
+          padding: 6px 0;
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(-8px);
+          transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+          z-index: 100;
+        }
+
+        .lang-switcher-container:hover .lang-dropdown {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
+
+        .lang-dropdown-option {
+          width: calc(100% - 16px);
+          margin: 2px 8px;
+          padding: 8px 12px;
+          font-size: 13px;
+          font-weight: 500;
+          color: #4B5563;
+          background: none;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          text-align: left;
+          transition: all 0.15s ease;
+          font-family: 'Inter', sans-serif;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .lang-dropdown-option:hover {
+          background-color: #F3F4F6;
+          color: #111827;
+        }
+
+        .lang-dropdown-option.selected {
+          color: #16A34A;
+          font-weight: 600;
+        }
+      `}</style>
     </div>
   );
 };

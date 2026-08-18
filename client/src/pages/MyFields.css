@@ -430,3 +430,118 @@
   white-space: nowrap;
 }
 .myfields-banner-btn:hover { background-color: #f0fdf4; }
+
+/* ── Empty State ─────────────────────────────────────────────────────────── */
+.myfields-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+  min-height: 340px;
+}
+.myfields-empty-icon {
+  font-size: 4rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+.myfields-empty-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.myfields-empty-desc {
+  font-size: 0.9rem;
+  color: #666;
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+/* ── Card crop badge ─────────────────────────────────────────────────────── */
+.myfields-card-image-wrapper {
+  position: relative;
+}
+.myfields-card-crop-badge {
+  position: absolute;
+  bottom: 0.4rem;
+  right: 0.4rem;
+  background: rgba(0,0,0,0.6);
+  border-radius: 0.4rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ── Card sub-meta & location ────────────────────────────────────────────── */
+.myfields-card-sub-meta {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.15rem;
+}
+.myfields-card-location {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  color: #555;
+  margin-top: 0.25rem;
+}
+
+/* ── Dropdown menu ───────────────────────────────────────────────────────── */
+.myfields-dropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: 100;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.625rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 180px;
+  overflow: hidden;
+  animation: fadeInDown 0.15s ease;
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.myfields-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: #374151;
+  transition: background 0.12s;
+}
+.myfields-dropdown-item:hover { background: #f9fafb; }
+.myfields-dropdown-item.danger { color: #dc2626; }
+.myfields-dropdown-item.danger:hover { background: #fef2f2; }
+
+.myfields-dropdown-confirm {
+  padding: 0.75rem 1rem;
+}
+.myfields-dropdown-confirm p {
+  font-size: 0.78rem;
+  color: #374151;
+  margin-bottom: 0.6rem;
+  line-height: 1.4;
+}
+.myfields-dropdown-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* ── Spin utility ────────────────────────────────────────────────────────── */
+.spin { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+

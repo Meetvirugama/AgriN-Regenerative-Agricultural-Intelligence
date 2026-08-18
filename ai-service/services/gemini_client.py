@@ -1,5 +1,6 @@
 import os
 import json
+import io
 from google import genai
 from google.genai import types
 
@@ -13,9 +14,10 @@ if not api_key:
 else:
     client = genai.Client()
 
-def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, schema_class=None) -> dict:
+def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, schema_class=None, extra_images: list = None) -> dict:
     """
-    Analyzes an image with a prompt using Gemini.
+    Analyzes an image (or multiple images) with a prompt using Gemini.
+    extra_images: list of {bytes, mime_type} for additional photos (up to 2 more).
     """
     if not client:
         raise ValueError("GEMINI_API_KEY is not configured.")
@@ -25,8 +27,19 @@ def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, s
     
     contents = [
         types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-        prompt
     ]
+
+    # Add extra photos (whole plant, close-up) if provided
+    if extra_images:
+        for img in extra_images:
+            try:
+                contents.append(
+                    types.Part.from_bytes(data=img["bytes"], mime_type=img.get("mime_type", "image/jpeg"))
+                )
+            except Exception as e:
+                print(f"[Gemini] Could not add extra image: {e}")
+
+    contents.append(prompt)
 
     # If a schema is provided, enforce structured JSON output
     config_args = {"temperature": 0.2}
@@ -71,3 +84,114 @@ def generate_text(prompt: str, schema_class=None) -> dict:
     if schema_class:
         return json.loads(response.text)
     return {"text": response.text}
+
+
+# =============================================================================
+# IMAGE QUALITY GATE  (Section 15 of Task List)
+# Exposed here so quality_gate.py can import: from services.gemini_client import assess_image_quality
+# =============================================================================
+
+def assess_image_quality(image_bytes: bytes) -> dict:
+    """
+    Section 15 — Image Quality Gate.
+
+    Assesses blur, brightness, and resolution BEFORE diagnosis.
+    Uses Pillow (CPU-only, no GPU needed on M2).
+
+    Returns:
+      {
+        "pass": true/false,
+        "grade": "good" | "fair" | "poor",
+        "issues": [...],
+        "farmer_guidance": "...",
+        "metrics": { blur_score, brightness_mean, width, height }
+      }
+    """
+    try:
+        from PIL import Image, ImageFilter
+        import numpy as np
+    except ImportError:
+        # Pillow not available — skip quality check, allow diagnosis to proceed
+        return {
+            "pass": True,
+            "grade": "unknown",
+            "issues": ["quality_check_unavailable"],
+            "farmer_guidance": "",
+            "metrics": {},
+        }
+
+    issues = []
+
+    # Load image
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    width, height = img.size
+
+    # ── Resolution check ────────────────────────────────────────────────────
+    MIN_DIMENSION = 224  # minimum for any CNN model input
+    if width < MIN_DIMENSION or height < MIN_DIMENSION:
+        issues.append("low_resolution")
+
+    # ── Blur check (Laplacian variance) ───────────────────────────────────
+    # Convert to grayscale, apply Laplacian, measure variance.
+    # Low variance = blurry image.
+    gray = img.convert("L")
+    gray_arr = np.array(gray, dtype=np.float32)
+    laplacian = np.array(gray.filter(ImageFilter.FIND_EDGES), dtype=np.float32)
+    blur_score = float(laplacian.var())
+
+    BLUR_THRESHOLD = 80.0   # empirical; calibrate with real farmer photos
+    if blur_score < BLUR_THRESHOLD:
+        issues.append("blurry")
+
+    # ── Brightness check ────────────────────────────────────────────────
+    brightness_mean = float(gray_arr.mean())
+    if brightness_mean < 40:     # too dark
+        issues.append("too_dark")
+    elif brightness_mean > 230:  # overexposed
+        issues.append("overexposed")
+
+    # ── Grade ─────────────────────────────────────────────────────────────
+    if len(issues) == 0:
+        grade = "good"
+    elif len(issues) == 1 and "low_resolution" not in issues:
+        grade = "fair"
+    else:
+        grade = "poor"
+
+    passed = grade in ("good", "fair")
+
+    # ── Farmer guidance ───────────────────────────────────────────────
+    guidance_parts = []
+    if "blurry" in issues:
+        guidance_parts.append("Hold your phone steady and tap the leaf to focus.")
+    if "too_dark" in issues:
+        guidance_parts.append("Move to natural daylight. Avoid shadows.")
+    if "overexposed" in issues:
+        guidance_parts.append("Avoid direct sunlight glare. Step into shade.")
+    if "low_resolution" in issues:
+        guidance_parts.append("Move closer to the leaf. Fill the frame.")
+
+    farmer_guidance = " ".join(guidance_parts) if guidance_parts else ""
+
+    if not passed:
+        farmer_guidance = (
+            "I can't reliably analyse this image. Please take:\n"
+            "\u2022 a closer photo of the affected leaf\n"
+            "\u2022 a clear whole-plant photo\n"
+            "\u2022 a photo in good natural light\n"
+            "\u2022 an underside photo if symptoms are there\n"
+            + farmer_guidance
+        )
+
+    return {
+        "pass": passed,
+        "grade": grade,
+        "issues": issues,
+        "farmer_guidance": farmer_guidance,
+        "metrics": {
+            "blur_score": round(blur_score, 2),
+            "brightness_mean": round(brightness_mean, 2),
+            "width": width,
+            "height": height,
+        },
+    }

@@ -20,7 +20,89 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { cropApi } from "../features/crop-context/api/cropApi";
 
+// Animated Hover Components
+import TriangleAlertIcon from "../components/hover-ui/triangle-alert-icon";
+import InfoCircleIcon from "../components/hover-ui/info-circle-icon";
+import CheckedIcon from "../components/hover-ui/checked-icon";
+import DownChevron from "../components/hover-ui/down-chevron";
+import ArrowNarrowLeftIcon from "../components/hover-ui/arrow-narrow-left-icon";
+import ArrowNarrowRightIcon from "../components/hover-ui/arrow-narrow-right-icon";
+
 import "./Alerts.css";
+
+const AlertsStatCard = ({ type, title, value, desc, icon: IconComponent }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <div 
+      className={`alerts-stat-card ${type}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="alerts-stat-header">
+        <div className={`alerts-stat-icon ${type}`}>
+          <IconComponent size={16} strokeWidth={2.5} isHovered={isHovered} />
+        </div>
+        <span className={`alerts-stat-title ${type}`}>{title}</span>
+      </div>
+      <h3 className="alerts-stat-value">{value}</h3>
+      <p className="alerts-stat-desc">{desc}</p>
+    </div>
+  );
+};
+
+const AlertsListItem = ({ alert, navigate }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <div 
+      className={`alerts-item ${alert.resolved ? 'resolved' : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="alerts-item-main">
+        <div className={`alerts-item-icon ${
+          alert.resolved ? 'resolved' :
+          alert.priority === 'High' ? 'high' :
+          alert.priority === 'Medium' ? 'medium' : 'info'
+        }`}>
+          {alert.resolved ? <CheckedIcon size={20} isHovered={isHovered} /> :
+           alert.priority === 'High' || alert.priority === 'Medium' ? <TriangleAlertIcon size={20} isHovered={isHovered} /> :
+           <InfoCircleIcon size={20} isHovered={isHovered} />}
+        </div>
+        <div>
+          <h4 className={`alerts-item-title ${alert.resolved ? 'resolved' : 'active'}`}>
+            {alert.title}
+          </h4>
+          <p className="alerts-item-desc">{alert.description}</p>
+          {!alert.resolved && (
+            <button className="alerts-item-link" onClick={() => navigate('/fields')}>
+              View Details <ArrowNarrowRightIcon size={12} isHovered={isHovered} />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="alerts-item-col">
+        <span className={`alerts-badge ${
+          alert.field === 'All Fields' ? 'all' : 'success'
+        }`}>
+          {alert.field}
+        </span>
+      </div>
+      <div className="alerts-item-col">
+        <span className={`alerts-badge ${
+          alert.resolved ? 'success' :
+          alert.priority === 'High' ? 'danger' :
+          alert.priority === 'Medium' ? 'warning' : 'info'
+        }`}>
+          {alert.resolved ? 'Resolved' : alert.priority}
+        </span>
+      </div>
+      <div className="alerts-item-time-col">
+        <span className="alerts-item-time">{alert.time}</span>
+        <button className="alerts-item-more"><MoreVertical size={18} /></button>
+      </div>
+    </div>
+  );
+};
 
 export const Alerts = () => {
   const [alerts, setAlerts] = useState([]);
@@ -64,11 +146,7 @@ export const Alerts = () => {
     const fetchAlerts = async () => {
       try {
         const data = await cropApi.getAlerts();
-        if (data && data.length > 0) {
-          setAlerts(data);
-        } else {
-          setAlerts([]);
-        }
+        setAlerts(data || []);
       } catch (err) {
         console.error("Failed to fetch alerts", err);
         setAlerts([]);
@@ -99,17 +177,17 @@ export const Alerts = () => {
     setAlerts(alerts.map(a => ({ ...a, resolved: true, priority: 'Resolved' })));
   };
 
-  const highCount = alerts.filter(a => a.priority === 'High' && !a.resolved).length;
-  const mediumCount = alerts.filter(a => a.priority === 'Medium' && !a.resolved).length;
-  const lowCount = alerts.filter(a => (a.priority === 'Low' || a.priority === 'Info') && !a.resolved).length;
-  const resolvedCount = alerts.filter(a => a.resolved || a.priority === 'Resolved').length;
+  const highCount = alerts.filter(a => a.priority === "High" && !a.resolved).length;
+  const mediumCount = alerts.filter(a => a.priority === "Medium" && !a.resolved).length;
+  const lowCount = alerts.filter(a => (a.priority === "Low" || a.priority === "Info") && !a.resolved).length;
+  const resolvedCount = alerts.filter(a => a.resolved || a.priority === "Resolved").length;
   const unreadCount = alerts.filter(a => !a.resolved).length;
   const totalCount = alerts.length || 1; 
   
-  const highPct = (highCount / totalCount) * 100;
-  const mediumPct = (mediumCount / totalCount) * 100;
-  const lowPct = (lowCount / totalCount) * 100;
-  const resolvedPct = (resolvedCount / totalCount) * 100;
+  const highPct = totalCount > 0 ? Math.round((highCount / totalCount) * 100) : 0;
+  const mediumPct = totalCount > 0 ? Math.round((mediumCount / totalCount) * 100) : 0;
+  const lowPct = totalCount > 0 ? Math.round((lowCount / totalCount) * 100) : 0;
+  const resolvedPct = totalCount > 0 ? Math.round((resolvedCount / totalCount) * 100) : 0;
 
   const highOffset = 25;
   const mediumOffset = (highOffset - highPct + 100) % 100;
@@ -141,7 +219,7 @@ export const Alerts = () => {
         )}
 
         <button className="alerts-btn" onClick={markAllAsRead}>
-          <CheckCircle2 size={16} className="text-text-muted" /> Mark all as read
+          <CheckedIcon size={16} className="text-text-muted" /> Mark all as read
         </button>
       </div>
     </>
@@ -166,7 +244,7 @@ export const Alerts = () => {
               <Globe size={16} />
               <span className="lang-full">English</span>
               <span className="lang-short">En</span>
-              <ChevronDown size={14} />
+              <DownChevron size={14} />
             </button>
             
             <div className="dashboard-header-profile" onClick={() => navigate('/profile')}>
@@ -174,7 +252,7 @@ export const Alerts = () => {
                 <User size={14} />
               </div>
               <span className="dashboard-header-action profile-name">
-                Ramesh <ChevronDown size={14} />
+                Ramesh <DownChevron size={14} />
               </span>
             </div>
           </div>
@@ -192,46 +270,38 @@ export const Alerts = () => {
           </div>
 
           {/* Top Stats */}
-          <div className="alerts-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '1rem' }}>
-            <div className="alerts-stat-box danger">
-              <div className="alerts-stat-box-header">
-                <div className="alerts-stat-icon-tiny danger">
-                  <AlertTriangle size={16} strokeWidth={2.5} />
-                </div>
-                <span className="alerts-stat-box-title danger">High Priority</span>
-              </div>
-              <span className="alerts-stat-box-value">{highCount}</span>
-            </div>
+          <div className="alerts-stats-grid">
+            <AlertsStatCard 
+              type="danger" 
+              title="High Priority" 
+              value={isLoading ? "-" : highCount} 
+              desc="Needs immediate action" 
+              icon={TriangleAlertIcon} 
+            />
 
-            <div className="alerts-stat-box warning">
-              <div className="alerts-stat-box-header">
-                <div className="alerts-stat-icon-tiny warning">
-                  <AlertTriangle size={16} strokeWidth={2.5} />
-                </div>
-                <span className="alerts-stat-box-title warning">Medium Priority</span>
-              </div>
-              <span className="alerts-stat-box-value">{mediumCount}</span>
-            </div>
+            <AlertsStatCard 
+              type="warning" 
+              title="Medium Priority" 
+              value={isLoading ? "-" : mediumCount} 
+              desc="Needs attention" 
+              icon={TriangleAlertIcon} 
+            />
 
-            <div className="alerts-stat-box info">
-              <div className="alerts-stat-box-header">
-                <div className="alerts-stat-icon-tiny info">
-                  <Info size={16} strokeWidth={2.5} />
-                </div>
-                <span className="alerts-stat-box-title info">Low Priority</span>
-              </div>
-              <span className="alerts-stat-box-value">{lowCount}</span>
-            </div>
+            <AlertsStatCard 
+              type="info" 
+              title="Low Priority" 
+              value={isLoading ? "-" : lowCount} 
+              desc="For your information" 
+              icon={InfoCircleIcon} 
+            />
 
-            <div className="alerts-stat-box success">
-              <div className="alerts-stat-box-header">
-                <div className="alerts-stat-icon-tiny success">
-                  <CheckCircle2 size={16} strokeWidth={2.5} />
-                </div>
-                <span className="alerts-stat-box-title success">Resolved</span>
-              </div>
-              <span className="alerts-stat-box-value">{resolvedCount}</span>
-            </div>
+            <AlertsStatCard 
+              type="success" 
+              title="Resolved" 
+              value={isLoading ? "-" : resolvedCount} 
+              desc="Last 7 days" 
+              icon={CheckedIcon} 
+            />
           </div>
 
           {/* List Area */}
@@ -244,7 +314,7 @@ export const Alerts = () => {
                               tab === 'High' ? `High (${highCount})` :
                               tab === 'Medium' ? `Medium (${mediumCount})` :
                               tab === 'Low' ? `Low (${lowCount})` :
-                              tab === 'Resolved' ? `Resolved (${resolvedCount})` : tab;
+                              tab === 'Resolved' ? `Resolved (${resolvedCount})` : `All Alerts (${totalCount})`;
                 return (
                   <button 
                     key={tab} 
@@ -265,73 +335,32 @@ export const Alerts = () => {
               <div className="alerts-th alerts-th-right">Time</div>
             </div>
 
-            {/* List Items */}
+             {/* List Items */}
             <div className="alerts-list">
               
               {isLoading ? (
                 <div className="alerts-loader">
                   <Loader2 className="alerts-spinner" />
                 </div>
-              ) : filteredAlerts.map((alert) => (
-                <div key={alert.id} className={`alerts-item ${alert.resolved ? 'resolved' : ''}`}>
-                  <div className="alerts-item-main">
-                    <div className={`alerts-item-icon ${
-                      alert.resolved ? 'resolved' :
-                      alert.priority === 'High' ? 'high' :
-                      alert.priority === 'Medium' ? 'medium' : 'info'
-                    }`}>
-                      {alert.resolved ? <CheckCircle2 size={20} /> :
-                       alert.priority === 'High' || alert.priority === 'Medium' ? <AlertTriangle size={20} /> :
-                       <Info size={20} />}
-                    </div>
-                    <div>
-                      <h4 className={`alerts-item-title ${alert.resolved ? 'resolved' : 'active'}`}>
-                        {alert.title}
-                      </h4>
-                      <p className="alerts-item-desc">{alert.description}</p>
-                      {!alert.resolved && (
-                        <button className="alerts-item-link" onClick={() => navigate('/fields')}>
-                          View Details <ArrowRight size={12} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="alerts-item-col">
-                    <span className={`alerts-badge ${
-                      alert.field === 'All Fields' ? 'all' : 'success'
-                    }`}>
-                      {alert.field}
-                    </span>
-                  </div>
-                  <div className="alerts-item-col">
-                    <span className={`alerts-badge ${
-                      alert.resolved ? 'success' :
-                      alert.priority === 'High' ? 'danger' :
-                      alert.priority === 'Medium' ? 'warning' : 'info'
-                    }`}>
-                      {alert.resolved ? 'Resolved' : alert.priority}
-                    </span>
-                  </div>
-
-                  <div className="alerts-item-time-col">
-                    <span className="alerts-item-time">{alert.time}</span>
-                    <button className="alerts-item-more"><MoreVertical size={18} /></button>
-                  </div>
+              ) : filteredAlerts.length === 0 ? (
+                <div style={{ padding: "48px", textAlign: "center", color: "#6B7280" }}>
+                  <TriangleAlertIcon size={32} style={{ margin: "0 auto 12px auto", color: "#9CA3AF" }} />
+                  <p style={{ fontWeight: 500, fontSize: "14px" }}>No alerts found</p>
+                  <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "4px" }}>Everything is running smoothly on your fields.</p>
                 </div>
+              ) : filteredAlerts.map((alert) => (
+                <AlertsListItem key={alert.id} alert={alert} navigate={navigate} />
               ))}
 
             </div>
 
             {/* Pagination Footer */}
             <div className="alerts-pagination">
-              <span className="alerts-pagination-info">Showing 1 to 5 of 15 alerts</span>
+              <span className="alerts-pagination-info">Showing 1 to {Math.min(filteredAlerts.length, 5)} of {filteredAlerts.length} alerts</span>
               <div className="alerts-pagination-controls">
-                <button className="alerts-page-btn icon"><ChevronLeft size={16} /></button>
+                <button className="alerts-page-btn icon"><ArrowNarrowLeftIcon size={16} /></button>
                 <button className="alerts-page-btn active">1</button>
-                <button className="alerts-page-btn inactive">2</button>
-                <button className="alerts-page-btn inactive">3</button>
-                <button className="alerts-page-btn icon"><ChevronRight size={16} /></button>
+                <button className="alerts-page-btn icon"><ArrowNarrowRightIcon size={16} /></button>
               </div>
             </div>
 
@@ -340,12 +369,11 @@ export const Alerts = () => {
           {/* Footer Info Banner */}
           <div className="alerts-footer-banner">
             <div className="alerts-footer-text">
-              <Info size={16} className="text-info" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <div>
-                <p className="alerts-footer-desc">
-                  Alerts are generated based on AI analysis and real-time data. Always verify conditions in your field.
-                </p>
-              </div>
+              <InfoCircleIcon size={18} className="shrink-0 mt-0.5 text-info" />
+              <p className="alerts-footer-desc">Alerts are generated based on AI analysis and real-time data. Always verify conditions in your field.</p>
+            </div>
+            <div className="alerts-footer-link-container">
+              Need help? Contact <Link to="/ask" className="alerts-footer-link">Ask AgriMesh</Link>
             </div>
           </div>
 
@@ -355,34 +383,41 @@ export const Alerts = () => {
         <div className="alerts-sidebar">
           
           {/* Chart at the top of Sidebar */}
-          <div className="alerts-chart-card" style={{ backgroundColor: 'var(--surface)', borderRadius: '0.75rem', padding: '1.25rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
-            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: '700', color: 'var(--text-main)', width: '100%', textAlign: 'left' }}>Alerts Summary</h3>
-            <div className="alerts-chart-wrapper-small" style={{ width: '6rem', height: '6rem' }}>
-              <svg viewBox="0 0 36 36" className="alerts-chart-svg">
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#ef4444" strokeWidth="4" strokeDasharray={`${highPct} ${100 - highPct}`} strokeDashoffset={`${highOffset}`} style={{ cursor: 'pointer', transition: 'stroke-width 0.2s' }} onMouseEnter={(e) => handleChartEnter(e, 'High Priority', '#ef4444', `${highPct} ${100 - highPct}`, `${highOffset}`)} onMouseLeave={handleChartLeave} />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f59e0b" strokeWidth="4" strokeDasharray={`${mediumPct} ${100 - mediumPct}`} strokeDashoffset={`${mediumOffset}`} style={{ cursor: 'pointer', transition: 'stroke-width 0.2s' }} onMouseEnter={(e) => handleChartEnter(e, 'Medium Priority', '#f59e0b', `${mediumPct} ${100 - mediumPct}`, `${mediumOffset}`)} onMouseLeave={handleChartLeave} />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3b82f6" strokeWidth="4" strokeDasharray={`${lowPct} ${100 - lowPct}`} strokeDashoffset={`${lowOffset}`} style={{ cursor: 'pointer', transition: 'stroke-width 0.2s' }} onMouseEnter={(e) => handleChartEnter(e, 'Low Priority', '#3b82f6', `${lowPct} ${100 - lowPct}`, `${lowOffset}`)} onMouseLeave={handleChartLeave} />
-                <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="4" strokeDasharray={`${resolvedPct} ${100 - resolvedPct}`} strokeDashoffset={`${resolvedOffset}`} style={{ cursor: 'pointer', transition: 'stroke-width 0.2s' }} onMouseEnter={(e) => handleChartEnter(e, 'Resolved', '#22c55e', `${resolvedPct} ${100 - resolvedPct}`, `${resolvedOffset}`)} onMouseLeave={handleChartLeave} />
-              </svg>
-              <div className="alerts-chart-center-small" style={{ flexDirection: 'column', pointerEvents: 'none' }}>
-                <span className="alerts-chart-total-small" style={{ fontSize: '1.5rem', lineHeight: '1' }}>{alerts.length}</span>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '700', marginTop: '0.25rem' }}>ALERTS</span>
-              </div>
-              
-              {tooltip && (
-                <div 
-                  className="alerts-chart-tooltip" 
-                  style={{ 
-                    left: `${tooltip.x}px`, 
-                    top: `${tooltip.y}px`, 
-                    transform: 'translate(-50%, -50%)' 
-                  }}
-                >
-                  <div className="alerts-tooltip-dot" style={{ backgroundColor: tooltip.color }}></div>
-                  {tooltip.label}
+          <div className="alerts-summary-card">
+            <h3 className="alerts-sidebar-title">Alerts Summary</h3>
+            
+            <div className="alerts-chart-container">
+              <div className="alerts-chart-wrapper">
+                {/* SVG Donut Chart */}
+                <svg viewBox="0 0 36 36" className="alerts-chart-svg">
+                  {totalCount === 0 ? (
+                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#E5E7EB" strokeWidth="4" strokeDasharray="100 0"></circle>
+                  ) : (
+                    <>
+                      <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#ef4444" strokeWidth="4" strokeDasharray={`${highPct} ${100 - highPct}`} strokeDashoffset="25"></circle>
+                      <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f59e0b" strokeWidth="4" strokeDasharray={`${mediumPct} ${100 - mediumPct}`} strokeDashoffset={`${25 - highPct}`}></circle>
+                      <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3b82f6" strokeWidth="4" strokeDasharray={`${lowPct} ${100 - lowPct}`} strokeDashoffset={`${25 - highPct - mediumPct}`}></circle>
+                      <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="4" strokeDasharray={`${resolvedPct} ${100 - resolvedPct}`} strokeDashoffset={`${25 - highPct - mediumPct - lowPct}`}></circle>
+                    </>
+                  )}
+                </svg>
+                <div className="alerts-chart-center">
+                  <span className="alerts-chart-total">{isLoading ? "-" : totalCount}</span>
+                  <span className="alerts-chart-label">Total</span>
                 </div>
-              )}
+              </div>
+
+              <div className="alerts-legend">
+                <div className="alerts-legend-item"><div className="alerts-legend-label"><div className="alerts-legend-dot danger"></div><span className="alerts-legend-text">High</span></div><span className="alerts-legend-value">{highCount} ({highPct}%)</span></div>
+                <div className="alerts-legend-item"><div className="alerts-legend-label"><div className="alerts-legend-dot warning"></div><span className="alerts-legend-text">Medium</span></div><span className="alerts-legend-value">{mediumCount} ({mediumPct}%)</span></div>
+                <div className="alerts-legend-item"><div className="alerts-legend-label"><div className="alerts-legend-dot info"></div><span className="alerts-legend-text">Low</span></div><span className="alerts-legend-value">{lowCount} ({lowPct}%)</span></div>
+                <div className="alerts-legend-item"><div className="alerts-legend-label"><div className="alerts-legend-dot success"></div><span className="alerts-legend-text">Resolved</span></div><span className="alerts-legend-value">{resolvedCount} ({resolvedPct}%)</span></div>
+              </div>
             </div>
+
+            <button className="alerts-sidebar-btn">
+              View Alert Analytics <ArrowNarrowRightIcon size={14} />
+            </button>
           </div>
 
 
@@ -433,7 +468,7 @@ export const Alerts = () => {
                         <div className="alerts-action-desc">{alert.title}</div>
                       </div>
                     </div>
-                    <ChevronRight size={16} className="alerts-action-chevron" />
+                    <ArrowNarrowRightIcon size={16} className="alerts-action-chevron" />
                   </button>
                 );
               })}
@@ -447,7 +482,7 @@ export const Alerts = () => {
             
             {filteredAlerts.filter(a => !a.resolved).length > 0 && (
               <button className="alerts-actions-view-all">
-                View All Recommendations <ArrowRight size={16} />
+                View All Recommendations <ArrowNarrowRightIcon size={14} />
               </button>
             )}
           </div>

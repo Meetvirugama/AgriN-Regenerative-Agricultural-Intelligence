@@ -1,33 +1,103 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Home, Map, BrainCircuit, MessageSquare, Bell, Stethoscope, 
-  Users, Settings, User, Search, Sprout, Globe, ChevronDown, 
-  Menu, X
+  Stethoscope, Users, Search, Sprout, Menu, X
 } from "lucide-react";
 import { GlobalMicButton } from "../features/voice/components/GlobalMicButton";
+import { LanguageSwitcher } from "../features/voice/components/LanguageSwitcher";
 import { FieldProvider } from "./providers/FieldProvider";
+import { useAuth } from "./providers/AuthProvider";
+import { cropApi } from "../features/crop-context/api/cropApi";
+
+// Animated Hover Components
+import HomeIcon from "../components/hover-ui/home-icon";
+import MapPinIcon from "../components/hover-ui/map-pin-icon";
+import BrainCircuitIcon from "../components/hover-ui/brain-circuit-icon";
+import BrandTelegramIcon from "../components/hover-ui/brand-telegram-icon";
+import FilledBellIcon from "../components/hover-ui/filled-bell-icon";
+import UserIcon from "../components/hover-ui/user-icon";
+import DownChevron from "../components/hover-ui/down-chevron";
+import GearIcon from "../components/hover-ui/gear-icon";
+
 import "./DashboardLayout.css";
 
 const NAV_ITEMS = [
-  { label: "Home", path: "/", icon: Home },
-  { label: "My Fields", path: "/fields", icon: Map },
-  { label: "Intelligence", path: "/intelligence", icon: BrainCircuit },
-  { label: "Ask AgriMesh", path: "/ask", icon: MessageSquare },
-  { label: "Alerts", path: "/alerts", icon: Bell, badge: 3 },
+  { label: "Home", path: "/", icon: HomeIcon },
+  { label: "My Fields", path: "/fields", icon: MapPinIcon },
+  { label: "Intelligence", path: "/intelligence", icon: BrainCircuitIcon },
+  { label: "Ask AgriMesh", path: "/ask", icon: BrandTelegramIcon },
+  { label: "Alerts", path: "/alerts", icon: FilledBellIcon },
   { label: "Crop Diagnosis", path: "/diagnosis", icon: Stethoscope },
-  { label: "Expert Support", path: "/expert", icon: Users },
 ];
+
+const SidebarNavItem = ({ item, isActive, activeAlertsCount }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const Icon = item.icon;
+  return (
+    <Link
+      to={item.path}
+      className={`dashboard-nav-item ${isActive ? "active" : ""}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="dashboard-nav-item-content">
+        <Icon size={18} strokeWidth={2} isHovered={isHovered} />
+        {item.label}
+      </div>
+      {item.label === "Alerts" && activeAlertsCount > 0 && (
+        <span className="dashboard-nav-badge">
+          {activeAlertsCount}
+        </span>
+      )}
+    </Link>
+  );
+};
+
+const FooterNavItem = ({ to, icon: Icon, label }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <Link
+      to={to}
+      className="dashboard-nav-item"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="dashboard-nav-item-content">
+        <Icon size={18} strokeWidth={2} isHovered={isHovered} /> {label}
+      </div>
+    </Link>
+  );
+};
 
 export const FarmerShell = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [alerts, setAlerts] = useState([]);
+  
+  // Header Hover States
+  const [isAlertsHovered, setIsAlertsHovered] = useState(false);
+  const [isProfileHovered, setIsProfileHovered] = useState(false);
 
   React.useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  React.useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const data = await cropApi.getAlerts();
+        setAlerts(data || []);
+      } catch (err) {
+        console.error("Failed to fetch shell alerts:", err);
+      }
+    };
+    fetchAlerts();
+  }, [location.pathname]);
+
+  const activeAlertsCount = alerts.filter(a => !a.resolved).length;
 
   return (
     <FieldProvider>
@@ -40,10 +110,10 @@ export const FarmerShell = () => {
           />
         )}
 
-        <aside className={`dashboard-sidebar transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+        <aside className={`dashboard-sidebar ${isMobileMenuOpen ? "open" : ""}`}>
           <div className="dashboard-sidebar-header">
-            <div className="dashboard-sidebar-logo">
-              <div className="dashboard-sidebar-logo-icon">
+            <div className="dashboard-logo">
+              <div className="dashboard-logo-icon">
                 <Sprout size={24} strokeWidth={2.5} />
               </div>
               <span>AgriMesh</span>
@@ -59,39 +129,21 @@ export const FarmerShell = () => {
           <nav className="dashboard-nav">
             {NAV_ITEMS.map((item) => {
               const isActive = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
-              const Icon = item.icon;
               return (
-                <Link
-                  key={item.label}
-                  to={item.path}
-                  className={`dashboard-nav-item ${isActive ? "active" : ""}`}
-                >
-                  <div className="dashboard-nav-item-content">
-                    <Icon size={18} strokeWidth={2} />
-                    {item.label}
-                  </div>
-                  {item.badge && (
-                    <span className="dashboard-nav-badge">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
+                <SidebarNavItem 
+                  key={item.label} 
+                  item={item} 
+                  isActive={isActive} 
+                  activeAlertsCount={activeAlertsCount} 
+                />
               );
             })}
           </nav>
 
           <div className="dashboard-sidebar-footer">
             <div className="dashboard-sidebar-divider"></div>
-            <Link to="/profile" className="dashboard-nav-item">
-              <div className="dashboard-nav-item-content">
-                <User size={18} strokeWidth={2} /> Profile
-              </div>
-            </Link>
-            <Link to="/settings" className="dashboard-nav-item">
-              <div className="dashboard-nav-item-content">
-                <Settings size={18} strokeWidth={2} /> Settings
-              </div>
-            </Link>
+            <FooterNavItem to="/profile" icon={UserIcon} label="Profile" />
+            <FooterNavItem to="/settings" icon={GearIcon} label="Settings" />
           </div>
         </aside>
 
@@ -109,48 +161,70 @@ export const FarmerShell = () => {
               {location.pathname === '/alerts' ? (
                 <div id="alerts-header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
               ) : (
-              <>
-              <div className="dashboard-header-search">
-                <Search size={16} />
-                <input 
-                  type="text" 
-                  placeholder="Search fields, crops, recommendations..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && searchQuery.trim()) {
-                      navigate(`/fields?search=${encodeURIComponent(searchQuery)}`);
-                      setSearchQuery("");
-                    }
-                  }}
-                />
-              </div>
+                <>
+                  <div className="dashboard-header-search">
+                    <Search size={16} />
+                    <input 
+                      type="text" 
+                      placeholder="Search fields, crops, recommendations..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && searchQuery.trim()) {
+                          navigate(`/fields?search=${encodeURIComponent(searchQuery)}`);
+                          setSearchQuery("");
+                        }
+                      }}
+                    />
+                  </div>
 
-              <div className="dashboard-header-actions">
-                <button className="dashboard-header-action alerts" onClick={() => navigate('/alerts')}>
-                  <div className="dashboard-bell-wrapper">
-                    <Bell size={18} />
-                    <span className="dashboard-bell-badge">3</span>
+                  <div className="dashboard-header-actions">
+                    <button 
+                      className="dashboard-header-action alerts" 
+                      onClick={() => navigate('/alerts')}
+                      onMouseEnter={() => setIsAlertsHovered(true)}
+                      onMouseLeave={() => setIsAlertsHovered(false)}
+                    >
+                      <div className="dashboard-bell-wrapper">
+                        <FilledBellIcon size={18} isHovered={isAlertsHovered} />
+                        {activeAlertsCount > 0 && (
+                          <span className="dashboard-bell-badge">{activeAlertsCount}</span>
+                        )}
+                      </div>
+                      <span>Alerts</span>
+                    </button>
+                    
+                    <LanguageSwitcher />
+                    
+                    <div 
+                      className="dashboard-header-profile"
+                      onMouseEnter={() => setIsProfileHovered(true)}
+                      onMouseLeave={() => setIsProfileHovered(false)}
+                    >
+                      <div className="dashboard-header-profile-trigger">
+                        <div className="dashboard-header-avatar">
+                          <UserIcon size={14} isHovered={isProfileHovered} />
+                        </div>
+                        <span className="dashboard-header-action">
+                          Ramesh <DownChevron size={14} isHovered={isProfileHovered} />
+                        </span>
+                      </div>
+
+                      <div className="profile-dropdown">
+                        <button onClick={() => navigate('/profile')} className="profile-dropdown-option">
+                          View Profile
+                        </button>
+                        <button onClick={() => navigate('/settings')} className="profile-dropdown-option">
+                          Settings
+                        </button>
+                        <div className="profile-dropdown-divider"></div>
+                        <button onClick={logout} className="profile-dropdown-option signout">
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <span>Alerts</span>
-                </button>
-                
-                <button className="dashboard-header-action language" onClick={() => alert('Language settings coming soon!')}>
-                  <Globe size={16} />
-                  <span>English</span>
-                  <ChevronDown size={14} />
-                </button>
-                
-                <div className="dashboard-header-profile" onClick={() => navigate('/profile')}>
-                  <div className="dashboard-header-avatar">
-                    <User size={14} />
-                  </div>
-                  <span className="dashboard-header-action">
-                    Ramesh <ChevronDown size={14} />
-                  </span>
-                </div>
-              </div>
-              </>
+                </>
               )}
             </header>
           )}
