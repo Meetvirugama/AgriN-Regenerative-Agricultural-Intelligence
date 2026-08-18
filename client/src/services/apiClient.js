@@ -33,6 +33,21 @@ export async function request(path, options = {}) {
     }
   }
 
+  // Automatically attach auth token if available
+  if (!headers.has("Authorization")) {
+    try {
+      const raw = localStorage.getItem("agri_auth");
+      if (raw) {
+        const session = JSON.parse(raw);
+        if (session?.accessToken) {
+          headers.set("Authorization", `Bearer ${session.accessToken}`);
+        }
+      }
+    } catch {
+      // Ignore JSON parse errors
+    }
+  }
+
   const config = {
     ...options,
     headers,

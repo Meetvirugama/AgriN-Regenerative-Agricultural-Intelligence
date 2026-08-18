@@ -29,7 +29,6 @@ import { startScheduler } from "./jobs/scheduler.js";
 dotenv.config();
 
 const app = express();
-app.set("trust proxy", 1); // Trust first proxy (Render/Vercel)
 const PORT = parseInt(process.env.PORT || "8000", 10);
 
 // ─── Security Middleware ────────────────────────────────────────────────────
@@ -125,7 +124,6 @@ app.use("/api/v1/intelligence", requireAuth, intelligenceRoutes);
 // Keep /api/* working so the existing frontend doesn't break during migration.
 // These will be removed once the frontend is updated to use /api/v1/*.
 
-app.use("/api/fields", fieldRoutes);   // ← was missing — POST/PUT/DELETE /api/fields needs this
 app.use("/api/fields", cropRoutes);
 app.use("/api/fields", weatherRoutes);
 app.use("/api/fields", soilRoutes);
@@ -139,27 +137,7 @@ app.use("/api", voiceRoutes);
 app.use("/api", feedbackRouter);
 app.use("/api", crossBorderRoutes);
 app.use("/api/escalations", escalationRoutes);
-
-// ─── Legacy missing-route aliases ─────────────────────────────────────────────
-// /api/alerts — frontend calls this without /v1 prefix
-app.use("/api/alerts", alertsRoutes);
-
-// /api/fields/stub-init — FieldProvider calls this to seed the active field
-app.post("/api/fields/stub-init", async (req, res) => {
-  try {
-    const { layer1Service, STUB_FARMER_ID } = await import("./modules/field/field.service.js");
-    await layer1Service.getOrCreateMockFarmer();
-    const fields = await layer1Service.getAllFieldsForFarmer(STUB_FARMER_ID);
-    if (fields.length === 0) {
-      // No fields yet — return null gracefully so the shell still renders
-      return res.json({ field: null });
-    }
-    res.json({ field: fields[0] });
-  } catch (err) {
-    console.error("[stub-init]", err.message);
-    res.status(500).json({ error: { message: err.message } });
-  }
-});
+app.use("/api/intelligence", requireAuth, intelligenceRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 
