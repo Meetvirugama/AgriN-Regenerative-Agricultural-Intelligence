@@ -14,9 +14,10 @@ if not api_key:
 else:
     client = genai.Client()
 
-def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, schema_class=None) -> dict:
+def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, schema_class=None, extra_images: list = None) -> dict:
     """
-    Analyzes an image with a prompt using Gemini.
+    Analyzes an image (or multiple images) with a prompt using Gemini.
+    extra_images: list of {bytes, mime_type} for additional photos (up to 2 more).
     """
     if not client:
         raise ValueError("GEMINI_API_KEY is not configured.")
@@ -26,8 +27,19 @@ def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, s
     
     contents = [
         types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-        prompt
     ]
+
+    # Add extra photos (whole plant, close-up) if provided
+    if extra_images:
+        for img in extra_images:
+            try:
+                contents.append(
+                    types.Part.from_bytes(data=img["bytes"], mime_type=img.get("mime_type", "image/jpeg"))
+                )
+            except Exception as e:
+                print(f"[Gemini] Could not add extra image: {e}")
+
+    contents.append(prompt)
 
     # If a schema is provided, enforce structured JSON output
     config_args = {"temperature": 0.2}

@@ -16,7 +16,7 @@ const router = Router();
 router.post("/:fieldId/diagnose", async (req, res) => {
   try {
     const { fieldId } = req.params;
-    const { image, latitude, longitude } = req.body;
+    const { image, image2, image3, latitude, longitude, farmerObservations } = req.body;
 
     if (!image) {
       return res.status(400).json({ error: "image is required (base64 data URL)" });
@@ -33,11 +33,37 @@ router.post("/:fieldId/diagnose", async (req, res) => {
 
     const imageBuffer = Buffer.from(base64Data, "base64");
 
+    // Parse extra images
+    let imageBuffer2 = null;
+    let mimeType2 = "image/jpeg";
+    if (image2) {
+      const m2 = image2.match(/^data:(image\/\w+);base64,/);
+      mimeType2 = m2 ? m2[1] : "image/jpeg";
+      const b2 = image2.replace(/^data:image\/\w+;base64,/, "");
+      if (b2 && b2.length > 100) imageBuffer2 = Buffer.from(b2, "base64");
+    }
+    let imageBuffer3 = null;
+    let mimeType3 = "image/jpeg";
+    if (image3) {
+      const m3 = image3.match(/^data:(image\/\w+);base64,/);
+      mimeType3 = m3 ? m3[1] : "image/jpeg";
+      const b3 = image3.replace(/^data:image\/\w+;base64,/, "");
+      if (b3 && b3.length > 100) imageBuffer3 = Buffer.from(b3, "base64");
+    }
+
     const observation = await observationService.diagnoseWithVision(
       fieldId,
       imageBuffer,
       mimeType,
-      { latitude: latitude ?? null, longitude: longitude ?? null },
+      {
+        latitude: latitude ?? null,
+        longitude: longitude ?? null,
+        imageBuffer2,
+        mimeType2,
+        imageBuffer3,
+        mimeType3,
+        farmerObservations: farmerObservations ?? null,
+      },
     );
 
     res.json(observation);

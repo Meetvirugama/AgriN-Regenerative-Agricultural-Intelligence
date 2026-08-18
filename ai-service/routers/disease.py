@@ -13,6 +13,8 @@ router = APIRouter()
 @router.post("/diagnose", response_model=FullDiagnosisResponse)
 async def diagnose_disease(
     image: UploadFile = File(...),
+    image2: Optional[UploadFile] = File(default=None),
+    image3: Optional[UploadFile] = File(default=None),
     crop_type: str = Form(default="unknown"),
     crop_stage: str = Form(default="unknown"),
     days_since_sowing: Optional[int] = Form(default=None),
@@ -21,11 +23,13 @@ async def diagnose_disease(
     weather_json: Optional[str] = Form(default=None),
     satellite_json: Optional[str] = Form(default=None),
     soil_json: Optional[str] = Form(default=None),
+    # Farmer observations Q&A from pre-diagnosis questions (Feature 24)
+    farmer_observations_json: Optional[str] = Form(default=None),
 ):
     """
     Layer 07 — Crop Health Diagnosis Engine.
 
-    Accepts a crop photo + real field context (weather/satellite/soil).
+    Accepts a crop photo (+ up to 2 extra photos) + real field context + farmer Q&A.
     Returns structured differential diagnosis with evidence trail.
 
     Called by Node.js disease.service.js after assembling field context.
@@ -91,6 +95,24 @@ async def diagnose_disease(
         weather = json.loads(weather_json) if weather_json else None
         satellite = json.loads(satellite_json) if satellite_json else None
         soil = json.loads(soil_json) if soil_json else None
+        farmer_observations = json.loads(farmer_observations_json) if farmer_observations_json else None
+
+        # Extra images (whole plant, close-up)
+        extra_images = []
+        if image2:
+            try:
+                b2 = await image2.read()
+                if b2:
+                    extra_images.append({"bytes": b2, "mime_type": image2.content_type or "image/jpeg"})
+            except Exception:
+                pass
+        if image3:
+            try:
+                b3 = await image3.read()
+                if b3:
+                    extra_images.append({"bytes": b3, "mime_type": image3.content_type or "image/jpeg"})
+            except Exception:
+                pass
 
         result = diagnose(
             image_bytes=image_bytes,
@@ -102,6 +124,8 @@ async def diagnose_disease(
             weather=weather,
             satellite=satellite,
             soil=soil,
+            farmer_observations=farmer_observations,
+            extra_images=extra_images if extra_images else None,
         )
 
         # ── Section 23: Confidence calibration — degrade if image is fair ────

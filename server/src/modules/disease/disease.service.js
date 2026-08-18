@@ -45,7 +45,7 @@ export class ObservationService {
     // ── 2a. Try Python ML service (dataset-grounded inference) ────────────
     //        Falls back to direct Gemini Vision if Python service is down.
     let diagnosis;
-    const pythonResult = await this._callPythonService(imageBuffer, mimeType, context);
+    const pythonResult = await this._callPythonService(imageBuffer, mimeType, context, opts);
     if (pythonResult) {
       diagnosis = pythonResult;
     } else {
@@ -101,18 +101,32 @@ export class ObservationService {
    * Sends image + assembled context as multipart/form-data.
    * Returns null if service is unavailable (allows fallback to Gemini).
    */
-  async _callPythonService(imageBuffer, mimeType, context) {
+  async _callPythonService(imageBuffer, mimeType, context, opts = {}) {
     try {
       const { default: FormData } = await import("form-data");
       const { default: fetch } = await import("node-fetch");
 
       const form = new FormData();
 
-      // Image blob
+      // Primary image blob
       form.append("image", imageBuffer, {
         filename: "crop.jpg",
         contentType: mimeType,
       });
+
+      // Extra images (whole plant, close-up)
+      if (opts.imageBuffer2) {
+        form.append("image2", opts.imageBuffer2, {
+          filename: "crop2.jpg",
+          contentType: opts.mimeType2 || "image/jpeg",
+        });
+      }
+      if (opts.imageBuffer3) {
+        form.append("image3", opts.imageBuffer3, {
+          filename: "crop3.jpg",
+          contentType: opts.mimeType3 || "image/jpeg",
+        });
+      }
 
       // Crop context
       form.append("crop_type", context.crop?.crop_type ?? "unknown");
@@ -128,6 +142,11 @@ export class ObservationService {
       if (context.weather) form.append("weather_json", JSON.stringify(context.weather));
       if (context.satellite) form.append("satellite_json", JSON.stringify(context.satellite));
       if (context.soil) form.append("soil_json", JSON.stringify(context.soil));
+
+      // Farmer observations (Feature 24)
+      if (opts.farmerObservations) {
+        form.append("farmer_observations_json", JSON.stringify(opts.farmerObservations));
+      }
 
       const response = await fetch(`${PYTHON_SERVICE_URL}/api/v1/disease/diagnose`, {
         method: "POST",
@@ -340,12 +359,13 @@ Respond ONLY with valid JSON in EXACTLY this format:
          treatment_recommendation, action_timing, monitor,
          differential_diagnosis, evidence,
          weather_snapshot, satellite_snapshot, soil_snapshot,
+         farmer_observations,
          image_quality, escalation_triggered, requires_expert,
          model_name, model_version
        ) VALUES (
          $1, $2, $3, $4, $5, $6, $7, $8,
          $9, $10, $11, $12, $13, $14, $15, $16, $17,
-         $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
+         $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28
        )
        RETURNING
          id, field_id, crop_type, growth_stage,
@@ -378,6 +398,7 @@ Respond ONLY with valid JSON in EXACTLY this format:
         context.weather ? JSON.stringify(context.weather) : null,
         context.satellite ? JSON.stringify(context.satellite) : null,
         context.soil ? JSON.stringify(context.soil) : null,
+        opts.farmerObservations ? JSON.stringify(opts.farmerObservations) : null,
         diagnosis.image_quality ?? "unknown",
         diagnosis.escalation_triggered ?? false,
         diagnosis.requires_expert ?? false,

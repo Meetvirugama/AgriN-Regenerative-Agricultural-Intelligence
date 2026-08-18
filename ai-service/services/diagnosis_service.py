@@ -34,6 +34,7 @@ def _build_reasoning_prompt(
     weather=None,
     satellite=None,
     soil=None,
+    farmer_observations=None,
 ) -> str:
     """Build the context-enriched reasoning prompt for Gemini."""
     known_classes = _get_known_classes(crop_type)
@@ -88,10 +89,33 @@ def _build_reasoning_prompt(
     else:
         soil_block = "SOIL: UNAVAILABLE"
 
+    # Farmer observations block (Feature 24 — 5 contextual questions)
+    if farmer_observations and isinstance(farmer_observations, dict):
+        obs_lines = []
+        q_map = {
+            "noticed_when": "When did you first notice this?",
+            "is_spreading": "Is the problem spreading?",
+            "recent_rain": "Has it rained recently?",
+            "recent_spray": "Did you apply fertilizer or pesticide recently?",
+            "affected_area": "Is this affecting one area or the whole field?",
+        }
+        for key, question in q_map.items():
+            answer = farmer_observations.get(key)
+            if answer:
+                obs_lines.append(f"  Q: {question}")
+                obs_lines.append(f"  A: {answer}")
+        if obs_lines:
+            farmer_block = "FARMER OBSERVATIONS (direct report):\n" + "\n".join(obs_lines)
+        else:
+            farmer_block = "FARMER OBSERVATIONS: None provided"
+    else:
+        farmer_block = "FARMER OBSERVATIONS: None provided"
+
     return f"""You are AgriMesh AI Reasoning Engine (Layer 07).
 
-You receive a crop photograph, the output of our local PyTorch Vision Model, and real environmental field context.
-Your task is DIFFERENTIAL DIAGNOSIS and REASONING - merge the visual findings with the context to create actionable advice.
+You receive a crop photograph (and possibly additional photos), the output of our local PyTorch Vision Model, and real environmental field context.
+If multiple photos are provided: Photo 1 is the primary affected area, Photo 2 is the whole plant, Photo 3 is a close-up detail.
+Your task is DIFFERENTIAL DIAGNOSIS and REASONING - merge ALL visual findings with the context to create actionable advice.
 
 ---
 {vision_block}
@@ -103,6 +127,8 @@ Your task is DIFFERENTIAL DIAGNOSIS and REASONING - merge the visual findings wi
 {sat_block}
 
 {soil_block}
+
+{farmer_block}
 ---
 
 STRICT RULES:
@@ -114,6 +140,8 @@ STRICT RULES:
    - Declining NDVI + visual stress -> supports water/heat stress
    - Low soil pH -> supports nutrient deficiency
    - Temperature >38C -> supports heat stress
+   - Farmer says "spreading rapidly" -> increases severity
+   - Farmer says "applied pesticide recently" -> consider phytotoxicity
 5. EVIDENCE: cite at least one finding per available data source.
 6. Never invent weather, NDVI, or soil numbers.
 7. severity: critical/high/medium/low/none/unknown
@@ -139,6 +167,8 @@ def diagnose(
     weather=None,
     satellite=None,
     soil=None,
+    farmer_observations=None,
+    extra_images=None,
 ):
     """
     Full Layer 07 diagnosis:
@@ -156,7 +186,7 @@ def diagnose(
             "top_k": []
         }
 
-    # 2. Build reasoning prompt combining vision results + field context
+    # 2. Build reasoning prompt combining vision results + field context + farmer observations
     prompt = _build_reasoning_prompt(
         vision_results=vision_results,
         crop_type=crop_type,
@@ -166,15 +196,17 @@ def diagnose(
         weather=weather,
         satellite=satellite,
         soil=soil,
+        farmer_observations=farmer_observations,
     )
 
     # 3. Call Gemini for Context Fusion and Reasoning
-    # We still pass the image to Gemini so it can visually verify the PyTorch model's prediction!
+    # We still pass the image(s) to Gemini so it can visually verify the PyTorch model's prediction!
     result = analyze_image_with_prompt(
         image_bytes=image_bytes,
         mime_type=mime_type,
         prompt=prompt,
         schema_class=FullDiagnosisResponse,
+        extra_images=extra_images,
     )
 
     return result
