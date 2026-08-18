@@ -1,6 +1,14 @@
-import torch
-import torch.nn as nn
-from torchvision import transforms
+try:
+    import torch
+    import torch.nn as nn
+    from torchvision import transforms
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    nn = None
+    transforms = None
+    TORCH_AVAILABLE = False
+
 from PIL import Image
 import json
 import io
@@ -14,20 +22,24 @@ NUM_CLASSES = len(KNOWN_CONDITIONS.get("tomato", []))
 
 class VisionModelPredictor:
     def __init__(self):
-        self.device = torch.device("cpu") # Mac M2 will use cpu/mps if available, cpu is safe
-        self.model = None
         self.classes = KNOWN_CONDITIONS.get("tomato", [])
         self.temperature = 1.0
-        
-        # Standard ImageNet transforms used by MobileNet/EfficientNet
-        self.transform = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+        self.model = None
 
-        self._load_model()
+        if TORCH_AVAILABLE:
+            self.device = torch.device("cpu")
+            # Standard ImageNet transforms used by MobileNet/EfficientNet
+            self.transform = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
+            self._load_model()
+        else:
+            self.device = None
+            self.transform = None
+            print("[Vision] PyTorch not installed. Operating in Gemini Vision fallback mode.")
 
     def _load_model(self):
         """Loads the trained PyTorch model and calibration parameters."""
