@@ -137,6 +137,7 @@ app.use("/api", voiceRoutes);
 app.use("/api", feedbackRouter);
 app.use("/api", crossBorderRoutes);
 app.use("/api/escalations", escalationRoutes);
+app.use("/api/intelligence", requireAuth, intelligenceRoutes);
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 
