@@ -5,8 +5,10 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding-bottom: 3rem;
+  padding-bottom: 1rem;
   width: 100%;
+  height: calc(100vh - 136px);
+  overflow: hidden;
 }
 
 .myfields-header {
@@ -151,6 +153,9 @@
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 1.5rem;
+  overflow: hidden;
+  padding-right: 0.5rem;
+  padding-bottom: 2rem;
 }
 @media (min-width: 768px) {
   .myfields-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

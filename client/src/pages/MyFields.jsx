@@ -214,14 +214,7 @@ export const MyFields = () => {
               : "Manage and monitor all your fields from here."}
           </p>
         </div>
-        <div className="myfields-header-actions">
-          <button
-            onClick={() => navigate("/fields/add")}
-            className="myfields-btn-primary"
-          >
-            <Plus size={18} strokeWidth={2.5} /> Add New Field
-          </button>
-        </div>
+
       </div>
 
       {/* CONTROLS ROW */}
@@ -335,21 +328,7 @@ export const MyFields = () => {
         </div>
       )}
 
-      {/* Bottom Banner — only when fields exist */}
-      {!isLoading && fields.length > 0 && (
-        <div className="myfields-bottom-banner">
-          <div className="myfields-banner-content">
-            <div className="myfields-banner-icon-area">🏞️</div>
-            <div className="myfields-banner-text-group">
-              <h3 className="myfields-banner-title">Add more fields to get better insights</h3>
-              <p className="myfields-banner-desc">The more fields you add, the smarter AgriMesh becomes.</p>
-            </div>
-          </div>
-          <button onClick={() => navigate("/fields/add")} className="myfields-banner-btn">
-            Add New Field
-          </button>
-        </div>
-      )}
+
     </div>
   );
 };
