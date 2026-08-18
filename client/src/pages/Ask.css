@@ -5,8 +5,9 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding-bottom: 3rem;
   width: 100%;
+  height: calc(100vh - 136px);
+  overflow: hidden;
 }
 
 .ask-header {
