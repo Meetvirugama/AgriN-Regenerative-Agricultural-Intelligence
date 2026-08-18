@@ -1,26 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
   ArrowLeft, Search, Crosshair, MapPin, Info, Satellite, CloudRain, 
-  Map as MapIcon, Plus, Minus, Check, MousePointer2, PenTool, Edit3, 
-  Trash2, Navigation, Calendar, Droplet, Triangle, CloudUpload, 
-  BrainCircuit, Lightbulb, Tag, Bell, Leaf, Loader2, X, AlertTriangle
+  Map as MapIcon, Plus, Minus, Check, MousePointer2, PenTool,
+  Trash2, Calendar, Droplet, CloudUpload, 
+  BrainCircuit, Leaf, Loader2, X, AlertTriangle, Undo2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { GoogleMap, useJsApiLoader, Marker, Polygon, DrawingManager, Autocomplete } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Polygon, Autocomplete } from '@react-google-maps/api';
 import { cropApi } from "../../crop-context/api/cropApi";
 
 import "./AddFieldWizard.css";
 
-const libraries = ['places', 'drawing', 'geometry'];
+// NOTE: 'drawing' library removed — DrawingManager was removed in Maps JS API v3.65
+// We now use a manual click-to-draw approach.
+const libraries = ['places', 'geometry'];
 
 const mapContainerStyle = {
   width: '100%',
   height: '100%'
 };
-
-// Safe helpers — only read google.maps enums after isLoaded=true
-const getControlPosition = () => window.google?.maps?.ControlPosition?.TOP_CENTER;
-const getPolygonMode = () => window.google?.maps?.drawing?.OverlayType?.POLYGON;
 
 export const AddFieldWizard = () => {
   const navigate = useNavigate();
@@ -29,7 +27,7 @@ export const AddFieldWizard = () => {
   const [createdFieldId, setCreatedFieldId] = useState(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSy_MISSING_KEY_FALLBACK_SO_IT_DOESNT_CRASH",
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
     libraries
   });
 
@@ -39,14 +37,16 @@ export const AddFieldWizard = () => {
     lng: 78.2650,
     address: "Madhopur, Uttar Pradesh, India"
   });
-  
+
   // Maps State
   const mapRef = useRef(null);
   const autocompleteRef = useRef(null);
   const [mapCenter, setMapCenter] = useState({ lat: 29.7310, lng: 78.2650 });
 
-  // Boundary State
-  const [boundaryCoords, setBoundaryCoords] = useState([]);
+  // Drawing State — replaces DrawingManager
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [draftPoints, setDraftPoints] = useState([]); // points being drawn
+  const [boundaryCoords, setBoundaryCoords] = useState([]); // finalized polygon
   const [areaHectares, setAreaHectares] = useState(0);
 
   // Form State
@@ -90,10 +90,53 @@ export const AddFieldWizard = () => {
     }
   };
 
-  const onMapClick = (e) => {
-    if (step === 1) {
-      reverseGeocode(e.latLng.lat(), e.latLng.lng());
+  // Step 1 map click — pin location
+  const onStep1MapClick = (e) => {
+    reverseGeocode(e.latLng.lat(), e.latLng.lng());
+  };
+
+  // Step 2 map click — add polygon vertex when in drawing mode
+  const onStep2MapClick = (e) => {
+    if (!isDrawingMode) return;
+    const point = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+    setDraftPoints(prev => [...prev, point]);
+  };
+
+  const finishDrawing = () => {
+    if (draftPoints.length < 3) {
+      alert("Please click at least 3 points to draw a polygon.");
+      return;
     }
+    const coords = draftPoints;
+    setBoundaryCoords(coords);
+
+    if (window.google?.maps?.geometry) {
+      const latLngs = coords.map(p => new window.google.maps.LatLng(p.lat, p.lng));
+      const path = new window.google.maps.MVCArray(latLngs);
+      const sqMeters = window.google.maps.geometry.spherical.computeArea(path);
+      setAreaHectares((sqMeters / 10000).toFixed(2));
+    }
+
+    setIsDrawingMode(false);
+    setDraftPoints([]);
+  };
+
+  const undoLastPoint = () => {
+    setDraftPoints(prev => prev.slice(0, -1));
+  };
+
+  const clearBoundary = () => {
+    setBoundaryCoords([]);
+    setDraftPoints([]);
+    setAreaHectares(0);
+    setIsDrawingMode(false);
+  };
+
+  const startDrawing = () => {
+    setBoundaryCoords([]);
+    setDraftPoints([]);
+    setAreaHectares(0);
+    setIsDrawingMode(true);
   };
 
   const onPlaceChanged = () => {
@@ -108,32 +151,12 @@ export const AddFieldWizard = () => {
     }
   };
 
-  const onPolygonComplete = (polygon) => {
-    const path = polygon.getPath().getArray();
-    const coords = path.map(p => ({ lat: p.lat(), lng: p.lng() }));
-    
-    // We want to keep just one polygon, so we remove the drawn one and render our own <Polygon>
-    polygon.setMap(null);
-    setBoundaryCoords(coords);
-
-    if (window.google && window.google.maps.geometry) {
-      const sqMeters = window.google.maps.geometry.spherical.computeArea(polygon.getPath());
-      setAreaHectares((sqMeters / 10000).toFixed(2));
-    }
-  };
-  
-  const clearBoundary = () => {
-    setBoundaryCoords([]);
-    setAreaHectares(0);
-  };
-
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Build GeoJSON format for the backend
       const ring = boundaryCoords.map(c => [c.lng, c.lat]);
       if (ring.length > 0) {
-        ring.push([boundaryCoords[0].lng, boundaryCoords[0].lat]); // close the polygon
+        ring.push([boundaryCoords[0].lng, boundaryCoords[0].lat]);
       }
       const geojson = boundaryCoords.length > 0 ? {
         type: "Feature",
@@ -169,7 +192,7 @@ export const AddFieldWizard = () => {
   if (loadError) return (
     <div style={{padding: '2rem', display: 'flex', gap: '1rem', alignItems: 'center', color: 'var(--danger)'}}>
       <AlertTriangle size={20} />
-      Maps failed to load. Check your API key and that the Maps JavaScript API + Drawing API are enabled.
+      Maps failed to load. Check your API key and that the Maps JavaScript API is enabled.
     </div>
   );
   if (!isLoaded) return (
@@ -240,15 +263,17 @@ export const AddFieldWizard = () => {
                   zoom={15}
                   onLoad={onMapLoad}
                   onUnmount={onMapUnmount}
-                  onClick={onMapClick}
+                  onClick={onStep1MapClick}
                   options={{
                     mapTypeId: 'satellite',
                     mapTypeControl: false,
                     streetViewControl: false,
                     fullscreenControl: false,
+                    mapId: 'AGRIMESH_MAP',
                   }}
                 >
-                  <Marker position={{ lat: location.lat, lng: location.lng }} />
+                  {/* Pin rendered as overlay instead of deprecated Marker */}
+                  <LocationPin position={{ lat: location.lat, lng: location.lng }} map={mapRef.current} />
                 </GoogleMap>
               </div>
 
@@ -292,55 +317,106 @@ export const AddFieldWizard = () => {
           </div>
         )}
 
-        {/* STEP 2: BOUNDARY */}
+        {/* STEP 2: BOUNDARY — manual click-to-draw */}
         {step === 2 && (
           <div className="wizard-step-content cols-4">
             <div className="wizard-main-col-xl wizard-col-flex tall">
               <div className="wizard-step-header-row">
                 <div>
                   <h2 className="wizard-step-title">Step 2: Draw Field Boundary</h2>
-                  <p className="wizard-step-subtitle">Use the polygon tool to draw the boundary of your field</p>
+                  <p className="wizard-step-subtitle">Click the map to place points around your field boundary</p>
                 </div>
                 <div className="wizard-inline-info">
-                  <Info size={16} /> Draw the boundary as close as possible for accurate insights
+                  <Info size={16} /> Click map corners, then press "Finish Drawing"
                 </div>
               </div>
 
-              <div className="wizard-map-wrapper" style={{ height: '500px', zIndex: 1, position: 'relative' }}>
+              {/* Drawing toolbar */}
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                {!isDrawingMode && boundaryCoords.length === 0 && (
+                  <button
+                    onClick={startDrawing}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem' }}
+                  >
+                    <PenTool size={16} /> Start Drawing
+                  </button>
+                )}
+                {isDrawingMode && (
+                  <>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(34,197,94,0.1)', color: 'var(--success)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>
+                      <MousePointer2 size={16} /> Drawing... ({draftPoints.length} pts)
+                    </span>
+                    <button
+                      onClick={undoLastPoint}
+                      disabled={draftPoints.length === 0}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem', opacity: draftPoints.length === 0 ? 0.4 : 1 }}
+                    >
+                      <Undo2 size={16} /> Undo
+                    </button>
+                    <button
+                      onClick={finishDrawing}
+                      disabled={draftPoints.length < 3}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--success)', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem', opacity: draftPoints.length < 3 ? 0.5 : 1 }}
+                    >
+                      <Check size={16} /> Finish Drawing
+                    </button>
+                    <button
+                      onClick={clearBoundary}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontWeight: '600', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.875rem' }}
+                    >
+                      <X size={16} /> Cancel
+                    </button>
+                  </>
+                )}
+                {boundaryCoords.length > 0 && (
+                  <button
+                    onClick={clearBoundary}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontWeight: '600', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.875rem' }}
+                  >
+                    <Trash2 size={16} /> Clear & Redraw
+                  </button>
+                )}
+              </div>
+
+              <div 
+                className="wizard-map-wrapper" 
+                style={{ 
+                  height: '500px', 
+                  zIndex: 1, 
+                  position: 'relative',
+                  cursor: isDrawingMode ? 'crosshair' : 'default'
+                }}
+              >
                 <GoogleMap
                   mapContainerStyle={mapContainerStyle}
                   center={mapCenter}
                   zoom={18}
                   onLoad={onMapLoad}
                   onUnmount={onMapUnmount}
+                  onClick={onStep2MapClick}
                   options={{
                     mapTypeId: 'satellite',
                     mapTypeControl: true,
                     streetViewControl: false,
                     fullscreenControl: false,
+                    mapId: 'AGRIMESH_MAP',
                   }}
                 >
-                  {boundaryCoords.length === 0 && getControlPosition() && getPolygonMode() && (
-                    <DrawingManager
-                      onPolygonComplete={onPolygonComplete}
+                  {/* Show draft polygon while drawing */}
+                  {draftPoints.length >= 3 && (
+                    <Polygon
+                      paths={draftPoints}
                       options={{
-                        drawingControl: true,
-                        drawingControlOptions: {
-                          position: getControlPosition(),
-                          drawingModes: [getPolygonMode()]
-                        },
-                        polygonOptions: {
-                          fillColor: '#22c55e',
-                          fillOpacity: 0.4,
-                          strokeWeight: 2,
-                          strokeColor: '#22c55e',
-                          clickable: false,
-                          editable: false,
-                          zIndex: 1
-                        }
+                        fillColor: '#22c55e',
+                        fillOpacity: 0.2,
+                        strokeColor: '#22c55e',
+                        strokeOpacity: 0.8,
+                        strokeWeight: 2,
+                        strokeDasharray: '8,4',
                       }}
                     />
                   )}
+                  {/* Show finalized polygon */}
                   {boundaryCoords.length > 0 && (
                     <Polygon
                       paths={boundaryCoords}
@@ -354,15 +430,6 @@ export const AddFieldWizard = () => {
                     />
                   )}
                 </GoogleMap>
-                
-                {boundaryCoords.length > 0 && (
-                  <button 
-                    onClick={clearBoundary}
-                    style={{ position: 'absolute', bottom: '1rem', left: '1rem', zIndex: 10, background: 'var(--surface)', border: '1px solid var(--border)', padding: '0.5rem 1rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', color: 'var(--danger)', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'}}
-                  >
-                    <Trash2 size={16} /> Clear Drawing
-                  </button>
-                )}
               </div>
             </div>
 
@@ -378,11 +445,11 @@ export const AddFieldWizard = () => {
                 </div>
 
                 <div className="wizard-success-banner">
-                  <h4 className="wizard-success-banner-title">Boundary Tips</h4>
+                  <h4 className="wizard-success-banner-title">How to draw</h4>
                   <div className="wizard-success-banner-list">
-                    <div className="wizard-success-banner-item"><div className="wizard-check-circle"><Check size={12} strokeWidth={3} /></div> Use the polygon tool on the map menu</div>
-                    <div className="wizard-success-banner-item"><div className="wizard-check-circle"><Check size={12} strokeWidth={3} /></div> Click corners of your field</div>
-                    <div className="wizard-success-banner-item"><div className="wizard-check-circle"><Check size={12} strokeWidth={3} /></div> Click the first point again to finish</div>
+                    <div className="wizard-success-banner-item"><div className="wizard-check-circle"><Check size={12} strokeWidth={3} /></div> Press "Start Drawing"</div>
+                    <div className="wizard-success-banner-item"><div className="wizard-check-circle"><Check size={12} strokeWidth={3} /></div> Click each corner of your field</div>
+                    <div className="wizard-success-banner-item"><div className="wizard-check-circle"><Check size={12} strokeWidth={3} /></div> Press "Finish Drawing" (min 3 pts)</div>
                   </div>
                 </div>
               </div>
@@ -494,7 +561,8 @@ export const AddFieldWizard = () => {
                       draggable: false,
                       zoomControl: false,
                       scrollwheel: false,
-                      disableDoubleClickZoom: true
+                      disableDoubleClickZoom: true,
+                      mapId: 'AGRIMESH_MAP',
                     }}
                   >
                     {boundaryCoords.length > 0 && (
@@ -584,6 +652,53 @@ export const AddFieldWizard = () => {
       </div>
     </div>
   );
+};
+
+// Simple pin overlay — avoids the deprecated google.maps.Marker
+const LocationPin = ({ position, map }) => {
+  const overlayRef = useRef(null);
+
+  useEffect(() => {
+    if (!map || !position || !window.google) return;
+
+    class PinOverlay extends window.google.maps.OverlayView {
+      constructor(pos) {
+        super();
+        this.pos = pos;
+        this.div = null;
+      }
+      onAdd() {
+        this.div = document.createElement('div');
+        this.div.style.cssText = 'position:absolute;width:24px;height:24px;transform:translate(-50%,-100%)';
+        this.div.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#ef4444" stroke="white" stroke-width="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
+        const panes = this.getPanes();
+        panes.overlayMouseTarget.appendChild(this.div);
+      }
+      draw() {
+        const projection = this.getProjection();
+        const point = projection.fromLatLngToDivPixel(
+          new window.google.maps.LatLng(this.pos.lat, this.pos.lng)
+        );
+        if (point && this.div) {
+          this.div.style.left = point.x + 'px';
+          this.div.style.top = point.y + 'px';
+        }
+      }
+      onRemove() {
+        if (this.div) { this.div.parentNode?.removeChild(this.div); this.div = null; }
+      }
+    }
+
+    const overlay = new PinOverlay(position);
+    overlay.setMap(map);
+    overlayRef.current = overlay;
+
+    return () => {
+      overlay.setMap(null);
+    };
+  }, [map, position]);
+
+  return null;
 };
 
 const StepIndicator = ({ active, current, completed, num, label }) => {

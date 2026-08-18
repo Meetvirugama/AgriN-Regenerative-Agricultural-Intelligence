@@ -27,7 +27,7 @@ export const FieldProvider = ({ children }) => {
     try {
       const cachedFieldId = sessionStorage.getItem(FIELD_ID_SESSION_KEY);
 
-      let fieldId;
+        let fieldId;
 
       if (cachedFieldId) {
         fieldId = cachedFieldId;
@@ -35,6 +35,11 @@ export const FieldProvider = ({ children }) => {
         // First load — call stub-init (idempotent)
         try {
           const { field } = await cropApi.initStub();
+          // field is null when the farmer has no fields yet — that's OK
+          if (!field) {
+            setIsLoading(false);
+            return;
+          }
           fieldId = field.id;
           sessionStorage.setItem(FIELD_ID_SESSION_KEY, fieldId);
         } catch (stubErr) {
