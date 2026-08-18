@@ -113,6 +113,25 @@ export class FieldRepository {
     return row;
   }
 
+  async updateField(fieldId, { name, cropType, cropVariety, sowingDate, irrigationType }) {
+    return queryOne(
+      `UPDATE fields
+       SET name = COALESCE($2, name),
+           crop_type = COALESCE($3, crop_type),
+           crop_variety = COALESCE($4, crop_variety),
+           sowing_date = COALESCE($5::date, sowing_date),
+           irrigation_type = COALESCE($6, irrigation_type),
+           updated_at = NOW()
+       WHERE id = $1
+       RETURNING ${this.#SELECT_FIELDS}`,
+      [fieldId, name ?? null, cropType ?? null, cropVariety ?? null, sowingDate ?? null, irrigationType ?? null],
+    );
+  }
+
+  async deleteField(fieldId) {
+    await execute(`DELETE FROM fields WHERE id = $1`, [fieldId]);
+  }
+
   async createField(farmerId, name, cropType, sowingDate, cropVariety, lat, lng, locationName, areaHectares, boundaryGeojson, irrigationType) {
     const hasPolygon = boundaryGeojson != null;
     const geojsonStr = hasPolygon ? JSON.stringify(boundaryGeojson) : null;

@@ -22,9 +22,14 @@ export const cropApi = {
     });
   },
   getAllFields: async () => request("fields"),
+  deleteField: async (fieldId) =>
+    request(`fields/${fieldId}`, { method: "DELETE" }),
+  updateField: async (fieldId, data) =>
+    request(`fields/${fieldId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
   getDiagnosis: async (fieldId, imageBlob) => {
-    // We mock this slightly since we're using identify-crop right now
-    // In reality this would hit a proper diagnosis endpoint
     return request(`fields/${fieldId}/identify-crop`, {
       method: "POST",
       body: JSON.stringify({ image: "mock_base64" }),

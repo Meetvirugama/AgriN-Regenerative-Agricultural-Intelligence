@@ -65,6 +65,14 @@ export class Layer1Service {
   async getAllFieldsForFarmer(farmerId) {
     return fieldRepo.findFieldsByFarmer(farmerId);
   }
+
+  async updateField(fieldId, data) {
+    return fieldRepo.updateField(fieldId, data);
+  }
+
+  async deleteField(fieldId) {
+    return fieldRepo.deleteField(fieldId);
+  }
 }
 
 export const layer1Service = new Layer1Service();

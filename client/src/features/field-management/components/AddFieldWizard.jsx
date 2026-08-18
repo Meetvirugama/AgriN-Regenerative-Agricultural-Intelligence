@@ -26,6 +26,7 @@ export const AddFieldWizard = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdFieldId, setCreatedFieldId] = useState(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSy_MISSING_KEY_FALLBACK_SO_IT_DOESNT_CRASH",
@@ -143,7 +144,7 @@ export const AddFieldWizard = () => {
         properties: {}
       } : null;
 
-      await cropApi.createField({
+      const newField = await cropApi.createField({
         name: formData.name,
         cropType: formData.crop,
         sowingDate: formData.date,
@@ -152,8 +153,10 @@ export const AddFieldWizard = () => {
         lng: location.lng,
         locationName: location.address,
         areaHectares: parseFloat(areaHectares) || 0,
-        boundaryGeojson: geojson
+        boundaryGeojson: geojson,
+        irrigationType: formData.irrigation,
       });
+      setCreatedFieldId(newField?.id ?? null);
       setStep(4);
     } catch (err) {
       console.error("Failed to create field", err);
@@ -414,11 +417,18 @@ export const AddFieldWizard = () => {
                   <div className="wizard-form-icon-wrapper">
                     <div className="wizard-form-icon warning"><Leaf size={18} /></div>
                     <select className="wizard-form-input with-icon wizard-form-select" value={formData.crop} onChange={(e) => setFormData({...formData, crop: e.target.value})}>
-                      <option value="wheat">Wheat</option>
-                      <option value="rice">Rice</option>
-                      <option value="cotton">Cotton</option>
-                      <option value="maize">Maize</option>
-                      <option value="moong">Moong</option>
+                       <option value="wheat">🌾 Wheat</option>
+                       <option value="rice">🍚 Rice</option>
+                       <option value="cotton">🪡 Cotton</option>
+                       <option value="maize">🌽 Maize</option>
+                       <option value="moong">🫘 Moong</option>
+                       <option value="groundnut">🥜 Groundnut</option>
+                       <option value="sugarcane">🎋 Sugarcane</option>
+                       <option value="soybean">🫘 Soybean</option>
+                       <option value="tomato">🍅 Tomato</option>
+                       <option value="chili">🌶️ Chili</option>
+                       <option value="onion">🧅 Onion</option>
+                       <option value="potato">🥔 Potato</option>
                     </select>
                   </div>
                 </div>
@@ -445,11 +455,15 @@ export const AddFieldWizard = () => {
                   <label className="wizard-form-label">Irrigation Source</label>
                   <div className="wizard-form-icon-wrapper">
                     <div className="wizard-form-icon info"><Droplet size={18} /></div>
-                    <select className="wizard-form-input with-icon wizard-form-select" value={formData.irrigation} onChange={(e) => setFormData({...formData, irrigation: e.target.value})}>
-                      <option>Tube Well</option>
-                      <option>Canal</option>
-                      <option>Rainfed</option>
-                    </select>
+                     <select className="wizard-form-input with-icon wizard-form-select" value={formData.irrigation} onChange={(e) => setFormData({...formData, irrigation: e.target.value})}>
+                       <option value="Tube Well">Tube Well</option>
+                       <option value="Borewell">Borewell</option>
+                       <option value="Canal">Canal</option>
+                       <option value="Well">Well</option>
+                       <option value="Drip">Drip Irrigation</option>
+                       <option value="Sprinkler">Sprinkler</option>
+                       <option value="Rainfed">Rainfed (no irrigation)</option>
+                     </select>
                   </div>
                 </div>
 
@@ -549,14 +563,20 @@ export const AddFieldWizard = () => {
                   </div>
                 </div>
 
-                <div className="wizard-actions" style={{marginTop: '2rem'}}>
-                  <button 
-                    onClick={() => navigate('/fields')} 
-                    className="wizard-btn-solid"
-                  >
-                    View Field Dashboard
-                  </button>
-                </div>
+                 <div className="wizard-actions" style={{marginTop: '2rem', flexDirection: 'column', gap: '0.75rem'}}>
+                   <button 
+                     onClick={() => navigate(createdFieldId ? `/fields/${createdFieldId}` : '/fields')} 
+                     className="wizard-btn-solid"
+                   >
+                     View My Field Dashboard
+                   </button>
+                   <button
+                     onClick={() => navigate('/fields')}
+                     className="wizard-btn-outline"
+                   >
+                     Back to All Fields
+                   </button>
+                 </div>
               </div>
             </div>
           </div>
