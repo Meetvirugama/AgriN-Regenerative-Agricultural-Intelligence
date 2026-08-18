@@ -321,6 +321,10 @@
   overflow-y: auto;
 }
 
+.dashboard-content:has(.intelligence-app-viewport) {
+  overflow: hidden;
+}
+
 @media (max-width: 768px) {
   .dashboard-main {
     margin-left: 0;
