@@ -163,27 +163,29 @@ export const FarmerShell = () => {
                 <Menu size={24} />
               </button>
 
-              {location.pathname === '/alerts' ? (
+              {location.pathname === '/intelligence' ? (
+                <div id="intelligence-header-portal" className="intelligence-header-portal-slot"></div>
+              ) : location.pathname === '/alerts' ? (
                 <div id="alerts-header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
               ) : (
-                <>
-                  <div className="dashboard-header-search">
-                    <Search size={16} />
-                    <input 
-                      type="text" 
-                      placeholder="Search fields, crops, recommendations..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && searchQuery.trim()) {
-                          navigate(`/fields?search=${encodeURIComponent(searchQuery)}`);
-                          setSearchQuery("");
-                        }
-                      }}
-                    />
-                  </div>
+                <div className="dashboard-header-search">
+                  <Search size={16} />
+                  <input 
+                    type="text" 
+                    placeholder="Search fields, crops, recommendations..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchQuery.trim()) {
+                        navigate(`/fields?search=${encodeURIComponent(searchQuery)}`);
+                        setSearchQuery("");
+                      }
+                    }}
+                  />
+                </div>
+              )}
 
-                  <div className="dashboard-header-actions">
+              <div className="dashboard-header-actions">
                     <button 
                       className="dashboard-header-action alerts" 
                       onClick={() => navigate('/alerts')}
@@ -229,8 +231,6 @@ export const FarmerShell = () => {
                       </div>
                     </div>
                   </div>
-                </>
-              )}
             </header>
           )}
 

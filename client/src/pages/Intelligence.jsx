@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Leaf,
@@ -34,6 +35,14 @@ export const Intelligence = () => {
   const [activeFieldFilter, setActiveFieldFilter] = useState("All Fields");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [hoveredPoint, setHoveredPoint] = useState(null);
+  const [headerPortalEl, setHeaderPortalEl] = useState(null);
+
+  useEffect(() => {
+    const el = document.getElementById("intelligence-header-portal");
+    if (el) setHeaderPortalEl(el);
+    document.documentElement.removeAttribute("data-theme");
+    document.body.classList.remove("dark-theme");
+  }, []);
 
   // Dynamic 7-day date range (ending on today)
   const dateRangeLabel = useMemo(() => {
@@ -132,68 +141,62 @@ export const Intelligence = () => {
     return ["All Fields", ...list];
   }, [data?.fieldsList]);
 
+  const unifiedHeaderContent = (
+    <div className="intelligence-unified-nav-bar">
+      <div className="intelligence-unified-left">
+        <div className="intelligence-title-row">
+          <h1 className="intelligence-main-title">Intelligence</h1>
+          <span className="intelligence-ai-pill">
+            <Sparkles size={12} className="text-emerald-500" />
+            Live AI
+          </span>
+        </div>
+      </div>
+
+      {/* SEGMENTED TAB CONTROLS */}
+      <nav className="intelligence-tab-switcher" aria-label="Dashboard Views">
+        <button
+          className={`intelligence-tab-btn ${activeTab === "health" ? "active" : ""}`}
+          onClick={() => setActiveTab("health")}
+          type="button"
+        >
+          <Activity size={15} />
+          <span>Health & Trends</span>
+        </button>
+
+        <button
+          className={`intelligence-tab-btn ${activeTab === "recommendations" ? "active" : ""}`}
+          onClick={() => setActiveTab("recommendations")}
+          type="button"
+        >
+          <ClipboardList size={15} />
+          <span>Recommendations</span>
+          {recommendationsCount > 0 && (
+            <span className="tab-counter-badge">{recommendationsCount}</span>
+          )}
+        </button>
+
+        <button
+          className={`intelligence-tab-btn ${activeTab === "weather" ? "active" : ""}`}
+          onClick={() => setActiveTab("weather")}
+          type="button"
+        >
+          <CloudSun size={15} />
+          <span>Weather & Forecast</span>
+        </button>
+      </nav>
+    </div>
+  );
+
   return (
     <div className="intelligence-app-viewport">
-      {/* ─── 1. TOP HEADER WITH TAB SWITCHER ─── */}
-      <header className="intelligence-top-header">
-        <div className="intelligence-header-left">
-          <div className="intelligence-title-row">
-            <h1 className="intelligence-main-title">Intelligence Dashboard</h1>
-            <span className="intelligence-ai-pill">
-              <Sparkles size={12} className="text-emerald-500" />
-              Live AI
-            </span>
-          </div>
-          <div className="intelligence-feature-tags">
-            <span className="feature-tag">Crop Diagnostics</span>
-            <span className="feature-tag-sep">•</span>
-            <span className="feature-tag">NDVI Trajectories</span>
-            <span className="feature-tag-sep">•</span>
-            <span className="feature-tag">Microclimate Insights</span>
-          </div>
-        </div>
-
-        {/* SEGMENTED TAB CONTROLS */}
-        <nav className="intelligence-tab-switcher" aria-label="Dashboard Views">
-          <button
-            className={`intelligence-tab-btn ${activeTab === "health" ? "active" : ""}`}
-            onClick={() => setActiveTab("health")}
-            type="button"
-          >
-            <Activity size={15} />
-            <span>Health & Trends</span>
-          </button>
-
-          <button
-            className={`intelligence-tab-btn ${activeTab === "recommendations" ? "active" : ""}`}
-            onClick={() => setActiveTab("recommendations")}
-            type="button"
-          >
-            <ClipboardList size={15} />
-            <span>Recommendations</span>
-            {recommendationsCount > 0 && (
-              <span className="tab-counter-badge">{recommendationsCount}</span>
-            )}
-          </button>
-
-          <button
-            className={`intelligence-tab-btn ${activeTab === "weather" ? "active" : ""}`}
-            onClick={() => setActiveTab("weather")}
-            type="button"
-          >
-            <CloudSun size={15} />
-            <span>Weather & Forecast</span>
-          </button>
-        </nav>
-
-        <div className="intelligence-header-right">
-          <button className="intelligence-date-pill" type="button">
-            <Calendar size={14} className="text-text-muted" />
-            <span>{dateRangeLabel}</span>
-            <ChevronDown size={13} className="text-text-muted" />
-          </button>
-        </div>
-      </header>
+      {headerPortalEl ? (
+        createPortal(unifiedHeaderContent, headerPortalEl)
+      ) : (
+        <header className="intelligence-top-header">
+          {unifiedHeaderContent}
+        </header>
+      )}
 
       {/* ─── 2. COMPACT KPI SUMMARY STRIP ─── */}
       <section className="intelligence-kpi-strip">

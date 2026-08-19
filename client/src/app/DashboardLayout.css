@@ -172,10 +172,35 @@
   box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.1);
 }
 
+.intelligence-header-portal-slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-right: 1.5rem;
+}
+
+.intelligence-unified-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.intelligence-unified-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
 .dashboard-header-actions {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 20px;
+  flex-shrink: 0;
 }
 
 .dashboard-header-action {
