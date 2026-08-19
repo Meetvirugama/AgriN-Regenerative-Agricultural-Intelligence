@@ -321,19 +321,55 @@
   overflow-y: auto;
 }
 
-.dashboard-content:has(.intelligence-app-viewport) {
-  overflow: hidden;
+@media (min-width: 769px) {
+  .dashboard-content:has(.intelligence-app-viewport) {
+    overflow: hidden;
+  }
 }
 
 @media (max-width: 768px) {
+  .dashboard-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 50;
+    box-shadow: none;
+  }
+
+  .dashboard-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
   .dashboard-main {
     margin-left: 0;
     width: 100%;
   }
+
   .dashboard-header {
-    padding: 0 20px;
+    height: 60px;
+    padding: 0 16px;
+    gap: 8px;
   }
+
+  .dashboard-header-search {
+    display: none;
+  }
+
+  .dashboard-header-actions {
+    gap: 12px;
+    margin-left: auto;
+  }
+
+  .dashboard-header-profile {
+    padding-left: 12px;
+  }
+
   .dashboard-content {
-    padding: 20px;
+    padding: 14px 12px 28px 12px;
+    overflow-y: auto !important;
+  }
+
+  .dashboard-content:has(.intelligence-app-viewport) {
+    overflow-y: auto !important;
   }
 }

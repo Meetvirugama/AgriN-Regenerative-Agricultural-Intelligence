@@ -26,6 +26,66 @@ import { cropApi } from "../features/crop-context/api/cropApi";
 
 import "./Intelligence.css";
 
+// TEMPORARY DUMMY DATA FOR UI VERIFICATION (Easily removed when requested)
+const DUMMY_INTELLIGENCE_DATA = {
+  locationName: "Green Valley Agro-Station, Punjab",
+  stats: {
+    totalFields: 4,
+    avgHealth: 84,
+    activeAlerts: 2,
+    recommendations: 3,
+  },
+  healthDistribution: {
+    good: 70,
+    moderate: 20,
+    poor: 10,
+  },
+  trendData: [
+    { date: "12 Aug", value: 78 },
+    { date: "13 Aug", value: 80 },
+    { date: "14 Aug", value: 84 },
+    { date: "15 Aug", value: 82 },
+    { date: "16 Aug", value: 86 },
+    { date: "17 Aug", value: 85 },
+    { date: "18 Aug", value: 89 },
+  ],
+  topRecommendations: [
+    {
+      id: "dummy-rec-1",
+      type: "irrigation",
+      title: "Soil Moisture Deficit Warning",
+      desc: "Root zone volumetric water content is down to 18%. Increase drip cycles by 25 mins before afternoon heat spike.",
+      field: "North Plot (Wheat)",
+      priority: "High",
+      action: "Schedule Irrigation",
+    },
+    {
+      id: "dummy-rec-2",
+      type: "pest",
+      title: "Aphid Cluster & Mildew Detection",
+      desc: "Early visual canopy anomalies detected via multi-spectral scan. Apply organic neem oil deterrent within 48 hours.",
+      field: "South Meadow (Mustard)",
+      priority: "High",
+      action: "Log Inspection",
+    },
+    {
+      id: "dummy-rec-3",
+      type: "nutrient",
+      title: "Potassium & Nitrogen Top-Dressing",
+      desc: "Approaching flowering vegetative transition. Recommend N-P-K 12-32-16 application to bolster fruit set vigor.",
+      field: "Greenhouse 1 (Tomato)",
+      priority: "Medium",
+      action: "Apply Fertilizer",
+    },
+  ],
+  fieldsList: [
+    "North Plot (Wheat)",
+    "South Meadow (Mustard)",
+    "Greenhouse 1 (Tomato)",
+    "River Orchard (Apple)",
+  ],
+};
+
 export const Intelligence = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
@@ -86,21 +146,37 @@ export const Intelligence = () => {
     };
   }, []);
 
-  const totalFields = data?.stats?.totalFields ?? 0;
-  const avgHealthValue = data?.stats?.avgHealth ?? 0;
-  const activeAlerts = data?.stats?.activeAlerts ?? 0;
-  const recommendationsCount = data?.stats?.recommendations ?? 0;
+  // Use fetched data or fallback to dummy demonstration data
+  const currentData = data || DUMMY_INTELLIGENCE_DATA;
 
-  const goodPct = data?.healthDistribution?.good ?? (totalFields > 0 ? 100 : 0);
-  const modPct = data?.healthDistribution?.moderate ?? 0;
-  const poorPct = data?.healthDistribution?.poor ?? 0;
+  const totalFields = currentData?.stats?.totalFields ?? 0;
+  const avgHealthValue = currentData?.stats?.avgHealth ?? 0;
+  const activeAlerts = currentData?.stats?.activeAlerts ?? 0;
+  const recommendationsCount = currentData?.stats?.recommendations ?? 0;
+
+  const goodPct = currentData?.healthDistribution?.good ?? (totalFields > 0 ? 100 : 0);
+  const modPct = currentData?.healthDistribution?.moderate ?? 0;
+  const poorPct = currentData?.healthDistribution?.poor ?? 0;
 
   const goodOffset = 0;
   const modOffset = -goodPct;
   const poorOffset = -(goodPct + modPct);
 
-  // Trend chart points calculations (viewBox 0 0 800 180)
-  const trendPoints = data?.trendData?.length ? data.trendData : [];
+  // Dynamic 7-day trend calculations with current dates
+  const trendPoints = useMemo(() => {
+    if (currentData?.trendData?.length) {
+      return currentData.trendData.map((pt, idx) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (currentData.trendData.length - 1 - idx));
+        return {
+          ...pt,
+          date: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+        };
+      });
+    }
+    return [];
+  }, [currentData?.trendData]);
+
   const getPointCoordinates = (index, val) => {
     const total = Math.max(trendPoints.length - 1, 1);
     const x = (index / total) * 740 + 30;
@@ -115,9 +191,9 @@ export const Intelligence = () => {
     : "";
 
   const availableFields = useMemo(() => {
-    const list = data?.fieldsList?.length ? data.fieldsList : [];
+    const list = currentData?.fieldsList?.length ? currentData.fieldsList : [];
     return ["All Fields", ...list];
-  }, [data?.fieldsList]);
+  }, [currentData?.fieldsList]);
 
   return (
     <div className="intelligence-app-viewport">
@@ -203,7 +279,7 @@ export const Intelligence = () => {
         </div>
 
         {/* Avg Health */}
-        <div className="intelligence-kpi-card">
+        <div className="intelligence-kpi-card kpi-health">
           <div className="intelligence-kpi-icon info">
             <TrendingUp size={18} />
           </div>
@@ -219,11 +295,16 @@ export const Intelligence = () => {
                 </span>
               )}
             </div>
+            {totalFields > 0 && (
+              <div className="kpi-mini-gauge-track">
+                <div className={`kpi-mini-gauge-fill ${avgHealthValue >= 70 ? "success" : "warning"}`} style={{ width: `${avgHealthValue}%` }}></div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Active Alerts */}
-        <div className="intelligence-kpi-card">
+        <div className="intelligence-kpi-card kpi-alerts">
           <div className="intelligence-kpi-icon warning">
             <AlertTriangle size={18} />
           </div>
@@ -241,7 +322,7 @@ export const Intelligence = () => {
         </div>
 
         {/* Recommendations */}
-        <div className="intelligence-kpi-card">
+        <div className="intelligence-kpi-card kpi-rec">
           <div className="intelligence-kpi-icon purple">
             <ClipboardList size={18} />
           </div>
@@ -257,7 +338,7 @@ export const Intelligence = () => {
         </div>
       </section>
 
-      {/* ─── 3. TAB CONTENT VIEWS (Flex 1, Zero Scroll) ─── */}
+      {/* ─── 3. TAB CONTENT VIEWS (Flex 1, Zero Scroll Desktop / Native Scroll Mobile) ─── */}
       <main className="intelligence-main-stage">
         {/* ===================================================================
             TAB 1: HEALTH & NDVI TRENDS
@@ -375,6 +456,15 @@ export const Intelligence = () => {
                       </div>
                     </div>
 
+                    {/* Multi-Segment Distribution Gauge */}
+                    <div className="health-dist-bar-wrapper">
+                      <div className="health-dist-bar">
+                        {goodPct > 0 && <div className="dist-segment good" style={{ width: `${goodPct}%` }} title={`Good: ${goodPct}%`}></div>}
+                        {modPct > 0 && <div className="dist-segment mod" style={{ width: `${modPct}%` }} title={`Moderate: ${modPct}%`}></div>}
+                        {poorPct > 0 && <div className="dist-segment poor" style={{ width: `${poorPct}%` }} title={`Poor: ${poorPct}%`}></div>}
+                      </div>
+                    </div>
+
                     <div className="compact-donut-legend">
                       <div className="compact-legend-row">
                         <div className="legend-label-col">
@@ -456,57 +546,65 @@ export const Intelligence = () => {
                       <div className="compact-grid-line bottom"><span className="grid-label">0%</span></div>
                     </div>
 
-                    {/* SVG Polyline */}
-                    <svg className="compact-trend-svg" viewBox="0 0 800 180" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient id="trendGradientCompact" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#16a34a" stopOpacity="0.25" />
-                          <stop offset="70%" stopColor="#22c55e" stopOpacity="0.06" />
-                          <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
+                    {/* Chart Plotting Area */}
+                    <div className="compact-trend-plot-area">
+                      {/* SVG Polyline & Gradient Fill */}
+                      <svg className="compact-trend-svg" viewBox="0 0 800 180" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="trendGradientCompact" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#16a34a" stopOpacity="0.22" />
+                            <stop offset="65%" stopColor="#22c55e" stopOpacity="0.05" />
+                            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
 
-                      {polygonStr && <polygon points={polygonStr} fill="url(#trendGradientCompact)" />}
-                      {polylineStr && (
-                        <polyline
-                          points={polylineStr}
-                          fill="none"
-                          stroke="#16a34a"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      )}
+                        {polygonStr && <polygon points={polygonStr} fill="url(#trendGradientCompact)" />}
+                        {polylineStr && (
+                          <polyline
+                            points={polylineStr}
+                            fill="none"
+                            stroke="#16a34a"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        )}
+                      </svg>
 
-                      {svgPoints.map((pt, idx) => (
-                        <circle
-                          key={idx}
-                          cx={pt.x}
-                          cy={pt.y}
-                          r="4.5"
-                          fill="#ffffff"
-                          stroke="#16a34a"
-                          strokeWidth="2.5"
-                          className="compact-trend-dot"
-                          onMouseEnter={() => setHoveredPoint({ ...trendPoints[idx], ...pt })}
-                          onMouseLeave={() => setHoveredPoint(null)}
-                        />
-                      ))}
-                    </svg>
-
-                    {/* Hover Tooltip */}
-                    {hoveredPoint && (
-                      <div
-                        className="compact-tooltip"
-                        style={{
-                          left: `${(hoveredPoint.x / 800) * 100}%`,
-                          top: `${(hoveredPoint.y / 180) * 100}%`,
-                        }}
-                      >
-                        <span className="tip-date">{hoveredPoint.date}</span>
-                        <strong className="tip-val">{hoveredPoint.value}% NDVI</strong>
+                      {/* Crisp, Non-Distorted High-Res Circular Data Dots */}
+                      <div className="compact-trend-dots-overlay">
+                        {svgPoints.map((pt, idx) => (
+                          <div
+                            key={idx}
+                            className={`compact-trend-dot-node ${hoveredPoint?.idx === idx ? "active" : ""}`}
+                            style={{
+                              left: `${(pt.x / 800) * 100}%`,
+                              top: `${(pt.y / 180) * 100}%`,
+                            }}
+                            onMouseEnter={() => setHoveredPoint({ ...trendPoints[idx], ...pt, idx })}
+                            onMouseLeave={() => setHoveredPoint(null)}
+                            title={`${trendPoints[idx]?.date}: ${trendPoints[idx]?.value}% NDVI`}
+                          >
+                            <span className="dot-inner-core"></span>
+                          </div>
+                        ))}
                       </div>
-                    )}
+
+                      {/* Hover Tooltip */}
+                      {hoveredPoint && (
+                        <div
+                          className="compact-tooltip"
+                          style={{
+                            left: `${(hoveredPoint.x / 800) * 100}%`,
+                            top: `${(hoveredPoint.y / 180) * 100}%`,
+                          }}
+                        >
+                          <span className="tip-date">{hoveredPoint.date}</span>
+                          <strong className="tip-val">{hoveredPoint.value}% NDVI</strong>
+                        </div>
+                      )}
+                    </div>
 
                     {/* X-Axis */}
                     <div className="compact-trend-x-axis">
