@@ -168,7 +168,7 @@ export const FarmerShell = () => {
               ) : location.pathname === '/alerts' ? (
                 <div id="alerts-header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
               ) : location.pathname === '/ask' ? (
-                <div style={{ flex: 1 }}></div>
+                <div id="ask-header-portal" className="intelligence-header-portal-slot hidden md:flex"></div>
               ) : (
                 <div className="dashboard-header-search">
                   <Search size={16} />

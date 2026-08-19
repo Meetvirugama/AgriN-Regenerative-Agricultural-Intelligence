@@ -11,71 +11,23 @@
 }
 
 /* ==========================================================================
-   1. TOP-LEFT EXECUTIVE HEADING
+   1. MOBILE IN-PAGE HEADER (Identical to Intelligence page)
    ========================================================================== */
-.ask-minimal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 0.65rem;
-  border-bottom: 1px solid #e5e7eb;
-  flex-shrink: 0;
-  gap: 1rem;
-  width: 100%;
+.ask-page-header-mobile {
+  display: none;
 }
 
-.ask-header-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-align: left;
-}
-
-.ask-brand-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.65rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
-  flex-shrink: 0;
-}
-
-.ask-title-group {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.ask-title-text {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  margin: 0;
-}
-
-.ask-ai-tag {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #059669;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 0.15rem 0.45rem;
-  border-radius: 9999px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.ask-subtitle-text {
-  font-size: 0.76rem;
-  color: #64748b;
-  margin: 0.15rem 0 0 0;
-  font-weight: 500;
+@media (max-width: 768px) {
+  .ask-page-header-mobile {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.6rem;
+    margin-bottom: 0.4rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
 }
 
 .ask-new-chat-btn {
@@ -84,7 +36,7 @@
   gap: 0.35rem;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  padding: 0.4rem 0.75rem;
+  padding: 0.35rem 0.65rem;
   border-radius: 0.55rem;
   font-size: 0.75rem;
   font-weight: 600;
@@ -98,6 +50,13 @@
   background: #f8fafc;
   color: #0f172a;
   border-color: #cbd5e1;
+}
+
+.ask-new-chat-btn.mobile {
+  padding: 0.3rem 0.55rem;
+  font-size: 0.7rem;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
 }
 
 /* ==========================================================================

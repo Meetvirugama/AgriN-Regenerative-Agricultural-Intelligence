@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { 
   Leaf, 
   Bug, 
   CloudSun, 
   Droplet, 
-  Send,
   Sparkles,
   Loader2,
   User,
@@ -43,8 +43,14 @@ export const Ask = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [headerPortalEl, setHeaderPortalEl] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  useEffect(() => {
+    const el = document.getElementById("ask-header-portal");
+    if (el) setHeaderPortalEl(el);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -117,35 +123,61 @@ export const Ask = () => {
     setInput("");
   };
 
+  const desktopHeaderContent = (
+    <div className="intelligence-unified-nav-bar">
+      <div className="intelligence-unified-left">
+        <div className="intelligence-title-row">
+          <h1 className="intelligence-main-title">Ask AgriMesh</h1>
+          <span className="intelligence-ai-pill">
+            <Sparkles size={12} className="text-emerald-500" />
+            AI Agronomist
+          </span>
+        </div>
+      </div>
+
+      {messages.length > 0 && (
+        <button 
+          onClick={handleClearChat}
+          className="ask-new-chat-btn"
+          type="button"
+          title="Start new conversation"
+        >
+          <RotateCcw size={13} />
+          <span>New Chat</span>
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="ask-minimal-viewport">
-      {/* ─── 1. MINIMAL EXECUTIVE HEADER ─── */}
-      <header className="ask-minimal-header">
-        <div className="ask-header-brand">
-          <div className="ask-brand-icon">
-            <Sparkles size={18} />
+      {headerPortalEl && createPortal(desktopHeaderContent, headerPortalEl)}
+
+      {/* MOBILE IN-PAGE HEADER (Visible on Mobile only, identical to Intelligence page) */}
+      <div className="ask-page-header-mobile">
+        <div className="intelligence-mobile-title-block">
+          <div className="intelligence-title-row">
+            <h1 className="intelligence-main-title">Ask AgriMesh</h1>
+            <span className="intelligence-ai-pill">
+              <Sparkles size={12} className="text-emerald-500" />
+              AI Agronomist
+            </span>
           </div>
-          <div>
-            <div className="ask-title-group">
-              <h1 className="ask-title-text">Ask AgriMesh</h1>
-              <span className="ask-ai-tag">AI Agronomist</span>
-            </div>
-            <p className="ask-subtitle-text">Instant expert guidance on crop health, soil, and field management</p>
-          </div>
+          <p className="intelligence-mobile-subtitle">Instant expert guidance on crop health, soil & field management</p>
         </div>
 
         {messages.length > 0 && (
           <button 
             onClick={handleClearChat}
-            className="ask-new-chat-btn"
+            className="ask-new-chat-btn mobile"
             type="button"
             title="Start new conversation"
           >
-            <RotateCcw size={14} />
+            <RotateCcw size={13} />
             <span>New Chat</span>
           </button>
         )}
-      </header>
+      </div>
 
       {/* ─── 2. MAIN CONVERSATION CANVAS ─── */}
       <main className="ask-chat-canvas">
