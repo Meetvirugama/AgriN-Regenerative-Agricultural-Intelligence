@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronRight, Leaf, MapPin, Calendar } from "lucide-react";
 import { useAuth } from "../app/providers/AuthProvider";
+import { cropApi } from "../features/crop-context/api/cropApi";
 
 import "./Onboarding.css";
+
 
 export const Onboarding = () => {
   const { farmer } = useAuth();
@@ -20,20 +22,20 @@ export const Onboarding = () => {
     if (!fieldName || !sowingDate) return;
     setIsSubmitting(true);
     try {
-      // Create Field API Call
-      const res = await fetch("http://localhost:8000/api/v1/fields/stub-init", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      // Create the field using the real API
+      const newField = await cropApi.createField({
+        name: fieldName,
+        cropType,
+        sowingDate,
       });
-      if (!res.ok) throw new Error("Failed to create field");
-      const data = await res.json();
-      // Navigate to the new field dashboard
-      navigate(`/field/${data.field.id}`);
+      // Navigate to the fields list so the user can see their new field
+      navigate("/fields");
     } catch (err) {
       console.error(err);
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="onboarding-container">

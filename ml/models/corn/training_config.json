@@ -1,0 +1,18 @@
+{
+  "crop": "corn",
+  "dataset": "PlantVillage",
+  "model": "efficientnet_b0",
+  "epochs": 15,
+  "batch_size": 32,
+  "learning_rate": 0.0003,
+  "weight_decay": 0.0001,
+  "image_size": 224,
+  "seed": 42,
+  "num_classes": 4,
+  "classes": [
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot",
+    "Corn_(maize)___Common_rust_",
+    "Corn_(maize)___Northern_Leaf_Blight",
+    "Corn_(maize)___healthy"
+  ]
+}

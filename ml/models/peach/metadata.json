@@ -1,0 +1,27 @@
+{
+  "crop": "Peach",
+  "dataset": "PlantVillage",
+  "model": "efficientnet_b0",
+  "classes": [
+    "Peach___Bacterial_spot",
+    "Peach___healthy"
+  ],
+  "training_images": 2125,
+  "validation_images": 266,
+  "test_images": 266,
+  "test_accuracy": 1.0,
+  "test_macro_f1": 1.0,
+  "best_validation_macro_f1": 0.9920613603127704,
+  "best_epoch": 13,
+  "image_size": 224,
+  "normalization_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "normalization_std": [
+    0.229,
+    0.224,
+    0.225
+  ]
+}

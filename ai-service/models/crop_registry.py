@@ -25,7 +25,7 @@ from typing import Optional
 # Root of project
 ROOT = Path(__file__).resolve().parents[2]
 MODEL_REGISTRY_FILE = ROOT / "data" / "model_registry.json"
-MODELS_DIR = ROOT / "data" / "models"
+MODELS_DIR = ROOT / "ml" / "models"  # Trained .pth artifacts live here
 TAXONOMY_FILE = ROOT / "data" / "taxonomy.json"
 
 

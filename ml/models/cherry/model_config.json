@@ -1,0 +1,27 @@
+{
+  "crop": "cherry",
+  "model": "efficientnet_b0",
+  "image_size": 224,
+  "num_classes": 2,
+  "classes": [
+    "Cherry_(including_sour)___Powdery_mildew",
+    "Cherry_(including_sour)___healthy"
+  ],
+  "normalization": {
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "test_accuracy": 0.9895833333333334,
+  "test_macro_f1": 0.9894909688013136,
+  "validation_macro_f1": 1.0,
+  "best_epoch": 6,
+  "batch_size": 32
+}

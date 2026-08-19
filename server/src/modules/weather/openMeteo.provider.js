@@ -1,4 +1,3 @@
-import { MockWeatherProvider } from "./weather.provider.js";
 
 // Open-Meteo free API — no key required
 const OPEN_METEO_BASE = "https://api.open-meteo.com/v1";
@@ -94,14 +93,10 @@ export class OpenMeteoProvider {
 }
 
 /**
- * Factory — returns the real Open-Meteo provider in all environments.
- * Falls back to MockWeatherProvider if the env var USE_MOCK_WEATHER=true.
+ * Factory — always returns the real Open-Meteo provider (Google's free weather API).
+ * No API key required.
  */
 export function createWeatherProvider() {
-  if (process.env.USE_MOCK_WEATHER === "true") {
-    console.log("[Weather] Using MockWeatherProvider (USE_MOCK_WEATHER=true)");
-    return new MockWeatherProvider();
-  }
-  console.log("[Weather] Using OpenMeteoProvider (real API, no key required)");
+  console.log("[Weather] Using OpenMeteoProvider (Open-Meteo free API, no key required)");
   return new OpenMeteoProvider();
 }

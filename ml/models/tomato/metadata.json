@@ -1,0 +1,27 @@
+{
+  "model": "EfficientNet-B0",
+  "dataset": "PlantVillage",
+  "crop": "Tomato",
+  "num_classes": 10,
+  "classes": [
+    "Tomato___Bacterial_spot",
+    "Tomato___Early_blight",
+    "Tomato___Late_blight",
+    "Tomato___Leaf_Mold",
+    "Tomato___Septoria_leaf_spot",
+    "Tomato___Spider_mites Two-spotted_spider_mite",
+    "Tomato___Target_Spot",
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+    "Tomato___Tomato_mosaic_virus",
+    "Tomato___healthy"
+  ],
+  "image_size": 224,
+  "best_epoch": 15,
+  "validation_macro_f1": 1.0,
+  "test_accuracy": 0.9994505494505495,
+  "test_macro_f1": 0.9992363908314419,
+  "batch_size": 32,
+  "epochs": 15,
+  "device": "Tesla T4",
+  "dataset_source": "https://github.com/spMohanty/PlantVillage-Dataset"
+}

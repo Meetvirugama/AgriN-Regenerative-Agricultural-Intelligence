@@ -1,0 +1,29 @@
+{
+  "crop": "grape",
+  "model": "efficientnet_b0",
+  "image_size": 224,
+  "num_classes": 4,
+  "classes": [
+    "Grape___Black_rot",
+    "Grape___Esca_(Black_Measles)",
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
+    "Grape___healthy"
+  ],
+  "normalization": {
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "test_accuracy": 1.0,
+  "test_macro_f1": 1.0,
+  "validation_macro_f1": 1.0,
+  "best_epoch": 4,
+  "batch_size": 32
+}

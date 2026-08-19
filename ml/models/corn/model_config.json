@@ -1,0 +1,29 @@
+{
+  "crop": "corn",
+  "model": "efficientnet_b0",
+  "image_size": 224,
+  "num_classes": 4,
+  "classes": [
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot",
+    "Corn_(maize)___Common_rust_",
+    "Corn_(maize)___Northern_Leaf_Blight",
+    "Corn_(maize)___healthy"
+  ],
+  "normalization": {
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "test_accuracy": 0.9896907216494846,
+  "test_macro_f1": 0.9853341103341103,
+  "validation_macro_f1": 0.979376995062638,
+  "best_epoch": 15,
+  "batch_size": 32
+}

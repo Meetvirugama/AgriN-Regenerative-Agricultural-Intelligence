@@ -56,3 +56,4 @@ reports/
 *.pth
 *.keras
 
+*.zip

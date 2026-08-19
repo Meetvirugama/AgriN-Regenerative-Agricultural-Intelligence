@@ -3,6 +3,9 @@ import json
 import io
 from google import genai
 from google.genai import types
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Initialize Gemini Client
 # It will automatically pick up GEMINI_API_KEY from environment variables
@@ -12,7 +15,7 @@ if not api_key:
     print("WARNING: GEMINI_API_KEY not set. Gemini API calls will fail.")
     client = None
 else:
-    client = genai.Client()
+    client = genai.Client(api_key=api_key)
 
 def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, schema_class=None, extra_images: list = None) -> dict:
     """
@@ -22,8 +25,8 @@ def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, s
     if not client:
         raise ValueError("GEMINI_API_KEY is not configured.")
 
-    # We use gemini-2.5-flash as the default multimodal model
-    model = 'gemini-2.5-flash'
+    # We use gemini-3.6-flash as the default multimodal model
+    model = 'gemini-3.6-flash'
     
     contents = [
         types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
@@ -42,10 +45,8 @@ def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, s
     contents.append(prompt)
 
     # If a schema is provided, enforce structured JSON output
+    # Avoid response_schema to prevent AFC hang
     config_args = {"temperature": 0.2}
-    if schema_class:
-        config_args["response_mime_type"] = "application/json"
-        config_args["response_schema"] = schema_class
 
     config = types.GenerateContentConfig(**config_args)
     
@@ -56,8 +57,35 @@ def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, s
     )
     
     if schema_class:
-        return json.loads(response.text)
-    return {"text": response.text}
+        try:
+            text = response.text
+            if not text:
+                print("[Gemini] Empty response text.")
+                raise ValueError("Empty response text")
+            import re
+            match = re.search(r'\{[\s\S]*\}|\[[\s\S]*\]', text)
+            if match:
+                return json.loads(match.group(0))
+            return json.loads(text)
+        except Exception as e:
+            print(f"[Gemini] Error parsing response: {e}, returning fallback dict.")
+            return {
+                "image_quality": "poor",
+                "condition_name": "Undetermined",
+                "condition_category": "unknown",
+                "confidence": 0.0,
+                "severity": "unknown",
+                "what_is_happening": "Unable to determine.",
+                "why_is_it_happening": "AI processing failed.",
+                "treatment_recommendation": "Consult an expert.",
+                "action_timing": "Immediately",
+                "monitor": "Check again later",
+                "requires_expert": True,
+                "escalation_triggered": True,
+                "differential_diagnosis": [{"condition": "Unknown", "probability": 1.0, "rationale": "Fallback"}],
+                "evidence": [{"source": "image", "finding": "Image analysis failed.", "supports_primary": True}]
+            }
+    return {"text": getattr(response, 'text', '')}
 
 def generate_text(prompt: str, schema_class=None) -> dict:
     """
@@ -66,7 +94,7 @@ def generate_text(prompt: str, schema_class=None) -> dict:
     if not client:
         raise ValueError("GEMINI_API_KEY is not configured.")
 
-    model = 'gemini-2.5-flash'
+    model = 'gemini-3.6-flash'
     
     config_args = {"temperature": 0.4}
     if schema_class:

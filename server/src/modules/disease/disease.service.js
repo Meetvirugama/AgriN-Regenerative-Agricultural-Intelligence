@@ -7,7 +7,7 @@ import { satelliteService } from "../satellite/satellite.service.js";
 import { cropStateRepo } from "../../db/repositories/farmerRepository.js";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
-const VISION_MODEL = "gemini-2.0-flash";
+const VISION_MODEL = "gemini-3.6-flash";
 
 /** Python FastAPI AI service URL (Layer 07 inference) */
 const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL ?? "http://localhost:8001";

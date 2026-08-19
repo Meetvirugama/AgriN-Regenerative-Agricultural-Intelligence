@@ -52,10 +52,10 @@ KNOWN_CONDITIONS = {
         "Potato Healthy",
     ],
     "corn": [
-        "Corn (maize) Cercospora Leaf Spot / Gray Leaf Spot",
-        "Corn (maize) Common Rust",
-        "Corn (maize) Northern Leaf Blight",
-        "Corn (maize) Healthy",
+        "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot",
+        "Corn_(maize)___Common_rust_",
+        "Corn_(maize)___Northern_Leaf_Blight",
+        "Corn_(maize)___healthy",
     ],
     "apple": [
         "Apple Apple Scab",
@@ -64,10 +64,26 @@ KNOWN_CONDITIONS = {
         "Apple Healthy",
     ],
     "grape": [
-        "Grape Black Rot",
-        "Grape Esca (Black Measles)",
-        "Grape Leaf Blight (Isariopsis Leaf Spot)",
-        "Grape Healthy",
+        "Grape___Black_rot",
+        "Grape___Esca_(Black_Measles)",
+        "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
+        "Grape___healthy",
+    ],
+    "cherry": [
+        "Cherry_(including_sour)___Powdery_mildew",
+        "Cherry_(including_sour)___healthy",
+    ],
+    "peach": [
+        "Peach___Bacterial_spot",
+        "Peach___healthy",
+    ],
+    "pepper": [
+        "Pepper,_bell___Bacterial_spot",
+        "Pepper,_bell___healthy",
+    ],
+    "strawberry": [
+        "Strawberry___Leaf_scorch",
+        "Strawberry___healthy",
     ],
     "wheat": [
         "Wheat Brown Rust",

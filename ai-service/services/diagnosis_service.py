@@ -154,7 +154,27 @@ STRICT RULES:
 9. escalation_triggered = true if severity is critical OR requires_expert is true.
 10. Use simple language a farmer can understand.
 
-Respond with structured JSON matching FullDiagnosisResponse schema exactly."""
+Respond ONLY with valid JSON in EXACTLY this format (no markdown code blocks, no other text):
+{
+  "condition_name": "Specific condition name",
+  "condition_category": "disease | pest | nutrient_deficiency | water_stress | heat_stress | healthy | unknown",
+  "fused_confidence": 0.0-1.0,
+  "severity": "critical | high | medium | low | none | unknown",
+  "requires_expert": true | false,
+  "escalation_triggered": true | false,
+  "primary_condition": "String describing primary condition",
+  "what_is_happening": "Brief description",
+  "why_is_it_happening": "Explanation",
+  "treatment_recommendation": "What should the farmer do",
+  "action_timing": "When should they act",
+  "monitor": "What signs to watch for",
+  "differentials": [
+    { "condition": "name", "probability": 0.0-1.0 }
+  ],
+  "evidence": [
+    { "source": "image | weather | satellite | soil | crop_stage | field_history", "finding": "finding text" }
+  ]
+}"""
 
 
 def diagnose(

@@ -23,10 +23,10 @@ const timeSince = (date) => {
 router.get("/", async (req, res) => {
   try {
     // No auth on legacy /api/alerts — return empty array gracefully
-    if (!req.user?.id) {
+    if (!req.farmer?.sub) {
       return res.json([]);
     }
-    const farmerId = req.user.id;
+    const farmerId = req.farmer.sub;
     const dbAlerts = await alertsRepository.findAlertsByFarmerId(farmerId);
     
     // Map to the format expected by the frontend
@@ -50,7 +50,7 @@ router.get("/", async (req, res) => {
 // Endpoint to create a new alert (for testing/seeding)
 router.post("/", async (req, res) => {
   try {
-    const farmerId = req.user.id;
+    const farmerId = req.farmer.sub;
     const newAlert = await alertsRepository.createAlert(farmerId, req.body);
     res.status(201).json(newAlert);
   } catch (err) {

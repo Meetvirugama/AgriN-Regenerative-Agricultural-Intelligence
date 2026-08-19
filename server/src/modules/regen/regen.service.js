@@ -19,17 +19,12 @@ export class Layer10Service {
 
     const latestSoil = layer4Service.getActiveSoilProfile(fieldId);
 
-    // Mock Field History (Layer 12 substitute)
-    const mockHistory = [
-      { season: "Kharif 2025", crop: "Rice", yield: "Average" },
-      { season: "Rabi 2024", crop: "Wheat", yield: "High" },
-    ];
-
     const context = {
       crop_type: field.crop_type,
       soil: latestSoil,
-      history: mockHistory,
+      history: [], // Field history (Layer 12) — not yet implemented
     };
+
 
     const aiResult = await regenAI.generatePlan(context);
 

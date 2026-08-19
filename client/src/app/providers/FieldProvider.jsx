@@ -27,25 +27,24 @@ export const FieldProvider = ({ children }) => {
     try {
       const cachedFieldId = sessionStorage.getItem(FIELD_ID_SESSION_KEY);
 
-        let fieldId;
+      let fieldId;
 
       if (cachedFieldId) {
         fieldId = cachedFieldId;
       } else {
-        // First load — call stub-init (idempotent)
+        // First load — fetch the farmer's fields from the real API
         try {
-          const { field } = await cropApi.initStub();
-          // field is null when the farmer has no fields yet — that's OK
-          if (!field) {
+          const fields = await cropApi.getAllFields();
+          if (!fields || fields.length === 0) {
+            // Farmer has no fields yet — that's OK, pages like /fields/add work without one
             setIsLoading(false);
             return;
           }
-          fieldId = field.id;
+          fieldId = fields[0].id;
           sessionStorage.setItem(FIELD_ID_SESSION_KEY, fieldId);
-        } catch (stubErr) {
-          // stub-init failed (network error, missing route, etc.)
-          // Don't crash the shell — pages like /fields/add work without an active field.
-          console.warn("[FieldProvider] stub-init failed (non-fatal):", stubErr.message);
+        } catch (fetchErr) {
+          // Fields fetch failed — don't crash the shell
+          console.warn("[FieldProvider] getAllFields failed (non-fatal):", fetchErr.message);
           setIsLoading(false);
           return;
         }
@@ -68,6 +67,7 @@ export const FieldProvider = ({ children }) => {
       setIsLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchField();

@@ -6,32 +6,31 @@ import { cropRoutes } from "../../modules/crop/crop.routes.js";
 // Mock the pool to avoid real DB connections in this basic integration test
 vi.mock("../../db/connection", () => ({
   pool: {
-    query: vi.fn().mockResolvedValue({ rows: [{ id: "mock-farmer-1" }] }),
+    query: vi.fn().mockResolvedValue({ rows: [] }),
+  },
+  queryOne: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock("../../modules/crop/crop.service", () => ({
+  layer2Service: {
+    getFieldCropState: vi
+      .fn()
+      .mockResolvedValue({ field_id: "test-field-1", current_stage: "vegetative" }),
   },
 }));
 
-vi.mock("../../modules/field/field.service", () => ({
-  layer1Service: {
-    getOrCreateMockFarmer: vi
-      .fn()
-      .mockResolvedValue({ id: "mock-farmer-1", name: "Ravi Kumar" }),
-    getOrCreateStubField: vi
-      .fn()
-      .mockResolvedValue({ id: "mock-field-1", name: "North Plot" }),
-  },
-}));
-
-describe("Fields API Integration", () => {
+describe("Crop Routes Integration", () => {
   const app = express();
   app.use(express.json());
   app.use("/api/v1/fields", cropRoutes);
 
-  it("POST /api/v1/fields/stub-init should return farmer and field", async () => {
-    const res = await request(app).post("/api/v1/fields/stub-init").expect(200);
+  it("GET /api/v1/fields/:fieldId/crop-state should return crop state", async () => {
+    const res = await request(app)
+      .get("/api/v1/fields/test-field-1/crop-state")
+      .expect(200);
 
-    expect(res.body).toHaveProperty("farmer");
-    expect(res.body).toHaveProperty("field");
-    expect(res.body.farmer.id).toBe("mock-farmer-1");
-    expect(res.body.field.id).toBe("mock-field-1");
+    expect(res.body).toHaveProperty("field_id");
+    expect(res.body).toHaveProperty("current_stage");
   });
 });
+

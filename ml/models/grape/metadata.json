@@ -1,0 +1,29 @@
+{
+  "crop": "Grape",
+  "dataset": "PlantVillage",
+  "model": "EfficientNet-B0",
+  "classes": [
+    "Grape___Black_rot",
+    "Grape___Esca_(Black_Measles)",
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)",
+    "Grape___healthy"
+  ],
+  "training_images": 3248,
+  "validation_images": 406,
+  "test_images": 408,
+  "test_accuracy": 1.0,
+  "test_macro_f1": 1.0,
+  "best_validation_macro_f1": 1.0,
+  "best_epoch": 4,
+  "image_size": 224,
+  "normalization_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "normalization_std": [
+    0.229,
+    0.224,
+    0.225
+  ]
+}

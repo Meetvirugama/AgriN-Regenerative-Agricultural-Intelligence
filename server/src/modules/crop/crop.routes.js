@@ -1,22 +1,7 @@
 import { Router } from "express";
 import { layer2Service } from "../crop/crop.service.js";
-import { layer1Service } from "../field/field.service.js";
 
 const router = Router();
-
-/**
- * POST /api/fields/stub-init
- * Idempotent — returns (or creates) the canonical mock farmer + field.
- */
-router.post("/stub-init", async (req, res, next) => {
-  try {
-    const farmer = await layer1Service.getOrCreateMockFarmer();
-    const field = await layer1Service.getOrCreateStubField(farmer.id);
-    res.json({ farmer, field });
-  } catch (err) {
-    next(err);
-  }
-});
 
 // GET /api/fields/:fieldId/crop-state
 router.get("/:fieldId/crop-state", async (req, res, next) => {

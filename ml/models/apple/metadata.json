@@ -1,0 +1,29 @@
+{
+  "crop": "Apple",
+  "dataset": "PlantVillage",
+  "model": "EfficientNet-B0",
+  "classes": [
+    "Apple___Apple_scab",
+    "Apple___Black_rot",
+    "Apple___Cedar_apple_rust",
+    "Apple___healthy"
+  ],
+  "training_images": 2530,
+  "validation_images": 316,
+  "test_images": 318,
+  "test_accuracy": 0.9905660377358491,
+  "test_macro_f1": 0.9894000927800269,
+  "best_validation_macro_f1": 1.0,
+  "best_epoch": 6,
+  "image_size": 224,
+  "normalization_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "normalization_std": [
+    0.229,
+    0.224,
+    0.225
+  ]
+}

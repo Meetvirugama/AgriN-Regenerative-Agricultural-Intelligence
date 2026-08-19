@@ -6,16 +6,14 @@ const router = Router();
 // Get aggregated global insights for a specific field's context
 router.get("/fields/:fieldId/global-insights", async (req, res) => {
   try {
-    res.json({
-      fieldId: req.params.fieldId,
-      insights: [
-        { title: "Global Yield Trend", description: "Wheat yields are up 5% globally this season.", relevance: "High" },
-        { title: "Pest Migration", description: "Desert locusts sighted in neighboring region.", relevance: "Medium" }
-      ]
-    });
+    const { fieldId } = req.params;
+    const insights = await CrossBorderService.getGlobalInsights(fieldId);
+    res.json({ fieldId, insights });
   } catch (error) {
+    console.error("[CrossBorder] Error:", error.message);
     res.status(500).json({ error: "Failed to fetch cross-border insights" });
   }
 });
 
 export default router;
+

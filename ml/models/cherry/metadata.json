@@ -1,0 +1,27 @@
+{
+  "crop": "Cherry",
+  "dataset": "PlantVillage",
+  "model": "efficientnet_b0",
+  "classes": [
+    "Cherry_(including_sour)___Powdery_mildew",
+    "Cherry_(including_sour)___healthy"
+  ],
+  "training_images": 1524,
+  "validation_images": 190,
+  "test_images": 192,
+  "test_accuracy": 0.9895833333333334,
+  "test_macro_f1": 0.9894909688013136,
+  "best_validation_macro_f1": 1.0,
+  "best_epoch": 6,
+  "image_size": 224,
+  "normalization_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "normalization_std": [
+    0.229,
+    0.224,
+    0.225
+  ]
+}

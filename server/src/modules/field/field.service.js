@@ -1,13 +1,12 @@
 import { farmerRepo, fieldRepo } from "../../db/repositories/farmerRepository.js";
 
-/** Stable IDs for the development stub farmer and field. */
+/** Stable ID for the development stub farmer. */
 export const STUB_FARMER_ID = "11111111-1111-1111-1111-111111111111";
-export const STUB_FIELD_ID = "22222222-2222-2222-2222-222222222222";
 
 export class Layer1Service {
   /**
-   * Idempotent — returns the existing mock farmer or creates one.
-   * Uses upsert so this is safe to call on every app boot.
+   * Idempotent — returns the existing stub farmer or creates one.
+   * Used only in unauthenticated dev mode (STUB_FARMER_ID fallback).
    */
   async getOrCreateMockFarmer() {
     return farmerRepo.upsertFarmer({
@@ -15,27 +14,6 @@ export class Layer1Service {
       phone_number: "+1234567890",
       name: "Meena",
       preferred_language: "en",
-    });
-  }
-
-  /**
-   * Idempotent stub field — always returns the same field_stub_1.
-   * If the field doesn't exist yet, creates it sown 45 days ago.
-   */
-  async getOrCreateStubField(farmerId) {
-    const existing = await fieldRepo.findFieldById(STUB_FIELD_ID);
-    if (existing) return existing;
-
-    const date45DaysAgo = new Date();
-    date45DaysAgo.setDate(date45DaysAgo.getDate() - 45);
-
-    return fieldRepo.upsertField({
-      id: STUB_FIELD_ID,
-      farmer_id: farmerId,
-      name: "Main Plot",
-      crop_type: "wheat",
-      crop_variety: null,
-      sowing_date: date45DaysAgo.toISOString().split("T")[0],
     });
   }
 
@@ -76,3 +54,4 @@ export class Layer1Service {
 }
 
 export const layer1Service = new Layer1Service();
+

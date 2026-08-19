@@ -228,22 +228,15 @@ async def quality_check(image: UploadFile = File(...)):
 @router.get("/models")
 async def list_models():
     """
-    Section 34 — Model registry.
-    Returns available model versions and their supported crops/classes.
-    Currently using Gemini 2.5 Flash as the vision backbone.
-    Will list PyTorch models once trained.
+    Returns all registered active models and their status.
+    PyTorch models report real accuracy from training metadata.
     """
+    from services.vision_inference import vision_predictor
     return {
-        "models": [
-            {
-                "model_name": "gemini-vision-fusion",
-                "model_version": "v0.1-alpha",
-                "backbone": "gemini-2.5-flash",
-                "type": "LLM-vision + context-fusion",
-                "status": "active",
-                "crops_supported": list(KNOWN_CONDITIONS.keys()),
-                "notes": "Gemini Vision baseline. Replace with trained EfficientNet once evaluated.",
-            }
+        "models": vision_predictor.model_info(),
+        "pytorch_crops": vision_predictor.list_supported_crops(),
+        "gemini_fallback_crops": [
+            crop for crop in KNOWN_CONDITIONS.keys()
+            if crop not in vision_predictor.list_supported_crops() and crop != "default"
         ],
-        "next_model": "tomato-efficientnet-b0-v0.1 (pending training on PlantVillage+PlantDoc)",
     }

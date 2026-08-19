@@ -96,9 +96,8 @@ app.get("/health", async (_req, res) => {
   });
 });
 
+
 // ─── API v1 Routes ───────────────────────────────────────────────────────────
-// stub-init is unprotected during development (Phase 4: add requireAuth once
-// the client login flow is complete)
 
 // Field-scoped routes
 app.use("/api/v1/fields", fieldRoutes);
@@ -144,22 +143,8 @@ app.use("/api/escalations", escalationRoutes);
 // /api/alerts — frontend calls this without /v1 prefix
 app.use("/api/alerts", alertsRoutes);
 
-// /api/fields/stub-init — FieldProvider calls this to seed the active field
-app.post("/api/fields/stub-init", async (req, res) => {
-  try {
-    const { layer1Service, STUB_FARMER_ID } = await import("./modules/field/field.service.js");
-    await layer1Service.getOrCreateMockFarmer();
-    const fields = await layer1Service.getAllFieldsForFarmer(STUB_FARMER_ID);
-    if (fields.length === 0) {
-      // No fields yet — return null gracefully so the shell still renders
-      return res.json({ field: null });
-    }
-    res.json({ field: fields[0] });
-  } catch (err) {
-    console.error("[stub-init]", err.message);
-    res.status(500).json({ error: { message: err.message } });
-  }
-});
+
+
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────
 

@@ -5,17 +5,17 @@ import {
   AlertTriangle, 
   ClipboardList, 
   Info,
-  ChevronDown,
   Droplet,
   Bug,
   Sun,
-  CloudRain,
-  Wind,
   Loader2
 } from "lucide-react";
 import { cropApi } from "../features/crop-context/api/cropApi";
 
+
+
 import "./Intelligence.css";
+
 
 export const Intelligence = () => {
   const [data, setData] = useState(null);
@@ -44,11 +44,6 @@ export const Intelligence = () => {
           <h1 className="intelligence-title">Intelligence Dashboard</h1>
           <p className="intelligence-subtitle">AI-powered insights and recommendations for your fields</p>
         </div>
-        <button className="intelligence-header-btn">
-          <CalendarIcon size={16} className="text-text-muted" /> 
-          12 Jun - 18 Jun 2025 
-          <ChevronDown size={16} className="text-text-muted" />
-        </button>
       </div>
 
       {/* STATS ROW */}
@@ -164,26 +159,18 @@ export const Intelligence = () => {
               <div className="intelligence-trend-line bottom"><span className="intelligence-trend-y-label">0%</span></div>
             </div>
 
-            <svg className="intelligence-trend-svg" viewBox="0 0 800 200" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <polygon points="0,50 150,20 300,30 450,20 600,40 750,15 800,20 800,200 0,200" fill="url(#trendGradient)" />
-              <polyline points="0,50 150,20 300,30 450,20 600,40 750,15 800,20" fill="none" stroke="#22c55e" strokeWidth="3" />
-              <circle cx="0" cy="50" r="4" fill="white" stroke="#22c55e" strokeWidth="2" />
-              <circle cx="150" cy="20" r="4" fill="white" stroke="#22c55e" strokeWidth="2" />
-              <circle cx="300" cy="30" r="4" fill="white" stroke="#22c55e" strokeWidth="2" />
-              <circle cx="450" cy="20" r="4" fill="white" stroke="#22c55e" strokeWidth="2" />
-              <circle cx="600" cy="40" r="4" fill="white" stroke="#22c55e" strokeWidth="2" />
-              <circle cx="750" cy="15" r="4" fill="white" stroke="#22c55e" strokeWidth="2" />
-              <circle cx="800" cy="20" r="4" fill="white" stroke="#22c55e" strokeWidth="2" />
-            </svg>
+            {isLoading ? (
+              <div className="intelligence-loader-wrapper">
+                <Loader2 size={32} className="intelligence-donut-spinner" />
+              </div>
+            ) : (
+              <div className="intelligence-loader-wrapper" style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center" }}>
+                Health trend data will appear once satellite observations are available for your fields.
+              </div>
+            )}
 
             <div className="intelligence-trend-x-axis">
-              <span>12 Jun</span><span>13 Jun</span><span>14 Jun</span><span>15 Jun</span><span>16 Jun</span><span>17 Jun</span><span>18 Jun</span>
+              <span>Day 1</span><span>Day 2</span><span>Day 3</span><span>Day 4</span><span>Day 5</span><span>Day 6</span><span>Day 7</span>
             </div>
           </div>
 
@@ -250,63 +237,13 @@ export const Intelligence = () => {
               <h3 className="intelligence-widget-title">Weather Overview</h3>
               <Info size={16} className="text-text-muted" />
             </div>
-            <button className="intelligence-filter-btn">
-              Madhopur, UP <ChevronDown size={16} className="text-text-muted" />
-            </button>
           </div>
 
           <div className="intelligence-weather-overview">
-            <div className="intelligence-weather-current">
-              <div className="intelligence-weather-main-row">
-                <Sun size={48} className="intelligence-weather-main-icon" />
-                <div>
-                  <h2 className="intelligence-weather-temp">32°C</h2>
-                  <p className="intelligence-weather-desc">Sunny</p>
-                </div>
-              </div>
-              <div className="intelligence-weather-details">
-                <div className="intelligence-weather-detail-row">
-                  <div className="intelligence-weather-detail-label"><Droplet size={16} /> Humidity</div>
-                  <span className="intelligence-weather-detail-value">42%</span>
-                </div>
-                <div className="intelligence-weather-detail-row">
-                  <div className="intelligence-weather-detail-label"><Wind size={16} /> Wind</div>
-                  <span className="intelligence-weather-detail-value">12 km/h</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="intelligence-weather-forecast">
-              <div className="intelligence-weather-forecast-day">
-                <span className="intelligence-weather-day-label">Thu</span>
-                <Sun size={24} className="text-warning" />
-                <div className="intelligence-weather-day-high">33°</div>
-                <div className="intelligence-weather-day-label">22°</div>
-              </div>
-              <div className="intelligence-weather-forecast-day">
-                <span className="intelligence-weather-day-label">Fri</span>
-                <Sun size={24} className="text-warning" />
-                <div className="intelligence-weather-day-high">34°</div>
-                <div className="intelligence-weather-day-label">23°</div>
-              </div>
-              <div className="intelligence-weather-forecast-day">
-                <span className="intelligence-weather-day-label">Sat</span>
-                <CloudRain size={24} className="text-text-muted" />
-                <div className="intelligence-weather-day-high">32°</div>
-                <div className="intelligence-weather-day-label">22°</div>
-              </div>
-              <div className="intelligence-weather-forecast-day">
-                <span className="intelligence-weather-day-label">Sun</span>
-                <CloudRain size={24} className="text-info" />
-                <div className="intelligence-weather-day-high">30°</div>
-                <div className="intelligence-weather-day-label">21°</div>
-              </div>
-              <div className="intelligence-weather-forecast-day">
-                <span className="intelligence-weather-day-label">Mon</span>
-                <Sun size={24} className="text-warning" />
-                <div className="intelligence-weather-day-high">31°</div>
-                <div className="intelligence-weather-day-label">22°</div>
-              </div>
+            <div className="intelligence-loader-wrapper" style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center", padding: "2rem" }}>
+              <Sun size={32} style={{ opacity: 0.3, marginBottom: "0.5rem" }} />
+              <p>Weather data loads from your field's location.</p>
+              <p style={{ marginTop: "0.25rem" }}>Add a field with GPS coordinates to see the forecast here.</p>
             </div>
           </div>
 
@@ -319,12 +256,3 @@ export const Intelligence = () => {
     </div>
   );
 };
-
-const CalendarIcon = ({ size, className }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-    <line x1="16" y1="2" x2="16" y2="6"></line>
-    <line x1="8" y1="2" x2="8" y2="6"></line>
-    <line x1="3" y1="10" x2="21" y2="10"></line>
-  </svg>
-);

@@ -19,26 +19,19 @@ import {
   ImagePlus
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { cropApi } from "../features/crop-context/api/cropApi";
+import { diagnosisApi } from "../features/disease-diagnosis/api/diagnosisApi";
+import { useActiveField } from "../app/providers/FieldProvider";
 
 import "./Diagnosis.css";
 
 export const Diagnosis = () => {
+  const { activeFieldId } = useActiveField();
   const [result, setResult] = useState(null);
   const [activeTab, setActiveTab] = useState('upload'); // 'upload', 'result', 'previous'
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [history, setHistory] = useState([
-    {
-      disease: "Leaf Rust (Puccinia triticina)",
-      confidence: 85,
-      crop: "Wheat",
-      date: "12 May 2025, 02:45 PM",
-      id: "DIAG-2025-0512-0245",
-      imageUrl: "https://images.unsplash.com/photo-1587334274328-64186a80aeee?w=800&q=80"
-    }
-  ]);
+  const [history, setHistory] = useState([]);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -52,40 +45,40 @@ export const Diagnosis = () => {
 
   const handleDiagnose = async () => {
     if (!selectedFile) return;
+    if (!activeFieldId) {
+      console.warn("[Diagnosis] No active field selected.");
+      return;
+    }
 
     setIsUploading(true);
     try {
-      // Stub: in reality we'd convert file to Base64 or FormData and use selected field ID
-      const data = await cropApi.getDiagnosis("field_mock_1", selectedFile);
+      // Convert file to base64 data URL
+      const base64Image = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
+      });
+
+      const data = await diagnosisApi.diagnoseCrop(activeFieldId, base64Image);
       const newResult = {
-        disease: "Brown Spot (Bipolaris sorokiniana)",
-        confidence: 92,
-        crop: data.identified_crop || "Wheat",
+        disease: data.disease_name || data.diagnosis || "Unknown",
+        confidence: data.confidence ? Math.round(data.confidence * 100) : null,
+        crop: data.crop_type || "Unknown",
         date: new Date().toLocaleString(),
-        id: `DIAG-${Date.now()}`,
-        imageUrl: previewUrl
+        id: data.diagnosis_id || `DIAG-${Date.now()}`,
+        imageUrl: previewUrl,
       };
       setResult(newResult);
       setHistory(prev => [newResult, ...prev]);
       setActiveTab('result');
     } catch (err) {
       console.error("Diagnosis failed:", err);
-      // Fallback for demo if backend fails
-      const newResult = {
-        disease: "Brown Spot (Bipolaris sorokiniana)",
-        confidence: 88,
-        crop: "Wheat",
-        date: new Date().toLocaleString(),
-        id: `DIAG-${Date.now()}`,
-        imageUrl: previewUrl
-      };
-      setResult(newResult);
-      setHistory(prev => [newResult, ...prev]);
-      setActiveTab('result');
     } finally {
       setIsUploading(false);
     }
   };
+
 
   const resetUpload = () => {
     setResult(null);

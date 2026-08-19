@@ -1,12 +1,13 @@
 import { request } from "../../../services/apiClient";
 
 export const cropApi = {
-  initStub: async () => request("fields/stub-init", { method: "POST" }),
   fetchCropState: async (fieldId) => request(`fields/${fieldId}/crop-state`),
-  identifyCrop: async (fieldId, _imageBlob) => {
+  identifyCrop: async (fieldId, imageBlob) => {
+    const formData = new FormData();
+    formData.append("image", imageBlob);
     return request(`fields/${fieldId}/identify-crop`, {
       method: "POST",
-      body: JSON.stringify({ image: "mock_base64" }),
+      body: formData,
     });
   },
   overrideCropState: async (fieldId, data) => {
@@ -29,14 +30,7 @@ export const cropApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-  getDiagnosis: async (fieldId, imageBlob) => {
-    return request(`fields/${fieldId}/identify-crop`, {
-      method: "POST",
-      body: JSON.stringify({ image: "mock_base64" }),
-    });
-  },
   getAlerts: async () => request("alerts"),
-  getExperts: async () => request("experts"),
   getIntelligence: async () => request("intelligence"),
   getRecentChats: async () => request("chat/recent"),
   sendChatMessage: async (message) => {
@@ -44,5 +38,6 @@ export const cropApi = {
       method: "POST",
       body: JSON.stringify({ message }),
     });
-  }
+  },
 };
+
