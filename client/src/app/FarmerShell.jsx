@@ -30,7 +30,7 @@ const NAV_ITEMS = [
   { label: "Crop Diagnosis", path: "/diagnosis", icon: Stethoscope },
 ];
 
-const SidebarNavItem = ({ item, isActive, activeAlertsCount }) => {
+const SidebarNavItem = ({ item, isActive, activeAlertsCount, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   const Icon = item.icon;
   return (
@@ -39,6 +39,7 @@ const SidebarNavItem = ({ item, isActive, activeAlertsCount }) => {
       className={`dashboard-nav-item ${isActive ? "active" : ""}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
     >
       <div className="dashboard-nav-item-content">
         <Icon size={18} strokeWidth={2} isHovered={isHovered} />
@@ -53,7 +54,7 @@ const SidebarNavItem = ({ item, isActive, activeAlertsCount }) => {
   );
 };
 
-const FooterNavItem = ({ to, icon: Icon, label }) => {
+const FooterNavItem = ({ to, icon: Icon, label, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   return (
     <Link
@@ -61,6 +62,7 @@ const FooterNavItem = ({ to, icon: Icon, label }) => {
       className="dashboard-nav-item"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
     >
       <div className="dashboard-nav-item-content">
         <Icon size={18} strokeWidth={2} isHovered={isHovered} /> {label}
@@ -105,24 +107,26 @@ export const FarmerShell = () => {
         
         {isMobileMenuOpen && (
           <div 
-            className="fixed inset-0 bg-black/50 z-20 md:hidden transition-opacity"
+            className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
         )}
 
         <aside className={`dashboard-sidebar ${isMobileMenuOpen ? "open" : ""}`}>
           <div className="dashboard-sidebar-header">
-            <div className="dashboard-logo">
-              <div className="dashboard-logo-icon">
+            <div className="dashboard-sidebar-logo">
+              <div className="dashboard-sidebar-logo-icon">
                 <Sprout size={24} strokeWidth={2.5} />
               </div>
               <span>AgriMesh</span>
             </div>
             <button 
-              className="md:hidden text-text-muted hover:text-text-main p-1"
+              className="md:hidden text-text-muted hover:text-text-main p-2 rounded-lg hover:bg-slate-100 cursor-pointer flex items-center justify-center border-none bg-transparent"
               onClick={() => setIsMobileMenuOpen(false)}
+              type="button"
+              aria-label="Close menu"
             >
-              <X size={24} />
+              <X size={22} />
             </button>
           </div>
 
@@ -135,6 +139,7 @@ export const FarmerShell = () => {
                   item={item} 
                   isActive={isActive} 
                   activeAlertsCount={activeAlertsCount} 
+                  onClick={() => setIsMobileMenuOpen(false)}
                 />
               );
             })}
@@ -142,8 +147,8 @@ export const FarmerShell = () => {
 
           <div className="dashboard-sidebar-footer">
             <div className="dashboard-sidebar-divider"></div>
-            <FooterNavItem to="/profile" icon={UserIcon} label="Profile" />
-            <FooterNavItem to="/settings" icon={GearIcon} label="Settings" />
+            <FooterNavItem to="/profile" icon={UserIcon} label="Profile" onClick={() => setIsMobileMenuOpen(false)} />
+            <FooterNavItem to="/settings" icon={GearIcon} label="Settings" onClick={() => setIsMobileMenuOpen(false)} />
           </div>
         </aside>
 
@@ -158,27 +163,31 @@ export const FarmerShell = () => {
                 <Menu size={24} />
               </button>
 
-              {location.pathname === '/alerts' ? (
+              {location.pathname === '/intelligence' ? (
+                <div id="intelligence-header-portal" className="intelligence-header-portal-slot hidden md:flex"></div>
+              ) : location.pathname === '/alerts' ? (
                 <div id="alerts-header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
+              ) : location.pathname === '/ask' ? (
+                <div style={{ flex: 1 }}></div>
               ) : (
-                <>
-                  <div className="dashboard-header-search">
-                    <Search size={16} />
-                    <input 
-                      type="text" 
-                      placeholder="Search fields, crops, recommendations..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && searchQuery.trim()) {
-                          navigate(`/fields?search=${encodeURIComponent(searchQuery)}`);
-                          setSearchQuery("");
-                        }
-                      }}
-                    />
-                  </div>
+                <div className="dashboard-header-search">
+                  <Search size={16} />
+                  <input 
+                    type="text" 
+                    placeholder="Search fields, crops, recommendations..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchQuery.trim()) {
+                        navigate(`/fields?search=${encodeURIComponent(searchQuery)}`);
+                        setSearchQuery("");
+                      }
+                    }}
+                  />
+                </div>
+              )}
 
-                  <div className="dashboard-header-actions">
+              <div className="dashboard-header-actions">
                     <button 
                       className="dashboard-header-action alerts" 
                       onClick={() => navigate('/alerts')}
@@ -224,8 +233,6 @@ export const FarmerShell = () => {
                       </div>
                     </div>
                   </div>
-                </>
-              )}
             </header>
           )}
 

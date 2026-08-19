@@ -4,7 +4,8 @@
   animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 6rem);
+  height: calc(100vh - 136px);
+  overflow: hidden;
 }
 
 .wizard-content-wrapper {
@@ -15,7 +16,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
   padding-bottom: 2rem;
 }
 
