@@ -5,9 +5,80 @@ import { alertsRepository } from "../../db/repositories/alertsRepository.js";
 const router = Router();
 const fieldRepository = new FieldRepository();
 
+// TEMPORARY DUMMY DATA FOR UI VERIFICATION (Toggle to false or delete when requested)
+const USE_DUMMY_INTELLIGENCE_DATA = true;
+
 // Endpoint to fetch dynamic real intelligence data
 router.get("/", async (req, res) => {
   try {
+    if (USE_DUMMY_INTELLIGENCE_DATA) {
+      // Dynamic 7-day trend values ending today
+      const trendData = [];
+      const baseValues = [78, 80, 84, 82, 86, 85, 89];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+        trendData.push({
+          date: dateStr,
+          value: baseValues[6 - i] || 85,
+        });
+      }
+
+      const dummyData = {
+        locationName: "Green Valley Agro-Station, Punjab",
+        stats: {
+          totalFields: 4,
+          avgHealth: 84,
+          activeAlerts: 2,
+          recommendations: 3,
+        },
+        healthDistribution: {
+          good: 70,
+          moderate: 20,
+          poor: 10,
+        },
+        trendData,
+        topRecommendations: [
+          {
+            id: "dummy-rec-1",
+            type: "irrigation",
+            title: "Soil Moisture Deficit Warning",
+            desc: "Root zone volumetric water content is down to 18%. Increase drip cycles by 25 mins before afternoon heat spike.",
+            field: "North Plot (Wheat)",
+            priority: "High",
+            action: "Schedule Irrigation",
+          },
+          {
+            id: "dummy-rec-2",
+            type: "pest",
+            title: "Aphid Cluster & Mildew Detection",
+            desc: "Early visual canopy anomalies detected via multi-spectral scan. Apply organic neem oil deterrent within 48 hours.",
+            field: "South Meadow (Mustard)",
+            priority: "High",
+            action: "Log Inspection",
+          },
+          {
+            id: "dummy-rec-3",
+            type: "nutrient",
+            title: "Potassium & Nitrogen Top-Dressing",
+            desc: "Approaching flowering vegetative transition. Recommend N-P-K 12-32-16 application to bolster fruit set vigor.",
+            field: "Greenhouse 1 (Tomato)",
+            priority: "Medium",
+            action: "Apply Fertilizer",
+          },
+        ],
+        fieldsList: [
+          "North Plot (Wheat)",
+          "South Meadow (Mustard)",
+          "Greenhouse 1 (Tomato)",
+          "River Orchard (Apple)",
+        ],
+      };
+
+      return res.json(dummyData);
+    }
+
     const farmerId = req.user?.id;
     const fields = farmerId ? await fieldRepository.findFieldsByFarmer(farmerId) : [];
     const alerts = farmerId ? await alertsRepository.findAlertsByFarmerId(farmerId) : [];
