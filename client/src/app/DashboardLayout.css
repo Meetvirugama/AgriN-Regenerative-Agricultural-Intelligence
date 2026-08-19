@@ -347,8 +347,10 @@
 }
 
 @media (min-width: 769px) {
-  .dashboard-content:has(.intelligence-app-viewport) {
-    overflow: hidden;
+  .dashboard-content:has(.intelligence-app-viewport),
+  .dashboard-content:has(.ask-minimal-viewport) {
+    overflow: hidden !important;
+    padding: 16px 36px 20px 36px;
   }
 }
 
@@ -401,8 +403,9 @@
     box-sizing: border-box;
   }
 
-  .dashboard-content:has(.intelligence-app-viewport) {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+  .dashboard-content:has(.intelligence-app-viewport),
+  .dashboard-content:has(.ask-minimal-viewport) {
+    overflow: hidden !important;
+    padding: 10px 14px;
   }
 }
