@@ -34,8 +34,6 @@
   --danger: #ef4444;
 }
 
-/* Removed the prefers-color-scheme: dark media query to enforce light theme globally across the app to match mockups */
-
 * {
   box-sizing: border-box;
   margin: 0;
