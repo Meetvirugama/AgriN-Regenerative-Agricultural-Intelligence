@@ -194,8 +194,18 @@ export const Intelligence = () => {
     <div className="intelligence-app-viewport">
       {headerPortalEl && createPortal(unifiedHeaderContent, headerPortalEl)}
 
-      {/* MOBILE IN-PAGE TAB SWITCHER (Visible on Mobile only) */}
+      {/* MOBILE IN-PAGE HEADER (Visible on Mobile only) */}
       <div className="intelligence-page-header-mobile">
+        <div className="intelligence-mobile-title-block">
+          <div className="intelligence-title-row">
+            <h1 className="intelligence-main-title">Intelligence</h1>
+            <span className="intelligence-ai-pill">
+              <Sparkles size={12} className="text-emerald-500" />
+              Live AI
+            </span>
+          </div>
+          <p className="intelligence-mobile-subtitle">Crop Diagnostics • Satellite NDVI • Microclimate</p>
+        </div>
         {renderTabSwitcher()}
       </div>
 
