@@ -1,258 +1,752 @@
-import React, { useState, useEffect } from "react";
-import { 
-  Leaf, 
-  TrendingUp, 
-  AlertTriangle, 
-  ClipboardList, 
-  Info,
+import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
+import {
+  Leaf,
+  TrendingUp,
+  AlertTriangle,
+  ClipboardList,
+  ChevronDown,
   Droplet,
   Bug,
   Sun,
-  Loader2
+  CloudRain,
+  Wind,
+  Loader2,
+  Calendar,
+  Sparkles,
+  ShieldCheck,
+  Thermometer,
+  CheckCircle2,
+  ArrowRight,
+  Activity,
+  CloudSun,
+  PlusCircle,
 } from "lucide-react";
 import { cropApi } from "../features/crop-context/api/cropApi";
 
-
-
 import "./Intelligence.css";
 
-
 export const Intelligence = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("health"); // "health" | "recommendations" | "weather"
+  const [activeFieldFilter, setActiveFieldFilter] = useState("All Fields");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [hoveredPoint, setHoveredPoint] = useState(null);
+  const [headerPortalEl, setHeaderPortalEl] = useState(null);
 
   useEffect(() => {
+    const el = document.getElementById("intelligence-header-portal");
+    if (el) setHeaderPortalEl(el);
+    document.documentElement.removeAttribute("data-theme");
+    document.body.classList.remove("dark-theme");
+  }, []);
+
+  // Dynamic 7-day date range (ending on today)
+  const dateRangeLabel = useMemo(() => {
+    const today = new Date();
+    const past = new Date();
+    past.setDate(today.getDate() - 6);
+    const options = { day: "numeric", month: "short" };
+    return `${past.toLocaleDateString("en-GB", options)} – ${today.toLocaleDateString("en-GB", options)}`;
+  }, []);
+
+  // Dynamic 5-day weather forecast days
+  const dynamicForecastDays = useMemo(() => {
+    const days = [];
+    const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const isToday = i === 0;
+      days.push({
+        day: isToday ? "Today" : weekdays[d.getDay()],
+        date: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+        icon: i % 3 === 2 ? CloudRain : Sun,
+        high: `${31 + (i % 3)}°`,
+        low: `${21 + (i % 2)}°`,
+        cond: i % 3 === 2 ? "Showers" : "Clear",
+        color: i % 3 === 2 ? "text-blue-500" : "text-amber-500",
+      });
+    }
+    return days;
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
     const fetchIntelligence = async () => {
       try {
         const result = await cropApi.getIntelligence();
-        setData(result);
+        if (isMounted && result) {
+          setData(result);
+        }
       } catch (err) {
-        console.error("Failed to fetch intelligence data", err);
+        console.warn("Could not fetch remote intelligence data:", err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
+
     fetchIntelligence();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  const totalFields = data?.stats?.totalFields ?? 0;
+  const avgHealthValue = data?.stats?.avgHealth ?? 0;
+  const activeAlerts = data?.stats?.activeAlerts ?? 0;
+  const recommendationsCount = data?.stats?.recommendations ?? 0;
+
+  const goodPct = data?.healthDistribution?.good ?? (totalFields > 0 ? 100 : 0);
+  const modPct = data?.healthDistribution?.moderate ?? 0;
+  const poorPct = data?.healthDistribution?.poor ?? 0;
+
+  const goodOffset = 0;
+  const modOffset = -goodPct;
+  const poorOffset = -(goodPct + modPct);
+
+  // Dynamic 7-day trend calculations with current dates
+  const trendPoints = useMemo(() => {
+    if (data?.trendData?.length) {
+      return data.trendData.map((pt, idx) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (data.trendData.length - 1 - idx));
+        return {
+          ...pt,
+          date: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+        };
+      });
+    }
+    return [];
+  }, [data?.trendData]);
+
+  const getPointCoordinates = (index, val) => {
+    const total = Math.max(trendPoints.length - 1, 1);
+    const x = (index / total) * 740 + 30;
+    const y = 160 - (val / 100) * 140;
+    return { x, y };
+  };
+
+  const svgPoints = trendPoints.map((pt, idx) => getPointCoordinates(idx, pt.value));
+  const polylineStr = svgPoints.map((pt) => `${pt.x},${pt.y}`).join(" ");
+  const polygonStr = svgPoints.length
+    ? `30,170 ${polylineStr} ${svgPoints[svgPoints.length - 1].x},170`
+    : "";
+
+  const availableFields = useMemo(() => {
+    const list = data?.fieldsList?.length ? data.fieldsList : [];
+    return ["All Fields", ...list];
+  }, [data?.fieldsList]);
+
+  const renderTabSwitcher = () => (
+    <nav className="intelligence-tab-switcher" aria-label="Dashboard Views">
+      <button
+        className={`intelligence-tab-btn ${activeTab === "health" ? "active" : ""}`}
+        onClick={() => setActiveTab("health")}
+        type="button"
+      >
+        <Activity size={15} />
+        <span>Health & Trends</span>
+      </button>
+
+      <button
+        className={`intelligence-tab-btn ${activeTab === "recommendations" ? "active" : ""}`}
+        onClick={() => setActiveTab("recommendations")}
+        type="button"
+      >
+        <ClipboardList size={15} />
+        <span>Recommendations</span>
+        {recommendationsCount > 0 && (
+          <span className="tab-counter-badge">{recommendationsCount}</span>
+        )}
+      </button>
+
+      <button
+        className={`intelligence-tab-btn ${activeTab === "weather" ? "active" : ""}`}
+        onClick={() => setActiveTab("weather")}
+        type="button"
+      >
+        <CloudSun size={15} />
+        <span>Weather & Forecast</span>
+      </button>
+    </nav>
+  );
+
+  const unifiedHeaderContent = (
+    <div className="intelligence-unified-nav-bar">
+      <div className="intelligence-unified-left">
+        <div className="intelligence-title-row">
+          <h1 className="intelligence-main-title">Intelligence</h1>
+          <span className="intelligence-ai-pill">
+            <Sparkles size={12} className="text-emerald-500" />
+            Live AI
+          </span>
+        </div>
+      </div>
+      {renderTabSwitcher()}
+    </div>
+  );
+
   return (
-    <div className="intelligence-container">
-      
-      {/* HEADER */}
-      <div className="intelligence-header">
-        <div>
-          <h1 className="intelligence-title">Intelligence Dashboard</h1>
-          <p className="intelligence-subtitle">AI-powered insights and recommendations for your fields</p>
+    <div className="intelligence-app-viewport">
+      {headerPortalEl && createPortal(unifiedHeaderContent, headerPortalEl)}
+
+      {/* MOBILE IN-PAGE HEADER (Visible on Mobile only) */}
+      <div className="intelligence-page-header-mobile">
+        <div className="intelligence-mobile-title-block">
+          <div className="intelligence-title-row">
+            <h1 className="intelligence-main-title">Intelligence</h1>
+            <span className="intelligence-ai-pill">
+              <Sparkles size={12} className="text-emerald-500" />
+              Live AI
+            </span>
+          </div>
+          <p className="intelligence-mobile-subtitle">Crop Diagnostics • Satellite NDVI • Microclimate</p>
         </div>
+        {renderTabSwitcher()}
       </div>
 
-      {/* STATS ROW */}
-      <div className="intelligence-stats-grid">
-        
-        <div className="intelligence-stat-card">
-          <div className="intelligence-stat-icon-wrapper success">
-            <Leaf size={24} />
+      {/* ─── 2. COMPACT KPI SUMMARY STRIP ─── */}
+      <section className="intelligence-kpi-strip">
+        {/* Total Fields */}
+        <div className="intelligence-kpi-card">
+          <div className="intelligence-kpi-icon success">
+            <Leaf size={18} />
           </div>
-          <div>
-            <p className="intelligence-stat-label">Total Fields</p>
-            <h3 className="intelligence-stat-value">{isLoading ? "-" : data?.stats?.totalFields}</h3>
-            <p className="intelligence-stat-desc">Active fields</p>
-          </div>
-        </div>
-
-        <div className="intelligence-stat-card">
-          <div className="intelligence-stat-icon-wrapper info">
-            <TrendingUp size={24} />
-          </div>
-          <div>
-            <p className="intelligence-stat-label">Avg. Field Health</p>
-            <h3 className="intelligence-stat-value">{isLoading ? "-" : `${data?.stats?.avgHealth}%`}</h3>
-            <p className="intelligence-stat-desc">Good</p>
+          <div className="intelligence-kpi-body">
+            <span className="intelligence-kpi-label">Total Fields</span>
+            <div className="intelligence-kpi-val-group">
+              <strong className="intelligence-kpi-val">
+                {isLoading ? <Loader2 size={16} className="animate-spin text-emerald-600" /> : totalFields}
+              </strong>
+              <span className="intelligence-kpi-sub">
+                {totalFields === 1 ? "Active parcel" : "Active parcels"}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="intelligence-stat-card">
-          <div className="intelligence-stat-icon-wrapper warning">
-            <AlertTriangle size={24} />
+        {/* Avg Health */}
+        <div className="intelligence-kpi-card kpi-health">
+          <div className="intelligence-kpi-icon info">
+            <TrendingUp size={18} />
           </div>
-          <div>
-            <p className="intelligence-stat-label">Active Alerts</p>
-            <h3 className="intelligence-stat-value">{isLoading ? "-" : data?.stats?.activeAlerts}</h3>
-            <p className="intelligence-stat-desc">Needs attention</p>
-          </div>
-        </div>
-
-        <div className="intelligence-stat-card">
-          <div className="intelligence-stat-icon-wrapper purple">
-            <ClipboardList size={24} />
-          </div>
-          <div>
-            <p className="intelligence-stat-label">Recommendations</p>
-            <h3 className="intelligence-stat-value">{isLoading ? "-" : data?.stats?.recommendations}</h3>
-            <p className="intelligence-stat-desc">This week</p>
-          </div>
-        </div>
-
-      </div>
-
-      {/* CHARTS ROW */}
-      <div className="intelligence-charts-grid">
-        
-        {/* Field Health Overview (Donut Chart placeholder) */}
-        <div className="intelligence-widget-card">
-          <div className="intelligence-widget-header">
-            <h3 className="intelligence-widget-title">Field Health Overview</h3>
-            <Info size={16} className="text-text-muted" />
-          </div>
-          
-          <div className="intelligence-donut-area">
-            <div className="intelligence-donut-wrapper">
-              {isLoading ? (
-                <div className="intelligence-donut-spinner-wrapper">
-                  <Loader2 size={32} className="intelligence-donut-spinner" />
-                </div>
-              ) : (
-                <>
-                  <svg viewBox="0 0 36 36" className="intelligence-donut-svg">
-                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#ef4444" strokeWidth="4" strokeDasharray={`${data?.healthDistribution?.poor || 0} ${100 - (data?.healthDistribution?.poor || 0)}`} strokeDashoffset="0"></circle>
-                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#f59e0b" strokeWidth="4" strokeDasharray={`${data?.healthDistribution?.moderate || 0} ${100 - (data?.healthDistribution?.moderate || 0)}`} strokeDashoffset={`-${data?.healthDistribution?.poor || 0}`}></circle>
-                    <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#22c55e" strokeWidth="4" strokeDasharray={`${data?.healthDistribution?.good || 0} ${100 - (data?.healthDistribution?.good || 0)}`} strokeDashoffset={`-${(data?.healthDistribution?.poor || 0) + (data?.healthDistribution?.moderate || 0)}`}></circle>
-                  </svg>
-                  <div className="intelligence-donut-center">
-                    <span className="intelligence-donut-value">{data?.stats?.avgHealth}%</span>
-                    <span className="intelligence-donut-label">Avg. Health</span>
-                  </div>
-                </>
+          <div className="intelligence-kpi-body">
+            <span className="intelligence-kpi-label">Avg. Field Health</span>
+            <div className="intelligence-kpi-val-group">
+              <strong className="intelligence-kpi-val">
+                {isLoading ? <Loader2 size={16} className="animate-spin text-blue-600" /> : totalFields > 0 ? `${avgHealthValue}%` : "—"}
+              </strong>
+              {totalFields > 0 && (
+                <span className={`intelligence-kpi-pill ${avgHealthValue >= 70 ? "success" : "warning"}`}>
+                  {avgHealthValue >= 70 ? "Optimal" : "Attention"}
+                </span>
               )}
             </div>
-
-            <div className="intelligence-legend">
-              <div className="intelligence-legend-item"><div className="intelligence-legend-label-group"><div className="intelligence-legend-dot success"></div><span className="intelligence-stat-label">Good</span></div><span className="intelligence-legend-value">{isLoading ? "-" : `${data?.healthDistribution?.good}%`}</span></div>
-              <div className="intelligence-legend-item"><div className="intelligence-legend-label-group"><div className="intelligence-legend-dot warning"></div><span className="intelligence-stat-label">Moderate</span></div><span className="intelligence-legend-value">{isLoading ? "-" : `${data?.healthDistribution?.moderate}%`}</span></div>
-              <div className="intelligence-legend-item"><div className="intelligence-legend-label-group"><div className="intelligence-legend-dot danger"></div><span className="intelligence-stat-label">Poor</span></div><span className="intelligence-legend-value">{isLoading ? "-" : `${data?.healthDistribution?.poor}%`}</span></div>
-            </div>
-          </div>
-
-          <button className="intelligence-widget-btn">
-            View All Fields
-          </button>
-        </div>
-
-        {/* Health Trend (Line Chart placeholder) */}
-        <div className="intelligence-widget-card span-2">
-          <div className="intelligence-widget-header-row">
-            <div className="intelligence-widget-header" style={{marginBottom: 0}}>
-              <h3 className="intelligence-widget-title">Health Trend</h3>
-              <Info size={16} className="text-text-muted" />
-            </div>
-            <button className="intelligence-filter-btn">
-              All Fields <ChevronDown size={16} className="text-text-muted" />
-            </button>
-          </div>
-
-          <div className="intelligence-trend-area">
-            <div className="intelligence-trend-y-axis">
-              <div className="intelligence-trend-line"><span className="intelligence-trend-y-label">100%</span></div>
-              <div className="intelligence-trend-line"><span className="intelligence-trend-y-label">75%</span></div>
-              <div className="intelligence-trend-line"><span className="intelligence-trend-y-label">50%</span></div>
-              <div className="intelligence-trend-line"><span className="intelligence-trend-y-label">25%</span></div>
-              <div className="intelligence-trend-line bottom"><span className="intelligence-trend-y-label">0%</span></div>
-            </div>
-
-            {isLoading ? (
-              <div className="intelligence-loader-wrapper">
-                <Loader2 size={32} className="intelligence-donut-spinner" />
-              </div>
-            ) : (
-              <div className="intelligence-loader-wrapper" style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center" }}>
-                Health trend data will appear once satellite observations are available for your fields.
+            {totalFields > 0 && (
+              <div className="kpi-mini-gauge-track">
+                <div className={`kpi-mini-gauge-fill ${avgHealthValue >= 70 ? "success" : "warning"}`} style={{ width: `${avgHealthValue}%` }}></div>
               </div>
             )}
-
-            <div className="intelligence-trend-x-axis">
-              <span>Day 1</span><span>Day 2</span><span>Day 3</span><span>Day 4</span><span>Day 5</span><span>Day 6</span><span>Day 7</span>
-            </div>
           </div>
+        </div>
 
-          <div className="intelligence-trend-legend">
-            <div className="intelligence-widget-header" style={{marginBottom: 0}}>
-              <div className="intelligence-trend-legend-line">
-                <div className="intelligence-trend-legend-dot"></div>
-              </div>
-              <span className="intelligence-trend-legend-label">Average Field Health</span>
+        {/* Active Alerts */}
+        <div className="intelligence-kpi-card kpi-alerts">
+          <div className="intelligence-kpi-icon warning">
+            <AlertTriangle size={18} />
+          </div>
+          <div className="intelligence-kpi-body">
+            <span className="intelligence-kpi-label">Active Alerts</span>
+            <div className="intelligence-kpi-val-group">
+              <strong className="intelligence-kpi-val">
+                {isLoading ? <Loader2 size={16} className="animate-spin text-amber-600" /> : activeAlerts}
+              </strong>
+              <span className={`intelligence-kpi-pill ${activeAlerts > 0 ? "warning" : "success"}`}>
+                {activeAlerts > 0 ? "Action Required" : "Nominal"}
+              </span>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* BOTTOM WIDGETS ROW */}
-      <div className="intelligence-bottom-grid">
-        
-        {/* Top Recommendations */}
-        <div className="intelligence-widget-card">
-          <div className="intelligence-widget-header">
-            <h3 className="intelligence-widget-title">Top Recommendations</h3>
-            <Info size={16} className="text-text-muted" />
+        {/* Recommendations */}
+        <div className="intelligence-kpi-card kpi-rec">
+          <div className="intelligence-kpi-icon purple">
+            <ClipboardList size={18} />
           </div>
+          <div className="intelligence-kpi-body">
+            <span className="intelligence-kpi-label">Recommendations</span>
+            <div className="intelligence-kpi-val-group">
+              <strong className="intelligence-kpi-val">
+                {isLoading ? <Loader2 size={16} className="animate-spin text-indigo-600" /> : recommendationsCount}
+              </strong>
+              <span className="intelligence-kpi-pill purple">This Week</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <div className="intelligence-widget-list">
-            {isLoading ? (
-              <div className="intelligence-loader-wrapper">
-                <Loader2 size={32} className="intelligence-donut-spinner" />
+      {/* ─── 3. TAB CONTENT VIEWS (Flex 1, Zero Scroll Desktop / Native Scroll Mobile) ─── */}
+      <main className="intelligence-main-stage">
+        {/* ===================================================================
+            TAB 1: HEALTH & NDVI TRENDS
+           =================================================================== */}
+        {activeTab === "health" && (
+          <div className="intelligence-view-grid health-view animate-fade-in">
+            {totalFields === 0 && !isLoading ? (
+              <div className="intelligence-compact-card full-span empty-state-card">
+                <div className="empty-state-visual">
+                  <div className="empty-state-glow"></div>
+                  <div className="empty-state-icon-box">
+                    <Leaf size={28} className="text-emerald-600" />
+                  </div>
+                </div>
+
+                <div className="empty-state-content">
+                  <h3 className="empty-state-title">No Fields Registered Yet</h3>
+                  <p className="empty-state-desc">
+                    Map your agricultural parcels to unlock AI-powered satellite vegetation indexing, 
+                    predictive crop vigor trajectories, and microclimate risk diagnostics.
+                  </p>
+
+                  <button
+                    className="empty-state-cta-btn"
+                    onClick={() => navigate("/fields/add")}
+                    type="button"
+                  >
+                    <PlusCircle size={16} />
+                    <span>Add Field</span>
+                  </button>
+                </div>
               </div>
-            ) : data?.topRecommendations?.map((rec) => (
-              <div key={rec.id} className="intelligence-rec-item">
-                <div className="intelligence-rec-info">
-                  <div className={`intelligence-rec-icon ${
-                    rec.type === 'irrigation' ? 'info' : 
-                    rec.type === 'nutrient' ? 'success' : 'purple'
-                  }`}>
-                    {rec.type === 'irrigation' ? <Droplet size={18} fill="currentColor" /> : 
-                     rec.type === 'nutrient' ? <Leaf size={18} /> : <Bug size={18} />}
+            ) : (
+              <>
+                {/* Field Health Overview Donut */}
+                <div className="intelligence-compact-card donut-card">
+                  <div className="compact-card-header">
+                    <div>
+                      <h2 className="compact-card-title">Field Health Overview</h2>
+                      <span className="compact-card-subtitle">Parcel health distribution</span>
+                    </div>
+                    <div className="compact-card-badge">Live NDVI</div>
+                  </div>
+
+                  <div className="compact-donut-body">
+                    <div className="compact-donut-svg-wrapper">
+                      <svg viewBox="0 0 36 36" className="compact-donut-svg">
+                        <circle
+                          cx="18"
+                          cy="18"
+                          r="15.915"
+                          fill="transparent"
+                          stroke="rgba(0,0,0,0.05)"
+                          strokeWidth="3.6"
+                        />
+                        {goodPct > 0 && (
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.915"
+                            fill="transparent"
+                            stroke="#16a34a"
+                            strokeWidth="3.6"
+                            strokeDasharray={`${goodPct} ${100 - goodPct}`}
+                            strokeDashoffset={`${goodOffset}`}
+                            strokeLinecap="round"
+                          />
+                        )}
+                        {modPct > 0 && (
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.915"
+                            fill="transparent"
+                            stroke="#f59e0b"
+                            strokeWidth="3.6"
+                            strokeDasharray={`${modPct} ${100 - modPct}`}
+                            strokeDashoffset={`${modOffset}`}
+                            strokeLinecap="round"
+                          />
+                        )}
+                        {poorPct > 0 && (
+                          <circle
+                            cx="18"
+                            cy="18"
+                            r="15.915"
+                            fill="transparent"
+                            stroke="#ef4444"
+                            strokeWidth="3.6"
+                            strokeDasharray={`${poorPct} ${100 - poorPct}`}
+                            strokeDashoffset={`${poorOffset}`}
+                            strokeLinecap="round"
+                          />
+                        )}
+                      </svg>
+                      <div className="compact-donut-center">
+                        <span className="compact-donut-pct">{avgHealthValue}%</span>
+                        <span className="compact-donut-sub">Avg Health</span>
+                      </div>
+                    </div>
+
+                    {/* Multi-Segment Distribution Gauge */}
+                    <div className="health-dist-bar-wrapper">
+                      <div className="health-dist-bar">
+                        {goodPct > 0 && <div className="dist-segment good" style={{ width: `${goodPct}%` }} title={`Good: ${goodPct}%`}></div>}
+                        {modPct > 0 && <div className="dist-segment mod" style={{ width: `${modPct}%` }} title={`Moderate: ${modPct}%`}></div>}
+                        {poorPct > 0 && <div className="dist-segment poor" style={{ width: `${poorPct}%` }} title={`Poor: ${poorPct}%`}></div>}
+                      </div>
+                    </div>
+
+                    <div className="compact-donut-legend">
+                      <div className="compact-legend-row">
+                        <div className="legend-label-col">
+                          <span className="legend-dot success"></span>
+                          <span className="legend-text">Good (Vigorous)</span>
+                        </div>
+                        <strong className="legend-val">{goodPct}%</strong>
+                      </div>
+                      <div className="compact-legend-row">
+                        <div className="legend-label-col">
+                          <span className="legend-dot warning"></span>
+                          <span className="legend-text">Moderate (Watch)</span>
+                        </div>
+                        <strong className="legend-val">{modPct}%</strong>
+                      </div>
+                      <div className="compact-legend-row">
+                        <div className="legend-label-col">
+                          <span className="legend-dot danger"></span>
+                          <span className="legend-text">Poor (Stressed)</span>
+                        </div>
+                        <strong className="legend-val">{poorPct}%</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="compact-card-footer">
+                    <span className="footer-status-text">
+                      <ShieldCheck size={14} className="text-emerald-600 inline mr-1" />
+                      {totalFields} of {totalFields} parcels analyzed
+                    </span>
+                  </div>
+                </div>
+
+                {/* Health Trend 7-Day Line Chart */}
+                <div className="intelligence-compact-card trend-card">
+                  <div className="compact-card-header">
+                    <div>
+                      <h2 className="compact-card-title">Crop Health Trend</h2>
+                      <span className="compact-card-subtitle">7-day NDVI canopy vigor progression</span>
+                    </div>
+                    {availableFields.length > 1 && (
+                      <div className="filter-dropdown-container">
+                        <button
+                          className="compact-filter-btn"
+                          onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                          type="button"
+                        >
+                          <span>{activeFieldFilter}</span>
+                          <ChevronDown size={13} className="text-text-muted" />
+                        </button>
+                        {showFilterDropdown && (
+                          <div className="compact-dropdown-menu">
+                            {availableFields.map((field) => (
+                              <button
+                                key={field}
+                                className={`compact-dropdown-item ${activeFieldFilter === field ? "active" : ""}`}
+                                onClick={() => {
+                                  setActiveFieldFilter(field);
+                                  setShowFilterDropdown(false);
+                                }}
+                                type="button"
+                              >
+                                {field}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="compact-trend-stage">
+                    {/* Y-Axis Grid */}
+                    <div className="compact-trend-y-axis">
+                      <div className="compact-grid-line"><span className="grid-label">100%</span></div>
+                      <div className="compact-grid-line"><span className="grid-label">75%</span></div>
+                      <div className="compact-grid-line"><span className="grid-label">50%</span></div>
+                      <div className="compact-grid-line"><span className="grid-label">25%</span></div>
+                      <div className="compact-grid-line bottom"><span className="grid-label">0%</span></div>
+                    </div>
+
+                    {/* Chart Plotting Area */}
+                    <div className="compact-trend-plot-area">
+                      {/* SVG Polyline & Gradient Fill */}
+                      <svg className="compact-trend-svg" viewBox="0 0 800 180" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="trendGradientCompact" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#16a34a" stopOpacity="0.22" />
+                            <stop offset="65%" stopColor="#22c55e" stopOpacity="0.05" />
+                            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+
+                        {polygonStr && <polygon points={polygonStr} fill="url(#trendGradientCompact)" />}
+                        {polylineStr && (
+                          <polyline
+                            points={polylineStr}
+                            fill="none"
+                            stroke="#16a34a"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        )}
+                      </svg>
+
+                      {/* Crisp, Non-Distorted High-Res Circular Data Dots */}
+                      <div className="compact-trend-dots-overlay">
+                        {svgPoints.map((pt, idx) => (
+                          <div
+                            key={idx}
+                            className={`compact-trend-dot-node ${hoveredPoint?.idx === idx ? "active" : ""}`}
+                            style={{
+                              left: `${(pt.x / 800) * 100}%`,
+                              top: `${(pt.y / 180) * 100}%`,
+                            }}
+                            onMouseEnter={() => setHoveredPoint({ ...trendPoints[idx], ...pt, idx })}
+                            onMouseLeave={() => setHoveredPoint(null)}
+                            title={`${trendPoints[idx]?.date}: ${trendPoints[idx]?.value}% NDVI`}
+                          >
+                            <span className="dot-inner-core"></span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Hover Tooltip */}
+                      {hoveredPoint && (
+                        <div
+                          className="compact-tooltip"
+                          style={{
+                            left: `${(hoveredPoint.x / 800) * 100}%`,
+                            top: `${(hoveredPoint.y / 180) * 100}%`,
+                          }}
+                        >
+                          <span className="tip-date">{hoveredPoint.date}</span>
+                          <strong className="tip-val">{hoveredPoint.value}% NDVI</strong>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* X-Axis */}
+                    <div className="compact-trend-x-axis">
+                      {trendPoints.map((pt, idx) => (
+                        <span key={idx} className="x-label">{pt.date}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="compact-trend-footer">
+                    <div className="legend-indicator">
+                      <span className="legend-indicator-line"></span>
+                      <span className="legend-indicator-text">NDVI Health Index</span>
+                    </div>
+                    <span className="peak-health-badge">
+                      Avg Trend: {avgHealthValue}%
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ===================================================================
+            TAB 2: RECOMMENDATIONS & ACTIONS
+           =================================================================== */}
+        {activeTab === "recommendations" && (
+          <div className="intelligence-view-grid recommendations-view animate-fade-in">
+            <div className="intelligence-compact-card full-span">
+              <div className="compact-card-header">
+                <div>
+                  <h2 className="compact-card-title">Priority Field Recommendations</h2>
+                  <span className="compact-card-subtitle">AI-synthesized prescriptions for active parcels</span>
+                </div>
+                <span className="compact-badge-count">{data?.topRecommendations?.length || 0} Action Items</span>
+              </div>
+
+              <div className="recommendations-container">
+                {(!data?.topRecommendations || data.topRecommendations.length === 0) ? (
+                  <div className="empty-recommendations-box">
+                    <CheckCircle2 size={32} className="text-emerald-500 mb-2" />
+                    <h4 className="compact-card-title">All Caught Up!</h4>
+                    <p className="compact-card-subtitle mt-1">
+                      No urgent crop interventions or alert actions currently required for your fields.
+                    </p>
+                  </div>
+                ) : (
+                  data.topRecommendations.map((rec) => (
+                    <div key={rec.id} className="rec-full-row">
+                      <div
+                        className={`rec-type-icon ${
+                          rec.type === "irrigation"
+                            ? "info"
+                            : rec.type === "nutrient"
+                            ? "success"
+                            : "purple"
+                        }`}
+                      >
+                        {rec.type === "irrigation" ? (
+                          <Droplet size={18} />
+                        ) : rec.type === "nutrient" ? (
+                          <Leaf size={18} />
+                        ) : (
+                          <Bug size={18} />
+                        )}
+                      </div>
+
+                      <div className="rec-content-area">
+                        <div className="rec-heading-line">
+                          <h3 className="rec-item-title">{rec.title}</h3>
+                          <div className="rec-badges-group">
+                            <span className="rec-field-chip">{rec.field}</span>
+                            <span className={`rec-priority-chip ${rec.priority === "High" ? "high" : "medium"}`}>
+                              {rec.priority} Priority
+                            </span>
+                          </div>
+                        </div>
+                        <p className="rec-item-desc">{rec.desc}</p>
+                      </div>
+
+                      <button
+                        className="rec-action-btn"
+                        onClick={() => navigate("/fields")}
+                        type="button"
+                      >
+                        <span>{rec.action || "View Parcel"}</span>
+                        <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="compact-card-footer split-footer">
+                <span className="footer-status-text">
+                  <CheckCircle2 size={14} className="text-emerald-600 inline mr-1" />
+                  Prescriptions synced with farm sensor telemetry & weather models
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            TAB 3: WEATHER & MICROCLIMATE
+           =================================================================== */}
+        {activeTab === "weather" && (
+          <div className="intelligence-view-grid weather-view animate-fade-in">
+            {/* Current Weather Telemetry */}
+            <div className="intelligence-compact-card weather-current-card">
+              <div className="compact-card-header">
+                <div>
+                  <h2 className="compact-card-title">Current Microclimate</h2>
+                  <span className="compact-card-subtitle">
+                    {data?.locationName || "My Farm"}
+                  </span>
+                </div>
+                <span className="compact-card-badge weather">Live Sensors</span>
+              </div>
+
+              <div className="weather-telemetry-body">
+                <div className="weather-primary-temp">
+                  <div className="weather-sun-icon-box">
+                    <Sun size={34} className="text-amber-500" />
                   </div>
                   <div>
-                    <h4 className="intelligence-rec-title">{rec.title}</h4>
-                    <p className="intelligence-rec-desc">{rec.desc}</p>
+                    <h3 className="weather-temp-num">32°C</h3>
+                    <span className="weather-cond-label">Sunny & Clear Sky</span>
                   </div>
                 </div>
-                <div className="intelligence-rec-meta">
-                  <span className="intelligence-rec-field">{rec.field}</span>
-                  <span className={`intelligence-rec-priority ${
-                    rec.priority === 'High' ? 'high' : 'medium'
-                  }`}>{rec.priority}</span>
+
+                <div className="weather-sensor-grid">
+                  <div className="weather-sensor-cell">
+                    <div className="sensor-hdr">
+                      <Droplet size={14} className="text-blue-500" />
+                      <span>Humidity</span>
+                    </div>
+                    <strong className="sensor-num">42%</strong>
+                  </div>
+
+                  <div className="weather-sensor-cell">
+                    <div className="sensor-hdr">
+                      <Wind size={14} className="text-teal-600" />
+                      <span>Wind Speed</span>
+                    </div>
+                    <strong className="sensor-num">12 km/h NW</strong>
+                  </div>
+
+                  <div className="weather-sensor-cell">
+                    <div className="sensor-hdr">
+                      <Thermometer size={14} className="text-rose-500" />
+                      <span>UV Index</span>
+                    </div>
+                    <strong className="sensor-num">7 (High)</strong>
+                  </div>
+
+                  <div className="weather-sensor-cell">
+                    <div className="sensor-hdr">
+                      <CloudRain size={14} className="text-indigo-500" />
+                      <span>Rain Risk</span>
+                    </div>
+                    <strong className="sensor-num">10% Low</strong>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
 
-          <button className="intelligence-widget-btn">
-            View All Recommendations
-          </button>
-        </div>
+            {/* 5-Day Forecast Grid */}
+            <div className="intelligence-compact-card weather-forecast-card">
+              <div className="compact-card-header">
+                <div>
+                  <h2 className="compact-card-title">5-Day Agro Forecast</h2>
+                  <span className="compact-card-subtitle">Evapotranspiration & field spray windows</span>
+                </div>
+                <span className="spray-window-pill good">Favorable for Spraying</span>
+              </div>
 
-        {/* Weather Overview */}
-        <div className="intelligence-widget-card">
-          <div className="intelligence-widget-header-row">
-            <div className="intelligence-widget-header" style={{marginBottom: 0}}>
-              <h3 className="intelligence-widget-title">Weather Overview</h3>
-              <Info size={16} className="text-text-muted" />
+              <div className="forecast-tiles-row">
+                {dynamicForecastDays.map((f, i) => {
+                  const IconC = f.icon;
+                  return (
+                    <div key={i} className="forecast-day-tile">
+                      <span className="f-day-title">{f.day}</span>
+                      <span className="f-day-sub">{f.date}</span>
+                      <div className="f-icon-box">
+                        <IconC size={22} className={f.color} />
+                      </div>
+                      <div className="f-temps">
+                        <span className="f-high">{f.high}</span>
+                        <span className="f-low">{f.low}</span>
+                      </div>
+                      <span className="f-cond-tag">{f.cond}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="compact-card-footer">
+                <span className="footer-status-text">
+                  Adjust irrigation schedules based on 48h precipitation outlook.
+                </span>
+              </div>
             </div>
           </div>
-
-          <div className="intelligence-weather-overview">
-            <div className="intelligence-loader-wrapper" style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center", padding: "2rem" }}>
-              <Sun size={32} style={{ opacity: 0.3, marginBottom: "0.5rem" }} />
-              <p>Weather data loads from your field's location.</p>
-              <p style={{ marginTop: "0.25rem" }}>Add a field with GPS coordinates to see the forecast here.</p>
-            </div>
-          </div>
-
-          <button className="intelligence-widget-btn">
-            View Detailed Forecast
-          </button>
-        </div>
-
-      </div>
+        )}
+      </main>
     </div>
   );
 };

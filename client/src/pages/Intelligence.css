@@ -1158,17 +1158,22 @@
    EMPTY STATES
    ========================================================================== */
 .empty-state-card {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 2.25rem 1.5rem;
+  padding: 2.5rem 1.75rem;
   background: radial-gradient(circle at 50% 30%, rgba(34, 197, 94, 0.06) 0%, rgba(255, 255, 255, 1) 75%);
   border: 1.5px dashed rgba(34, 197, 94, 0.4);
   border-radius: 1rem;
   position: relative;
   overflow: hidden;
+  max-width: 520px;
+  width: 100%;
+  margin: 1.5rem auto;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
 }
 
 .empty-state-visual {
@@ -1211,47 +1216,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 480px;
+  max-width: 440px;
 }
 
 .empty-state-title {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.02em;
 }
 
 .empty-state-desc {
-  font-size: 0.8125rem;
+  font-size: 0.82rem;
   line-height: 1.45;
   color: #64748b;
   font-weight: 450;
   margin-top: 0.4rem;
+  margin-bottom: 1.25rem;
   text-align: center;
-}
-
-.empty-state-feature-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.85rem;
-  margin-bottom: 1.15rem;
-}
-
-.empty-feature-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 650;
-  color: #334155;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .empty-state-cta-btn {
@@ -1260,14 +1242,19 @@
   gap: 0.5rem;
   background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
   color: #ffffff;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  padding: 0.55rem 1.25rem;
+  padding: 0.6rem 1.4rem;
   border-radius: 0.625rem;
   border: none;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
   transition: all 0.2s ease;
+}
+
+.empty-state-cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45);
 }
 
 .empty-state-cta-btn:hover {
