@@ -365,11 +365,15 @@
   }
 
   .dashboard-content {
-    padding: 14px 12px 28px 12px;
+    padding: clamp(10px, 3vw, 18px) clamp(8px, 2.5vw, 16px) clamp(24px, 6vw, 36px) clamp(8px, 2.5vw, 16px);
     overflow-y: auto !important;
+    overflow-x: hidden !important;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .dashboard-content:has(.intelligence-app-viewport) {
     overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 }
