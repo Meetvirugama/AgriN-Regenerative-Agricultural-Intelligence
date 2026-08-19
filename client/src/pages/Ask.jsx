@@ -10,9 +10,12 @@ import {
   User,
   RotateCcw,
   Sprout,
-  ArrowUp
+  ArrowUp,
+  Mic,
+  MicOff
 } from "lucide-react";
 import { cropApi } from "../features/crop-context/api/cropApi";
+import { voiceApi } from "../features/voice/api/voiceApi";
 
 import "./Ask.css";
 
@@ -116,6 +119,47 @@ export const Ask = () => {
     setInput(e.target.value);
     e.target.style.height = "auto";
     e.target.style.height = `${Math.min(e.target.scrollHeight, 140)}px`;
+  };
+
+  const [isRecording, setIsRecording] = useState(false);
+
+  const handleToggleVoice = async () => {
+    if (isRecording) {
+      setIsRecording(false);
+      try {
+        const text = await voiceApi.stt(
+          new Blob(),
+          localStorage.getItem("agri_lang") || "en-US"
+        );
+        if (text && typeof text === "string") {
+          setInput((prev) => (prev ? `${prev} ${text}` : text));
+        }
+      } catch (err) {
+        console.error("Voice STT error:", err);
+      }
+    } else {
+      setIsRecording(true);
+      if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRec();
+        recognition.lang = localStorage.getItem("agri_lang") || "en-US";
+        recognition.interimResults = false;
+        recognition.onresult = (e) => {
+          const transcript = e.results[0][0].transcript;
+          if (transcript) {
+            setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+          }
+          setIsRecording(false);
+        };
+        recognition.onerror = () => setIsRecording(false);
+        recognition.onend = () => setIsRecording(false);
+        try {
+          recognition.start();
+        } catch (e) {
+          setIsRecording(false);
+        }
+      }
+    }
   };
 
   const handleClearChat = () => {
@@ -264,6 +308,15 @@ export const Ask = () => {
             className="ask-dock-textarea"
             disabled={isTyping}
           />
+          <button
+            onClick={handleToggleVoice}
+            className={`ask-dock-mic-btn ${isRecording ? "recording" : ""}`}
+            type="button"
+            title={isRecording ? "Listening... click to stop" : "Voice input"}
+            aria-label="Voice input"
+          >
+            {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+          </button>
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || isTyping}

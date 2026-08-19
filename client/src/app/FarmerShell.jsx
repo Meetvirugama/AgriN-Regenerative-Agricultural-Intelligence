@@ -3,7 +3,6 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Stethoscope, Users, Search, Sprout, Menu, X
 } from "lucide-react";
-import { GlobalMicButton } from "../features/voice/components/GlobalMicButton";
 import { LanguageSwitcher } from "../features/voice/components/LanguageSwitcher";
 import { FieldProvider } from "./providers/FieldProvider";
 import { useAuth } from "./providers/AuthProvider";
@@ -239,8 +238,6 @@ export const FarmerShell = () => {
           <div className="dashboard-content">
             <Outlet />
           </div>
-
-          <GlobalMicButton />
         </main>
       </div>
     </FieldProvider>
