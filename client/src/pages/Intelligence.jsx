@@ -141,6 +141,40 @@ export const Intelligence = () => {
     return ["All Fields", ...list];
   }, [data?.fieldsList]);
 
+  const renderTabSwitcher = () => (
+    <nav className="intelligence-tab-switcher" aria-label="Dashboard Views">
+      <button
+        className={`intelligence-tab-btn ${activeTab === "health" ? "active" : ""}`}
+        onClick={() => setActiveTab("health")}
+        type="button"
+      >
+        <Activity size={15} />
+        <span>Health & Trends</span>
+      </button>
+
+      <button
+        className={`intelligence-tab-btn ${activeTab === "recommendations" ? "active" : ""}`}
+        onClick={() => setActiveTab("recommendations")}
+        type="button"
+      >
+        <ClipboardList size={15} />
+        <span>Recommendations</span>
+        {recommendationsCount > 0 && (
+          <span className="tab-counter-badge">{recommendationsCount}</span>
+        )}
+      </button>
+
+      <button
+        className={`intelligence-tab-btn ${activeTab === "weather" ? "active" : ""}`}
+        onClick={() => setActiveTab("weather")}
+        type="button"
+      >
+        <CloudSun size={15} />
+        <span>Weather & Forecast</span>
+      </button>
+    </nav>
+  );
+
   const unifiedHeaderContent = (
     <div className="intelligence-unified-nav-bar">
       <div className="intelligence-unified-left">
@@ -152,51 +186,18 @@ export const Intelligence = () => {
           </span>
         </div>
       </div>
-
-      {/* SEGMENTED TAB CONTROLS */}
-      <nav className="intelligence-tab-switcher" aria-label="Dashboard Views">
-        <button
-          className={`intelligence-tab-btn ${activeTab === "health" ? "active" : ""}`}
-          onClick={() => setActiveTab("health")}
-          type="button"
-        >
-          <Activity size={15} />
-          <span>Health & Trends</span>
-        </button>
-
-        <button
-          className={`intelligence-tab-btn ${activeTab === "recommendations" ? "active" : ""}`}
-          onClick={() => setActiveTab("recommendations")}
-          type="button"
-        >
-          <ClipboardList size={15} />
-          <span>Recommendations</span>
-          {recommendationsCount > 0 && (
-            <span className="tab-counter-badge">{recommendationsCount}</span>
-          )}
-        </button>
-
-        <button
-          className={`intelligence-tab-btn ${activeTab === "weather" ? "active" : ""}`}
-          onClick={() => setActiveTab("weather")}
-          type="button"
-        >
-          <CloudSun size={15} />
-          <span>Weather & Forecast</span>
-        </button>
-      </nav>
+      {renderTabSwitcher()}
     </div>
   );
 
   return (
     <div className="intelligence-app-viewport">
-      {headerPortalEl ? (
-        createPortal(unifiedHeaderContent, headerPortalEl)
-      ) : (
-        <header className="intelligence-top-header">
-          {unifiedHeaderContent}
-        </header>
-      )}
+      {headerPortalEl && createPortal(unifiedHeaderContent, headerPortalEl)}
+
+      {/* MOBILE IN-PAGE TAB SWITCHER (Visible on Mobile only) */}
+      <div className="intelligence-page-header-mobile">
+        {renderTabSwitcher()}
+      </div>
 
       {/* ─── 2. COMPACT KPI SUMMARY STRIP ─── */}
       <section className="intelligence-kpi-strip">
