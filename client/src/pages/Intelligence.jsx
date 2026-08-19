@@ -26,66 +26,6 @@ import { cropApi } from "../features/crop-context/api/cropApi";
 
 import "./Intelligence.css";
 
-// TEMPORARY DUMMY DATA FOR UI VERIFICATION (Easily removed when requested)
-const DUMMY_INTELLIGENCE_DATA = {
-  locationName: "Green Valley Agro-Station, Punjab",
-  stats: {
-    totalFields: 4,
-    avgHealth: 84,
-    activeAlerts: 2,
-    recommendations: 3,
-  },
-  healthDistribution: {
-    good: 70,
-    moderate: 20,
-    poor: 10,
-  },
-  trendData: [
-    { date: "12 Aug", value: 78 },
-    { date: "13 Aug", value: 80 },
-    { date: "14 Aug", value: 84 },
-    { date: "15 Aug", value: 82 },
-    { date: "16 Aug", value: 86 },
-    { date: "17 Aug", value: 85 },
-    { date: "18 Aug", value: 89 },
-  ],
-  topRecommendations: [
-    {
-      id: "dummy-rec-1",
-      type: "irrigation",
-      title: "Soil Moisture Deficit Warning",
-      desc: "Root zone volumetric water content is down to 18%. Increase drip cycles by 25 mins before afternoon heat spike.",
-      field: "North Plot (Wheat)",
-      priority: "High",
-      action: "Schedule Irrigation",
-    },
-    {
-      id: "dummy-rec-2",
-      type: "pest",
-      title: "Aphid Cluster & Mildew Detection",
-      desc: "Early visual canopy anomalies detected via multi-spectral scan. Apply organic neem oil deterrent within 48 hours.",
-      field: "South Meadow (Mustard)",
-      priority: "High",
-      action: "Log Inspection",
-    },
-    {
-      id: "dummy-rec-3",
-      type: "nutrient",
-      title: "Potassium & Nitrogen Top-Dressing",
-      desc: "Approaching flowering vegetative transition. Recommend N-P-K 12-32-16 application to bolster fruit set vigor.",
-      field: "Greenhouse 1 (Tomato)",
-      priority: "Medium",
-      action: "Apply Fertilizer",
-    },
-  ],
-  fieldsList: [
-    "North Plot (Wheat)",
-    "South Meadow (Mustard)",
-    "Greenhouse 1 (Tomato)",
-    "River Orchard (Apple)",
-  ],
-};
-
 export const Intelligence = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
@@ -146,17 +86,14 @@ export const Intelligence = () => {
     };
   }, []);
 
-  // Use fetched data or fallback to dummy demonstration data
-  const currentData = data || DUMMY_INTELLIGENCE_DATA;
+  const totalFields = data?.stats?.totalFields ?? 0;
+  const avgHealthValue = data?.stats?.avgHealth ?? 0;
+  const activeAlerts = data?.stats?.activeAlerts ?? 0;
+  const recommendationsCount = data?.stats?.recommendations ?? 0;
 
-  const totalFields = currentData?.stats?.totalFields ?? 0;
-  const avgHealthValue = currentData?.stats?.avgHealth ?? 0;
-  const activeAlerts = currentData?.stats?.activeAlerts ?? 0;
-  const recommendationsCount = currentData?.stats?.recommendations ?? 0;
-
-  const goodPct = currentData?.healthDistribution?.good ?? (totalFields > 0 ? 100 : 0);
-  const modPct = currentData?.healthDistribution?.moderate ?? 0;
-  const poorPct = currentData?.healthDistribution?.poor ?? 0;
+  const goodPct = data?.healthDistribution?.good ?? (totalFields > 0 ? 100 : 0);
+  const modPct = data?.healthDistribution?.moderate ?? 0;
+  const poorPct = data?.healthDistribution?.poor ?? 0;
 
   const goodOffset = 0;
   const modOffset = -goodPct;
@@ -164,10 +101,10 @@ export const Intelligence = () => {
 
   // Dynamic 7-day trend calculations with current dates
   const trendPoints = useMemo(() => {
-    if (currentData?.trendData?.length) {
-      return currentData.trendData.map((pt, idx) => {
+    if (data?.trendData?.length) {
+      return data.trendData.map((pt, idx) => {
         const d = new Date();
-        d.setDate(d.getDate() - (currentData.trendData.length - 1 - idx));
+        d.setDate(d.getDate() - (data.trendData.length - 1 - idx));
         return {
           ...pt,
           date: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
@@ -175,7 +112,7 @@ export const Intelligence = () => {
       });
     }
     return [];
-  }, [currentData?.trendData]);
+  }, [data?.trendData]);
 
   const getPointCoordinates = (index, val) => {
     const total = Math.max(trendPoints.length - 1, 1);
@@ -191,9 +128,9 @@ export const Intelligence = () => {
     : "";
 
   const availableFields = useMemo(() => {
-    const list = currentData?.fieldsList?.length ? currentData.fieldsList : [];
+    const list = data?.fieldsList?.length ? data.fieldsList : [];
     return ["All Fields", ...list];
-  }, [currentData?.fieldsList]);
+  }, [data?.fieldsList]);
 
   return (
     <div className="intelligence-app-viewport">
