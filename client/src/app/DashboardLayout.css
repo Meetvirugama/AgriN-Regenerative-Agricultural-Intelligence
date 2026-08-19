@@ -380,6 +380,10 @@
     display: none;
   }
 
+  .intelligence-header-portal-slot {
+    display: none !important;
+  }
+
   .dashboard-header-actions {
     gap: 12px;
     margin-left: auto;

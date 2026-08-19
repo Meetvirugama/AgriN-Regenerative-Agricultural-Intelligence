@@ -18,6 +18,41 @@
 /* ==========================================================================
    1. TOP HEADER & TAB SWITCHER
    ========================================================================== */
+.intelligence-page-header-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .intelligence-page-header-mobile {
+    display: flex;
+    width: 100%;
+    margin-bottom: 0.35rem;
+  }
+
+  .intelligence-page-header-mobile .intelligence-tab-switcher {
+    width: 100%;
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0.25rem;
+    gap: 0.35rem;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+  }
+
+  .intelligence-page-header-mobile .intelligence-tab-btn {
+    flex: 1;
+    min-width: max-content;
+    white-space: nowrap;
+    justify-content: center;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.75rem;
+  }
+}
+
 .intelligence-top-header {
   display: flex;
   align-items: center;

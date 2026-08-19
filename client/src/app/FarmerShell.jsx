@@ -164,7 +164,13 @@ export const FarmerShell = () => {
               </button>
 
               {location.pathname === '/intelligence' ? (
-                <div id="intelligence-header-portal" className="intelligence-header-portal-slot"></div>
+                <>
+                  <div id="intelligence-header-portal" className="intelligence-header-portal-slot hidden md:flex"></div>
+                  <div className="md:hidden flex items-center gap-1.5 flex-1 min-w-0">
+                    <span className="font-bold text-sm text-slate-800 truncate">Intelligence</span>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">AI</span>
+                  </div>
+                </>
               ) : location.pathname === '/alerts' ? (
                 <div id="alerts-header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
               ) : (
