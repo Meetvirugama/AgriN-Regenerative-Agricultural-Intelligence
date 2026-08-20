@@ -19,7 +19,6 @@ from torchvision import transforms
 from PIL import Image
 import json
 import io
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -204,7 +203,7 @@ class CropVisionPredictor:
         """Use Gemini Vision as fallback when no local model exists."""
         from services.gemini_client import analyze_image_with_prompt
         from models.schemas import KNOWN_CONDITIONS
-        from pydantic import BaseModel, Field
+        from pydantic import BaseModel
         from typing import List
 
         class TopK(BaseModel):

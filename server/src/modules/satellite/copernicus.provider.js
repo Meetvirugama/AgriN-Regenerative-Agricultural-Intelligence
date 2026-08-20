@@ -48,7 +48,6 @@ async function fetchAccessToken(clientId, clientSecret) {
   const data = await res.json();
   _token = data.access_token;
   _tokenExpiry = Date.now() + data.expires_in * 1000;
-  console.log("[Copernicus] Access token acquired, expires in", data.expires_in, "s");
   return _token;
 }
 
@@ -358,7 +357,6 @@ function evaluatePixel(sample) {
   async fetchLatestTile(geojson, fieldId) {
     if (!geojson) throw new Error("Field has no polygon geometry — cannot fetch Sentinel-2 data");
 
-    console.log(`[Copernicus] Fetching Sentinel-2 NDVI for field ${fieldId}...`);
 
     // Find best scene in catalog
     const scene = await this.findLatestScene(geojson);
@@ -388,7 +386,6 @@ function evaluatePixel(sample) {
       await fetchAccessToken(this.clientId, this.clientSecret),
     );
 
-    console.log(`[Copernicus] ✅ Real NDVI for field ${fieldId}: mean=${ndviStats.ndvi_mean}, date=${ndviStats.observation_date}`);
 
     return {
       fieldId,

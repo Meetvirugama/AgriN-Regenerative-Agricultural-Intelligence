@@ -32,6 +32,8 @@ class Layer3Service {
     const forecasts = await this.provider.getForecast(lat, lng, fieldId);
 
     // Persist each forecast snapshot (upserts on conflict)
+    // NOTE: snapshot persistence is independent of rule evaluation —
+    // a Python service outage must not discard already-fetched forecast data.
     for (const snapshot of forecasts) {
       await weatherRepo.saveSnapshot(snapshot);
     }
@@ -39,17 +41,22 @@ class Layer3Service {
     // Purge stale forecasts (> 2 days old)
     await weatherRepo.deleteStaleForecastsOlderThan(fieldId, 2);
 
-    // Evaluate rules and persist flags
-    const flags = await this.ruleEngine.evaluate(fieldId, forecasts);
-    for (const flag of flags) {
-      await weatherRepo.saveFlag({
-        field_id: flag.field_id,
-        event_type: flag.event_type,
-        start_date: flag.start_date,
-        end_date: flag.end_date,
-        severity: flag.severity,
-        message: flag.message,
-      });
+    // Evaluate rules and persist flags — isolated so Python outage is non-fatal
+    let flags = [];
+    try {
+      flags = await this.ruleEngine.evaluate(fieldId, forecasts);
+      for (const flag of flags) {
+        await weatherRepo.saveFlag({
+          field_id: flag.field_id,
+          event_type: flag.event_type,
+          start_date: flag.start_date,
+          end_date: flag.end_date,
+          severity: flag.severity,
+          message: flag.message,
+        });
+      }
+    } catch (rulesErr) {
+      console.warn(`[Weather] Rule evaluation failed for field ${fieldId} (non-fatal — snapshots already saved): ${rulesErr.message}`);
     }
 
     return { forecasts, flags };

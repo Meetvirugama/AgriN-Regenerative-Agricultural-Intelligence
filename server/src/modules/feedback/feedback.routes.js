@@ -60,7 +60,9 @@ router.post("/feedback", async (req, res, next) => {
  */
 router.get("/feedback/pending/:field_id", async (req, res, next) => {
   try {
-    res.json({ prompts: [] });
+    const { field_id } = req.params;
+    const prompts = await feedbackRepo.getPendingPrompts(field_id);
+    res.json({ prompts: prompts ?? [] });
   } catch (err) {
     next(err);
   }
@@ -72,10 +74,9 @@ router.get("/feedback/pending/:field_id", async (req, res, next) => {
  */
 router.get("/timeline/:field_id", async (req, res, next) => {
   try {
-    res.json({ timeline: [
-      { id: "tl-1", entry_date: "2025-06-10", entry_type: "advisory", summary_text: "Advisory issued: Water stress risk.", season_label: "This Season" },
-      { id: "tl-2", entry_date: "2025-06-05", entry_type: "observation", summary_text: "Crop stage changed to Vegetative.", season_label: "This Season" }
-    ] });
+    const { field_id } = req.params;
+    const entries = await timelineRepo.getTimeline(field_id);
+    res.json({ timeline: entries ?? [] });
   } catch (err) {
     next(err);
   }

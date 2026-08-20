@@ -162,7 +162,6 @@ export class ObservationService {
       }
 
       const result = await response.json();
-      console.log(`[Disease] Python service diagnosis: ${result.condition_name} (${Math.round((result.confidence ?? 0) * 100)}%)`);
       return result;
     } catch (err) {
       console.warn(`[Disease] Python service unavailable, falling back to Gemini: ${err.message}`);

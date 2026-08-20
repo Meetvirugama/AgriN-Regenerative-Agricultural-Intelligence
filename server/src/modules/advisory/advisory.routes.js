@@ -12,14 +12,14 @@ const router = Router();
  * Every response includes `evidence_summary` that shows which data sources
  * were available. If satellite data is simulated, this is flagged explicitly.
  */
-router.get("/fields/:fieldId/advisory", async (req, res) => {
+router.get("/fields/:fieldId/advisory", async (req, res, next) => {
   try {
     const { fieldId } = req.params;
     const advisory = await advisoryService.generateAdvisory(fieldId);
     res.json(advisory);
   } catch (err) {
     console.error("[Advisory] Error:", err.message);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
@@ -43,7 +43,7 @@ router.post("/fields/:fieldId/advisory/response", async (req, res) => {
     res.json({ success: true, message: "Farmer response recorded." });
   } catch (err) {
     console.error("[Advisory Response] Error:", err.message);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 

@@ -1,15 +1,15 @@
 import { escalationRepo } from "../../db/repositories/escalationRepository.js";
-import { STUB_FARMER_ID } from "../field/field.service.js";
+import { query } from "../../db/connection.js";
 
 export class EscalationService {
   /**
    * Create a new escalation ticket in PostgreSQL.
-   * Previously this used a hardcoded in-memory array with a fake farmerId.
+   * farmerId must be the authenticated farmer's UUID from req.farmer.sub.
    */
-  static async triggerEscalation(fieldId, reason, source, contextData = {}) {
+  static async triggerEscalation(farmerId, fieldId, reason, source, contextData = {}) {
     const row = await escalationRepo.createTicket({
       field_id: fieldId,
-      farmer_id: STUB_FARMER_ID, // Phase 4: replace with JWT-authenticated farmer ID
+      farmer_id: farmerId,
       source,
       reason,
       context_data: contextData,
@@ -48,13 +48,46 @@ export class EscalationService {
 
   static async getRegionalRisk() {
     const stats = await escalationRepo.getRegionalStats();
+
+    // Real average health score aggregated from field_health_scores
+    let averageHealthScore = null;
+    try {
+      const healthRow = await query(
+        `SELECT ROUND(AVG(overall_score))::int AS avg_score
+         FROM field_health_scores
+         WHERE computed_at > NOW() - INTERVAL '7 days'`,
+        [],
+      );
+      averageHealthScore = healthRow[0]?.avg_score ?? null;
+    } catch {
+      // table may not exist yet — degrade gracefully
+    }
+
+    // Real top issues from field_observations in the last 30 days
+    let topIssues = [];
+    try {
+      const issueRows = await query(
+        `SELECT primary_diagnosis AS issue, COUNT(*) AS cnt
+         FROM field_observations
+         WHERE observed_at > NOW() - INTERVAL '30 days'
+           AND primary_diagnosis IS NOT NULL
+         GROUP BY primary_diagnosis
+         ORDER BY cnt DESC
+         LIMIT 5`,
+        [],
+      );
+      topIssues = issueRows.map((r) => r.issue);
+    } catch {
+      // table may not exist yet — degrade gracefully
+    }
+
     return {
       region: "Punjab",
       activeTickets: stats.activeTickets,
       highSeverityCount: stats.highSeverityCount,
-      averageHealthScore: 68, // Phase 6: compute from real health-score aggregation
+      averageHealthScore,
       climateRiskLevel: stats.highSeverityCount > 2 ? "high" : "medium",
-      topIssues: ["Late Blight", "Drought Stress", "Nutrient Deficiency"], // Phase 6: AI-aggregated
+      topIssues: topIssues.length > 0 ? topIssues : ["No data"],
     };
   }
 }

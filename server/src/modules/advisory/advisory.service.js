@@ -135,7 +135,7 @@ class AdvisoryService {
   async _saveAdvisory(fieldId, gemini, evidence) {
     // Use existing advisories table if available (from migration 006)
     try {
-      return await queryOne(
+      const row = await queryOne(
         `INSERT INTO advisories
            (field_id, trigger_type, what_text, why_text, severity,
             action_text, action_deadline, monitor_text, source_layers,
@@ -157,8 +157,10 @@ class AdvisoryService {
           JSON.stringify({ gemini_confidence: gemini.confidence, evidence: gemini.evidence }),
         ],
       );
+      return { ...row, persisted: true };
     } catch (err) {
-      // advisories table may have slightly different schema — return in-memory
+      // advisories table may have slightly different schema — return in-memory shape
+      // but flag it explicitly so the client knows the ID is not in the DB
       console.warn("[Advisory] Could not persist to DB:", err.message);
       return {
         id: `adv-${Date.now()}`,
@@ -173,6 +175,8 @@ class AdvisoryService {
         confidence_reason: gemini.confidence_reason,
         gemini_evidence: gemini.evidence,
         generated_at: new Date().toISOString(),
+        persisted: false,
+        warning: "Advisory could not be saved to database. This ID is temporary and cannot be referenced in follow-up responses.",
       };
     }
   }

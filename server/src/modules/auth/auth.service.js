@@ -4,14 +4,22 @@ import bcrypt from "bcryptjs";
 import { authRepo } from "../../db/repositories/authRepository.js";
 import { farmerRepo } from "../../db/repositories/farmerRepository.js";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET ?? "insecure-dev-secret-change-in-production";
+const JWT_SECRET = process.env.JWT_SECRET ?? "insecure-dev-secret-change-in-production";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? "7d";
 
 if (!process.env.JWT_SECRET) {
-  console.warn(
-    "[Auth] WARNING: JWT_SECRET is not set. Using insecure dev default.",
-  );
+  if (process.env.NODE_ENV === "production") {
+    // Fail hard — a missing JWT_SECRET in production is a critical security misconfiguration
+    throw new Error(
+      "[Auth] FATAL: JWT_SECRET is not set in production. " +
+      "Set it via environment variable (generate: openssl rand -hex 64)."
+    );
+  } else {
+    console.warn(
+      "[Auth] WARNING: JWT_SECRET is not set. Using insecure dev default. " +
+      "This will throw in production."
+    );
+  }
 }
 
 export class AuthService {

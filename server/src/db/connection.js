@@ -32,7 +32,6 @@ pool.on("error", (err) => {
 });
 
 pool.on("connect", (client) => {
-  console.log("[DB] New connection established");
   client.on("error", (err) => {
     console.error("[DB] Active client connection error:", err.message);
   });

@@ -120,29 +120,6 @@ app.use("/api/v1/alerts", requireAuth, alertsRoutes);
 app.use("/api/v1/chat", requireAuth, chatRoutes);
 app.use("/api/v1/intelligence", requireAuth, intelligenceRoutes);
 
-// ─── Legacy v0 Compatibility Aliases ─────────────────────────────────────────
-// Keep /api/* working so the existing frontend doesn't break during migration.
-// These will be removed once the frontend is updated to use /api/v1/*.
-
-app.use("/api/fields", fieldRoutes);   // ← was missing — POST/PUT/DELETE /api/fields needs this
-app.use("/api/fields", cropRoutes);
-app.use("/api/fields", weatherRoutes);
-app.use("/api/fields", soilRoutes);
-app.use("/api/fields", diagnosisRoutes);
-app.use("/api/fields", regenRoutes);
-app.use("/api", satelliteRoutes);
-app.use("/api", healthScoreRoutes);
-app.use("/api", climateRiskRouter);
-app.use("/api", advisoryRouter);
-app.use("/api", voiceRoutes);
-app.use("/api", feedbackRouter);
-app.use("/api", crossBorderRoutes);
-app.use("/api/escalations", escalationRoutes);
-
-// ─── Legacy missing-route aliases ─────────────────────────────────────────────
-// /api/alerts — frontend calls this without /v1 prefix
-app.use("/api/alerts", alertsRoutes);
-
 
 
 

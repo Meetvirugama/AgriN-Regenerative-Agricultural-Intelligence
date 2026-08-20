@@ -3,7 +3,6 @@ import { pool } from "./connection.js";
 const STUB_FARMER_ID = "11111111-1111-1111-1111-111111111111";
 
 async function seed() {
-  console.log("[Seed] Starting seed process...");
   const client = await pool.connect();
 
   try {
@@ -14,7 +13,6 @@ async function seed() {
        ON CONFLICT (phone_number) DO NOTHING`,
       [STUB_FARMER_ID, "+1234567890", "Meena", "en"]
     );
-    console.log("[Seed] Farmer ensured.");
 
     // 2. Clear existing fields for this farmer just in case
     await client.query(`DELETE FROM fields WHERE farmer_id = $1`, [STUB_FARMER_ID]);
@@ -35,14 +33,12 @@ async function seed() {
         STUB_FARMER_ID, "Moong Field 03", "moong", "Local", date3.toISOString().split("T")[0],
       ]
     );
-    console.log("[Seed] Fields inserted.");
 
   } catch (err) {
     console.error("[Seed] Error:", err);
   } finally {
     client.release();
     await pool.end();
-    console.log("[Seed] Done.");
   }
 }
 

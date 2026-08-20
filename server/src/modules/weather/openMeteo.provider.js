@@ -97,6 +97,5 @@ export class OpenMeteoProvider {
  * No API key required.
  */
 export function createWeatherProvider() {
-  console.log("[Weather] Using OpenMeteoProvider (Open-Meteo free API, no key required)");
   return new OpenMeteoProvider();
 }

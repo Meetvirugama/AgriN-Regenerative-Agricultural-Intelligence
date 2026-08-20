@@ -85,6 +85,24 @@ export class WeatherRepository {
     );
   }
 
+  /**
+   * Get recent HISTORICAL (non-forecast) weather snapshots oldest-first.
+   * Used by crop.service.js to build the temperature history for GDD calculation.
+   * @param {string} fieldId
+   * @param {number} days - how many days back to look
+   */
+  async getRecentSnapshots(fieldId, days = 90) {
+    return query(
+      `SELECT field_id, snapshot_date::text AS date, temp_min::float, temp_max::float
+       FROM field_weather_snapshots
+       WHERE field_id = $1
+         AND is_forecast = FALSE
+         AND snapshot_date >= CURRENT_DATE - ($2 || ' days')::interval
+       ORDER BY snapshot_date ASC`,
+      [fieldId, days],
+    );
+  }
+
   async deleteStaleForecastsOlderThan(fieldId, days = 2) {
     await execute(
       `DELETE FROM field_weather_snapshots

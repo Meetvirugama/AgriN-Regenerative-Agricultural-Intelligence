@@ -1,6 +1,7 @@
 import { layer1Service } from "../field/field.service.js";
 import { cropStateRepo } from "../../db/repositories/farmerRepository.js";
 import { PythonClient } from "../../services/pythonClient.js";
+import { weatherRepo } from "../../db/repositories/weatherRepository.js";
 
 export class Layer2Service {
   getStageDescription(stage, cropType) {
@@ -40,20 +41,74 @@ export class Layer2Service {
       return existingState;
     }
 
+    // Infer region from field coordinates instead of hardcoding 'punjab'
+    const region = this._inferRegion(field.lat, field.lng);
+
     const calendar = await cropStateRepo.getCropCalendar(
       field.crop_type,
-      "punjab",
+      region,
     );
     if (!calendar) {
-      throw new Error(
-        `Crop calendar not found for ${field.crop_type} in region punjab`,
-      );
+      // Try fallback to 'punjab' default region if inferred region has no calendar
+      const fallbackCalendar = await cropStateRepo.getCropCalendar(field.crop_type, 'punjab');
+      if (!fallbackCalendar) {
+        throw new Error(
+          `Crop calendar not found for ${field.crop_type} in region ${region} (or fallback punjab)`,
+        );
+      }
+      console.warn(`[Crop] No calendar for ${field.crop_type}/${region}, using punjab fallback.`);
+      return this._computeStateFromCalendar(field, fallbackCalendar, fieldId, existingState);
     }
 
-    // Call Python FastAPI for scientific calculation
+    return this._computeStateFromCalendar(field, calendar, fieldId, existingState);
+  }
+
+  /**
+   * Infer an agricultural region name from lat/lng bounding boxes.
+   * Mirrors the logic in soil.service.js._inferRegion() for consistency.
+   */
+  _inferRegion(lat, lng) {
+    if (lat == null || lng == null) return 'punjab'; // default fallback
+
+    // Punjab / Haryana (North India)
+    if (lat >= 28.0 && lat <= 32.5 && lng >= 73.0 && lng <= 77.5) return 'punjab';
+    // Rajasthan
+    if (lat >= 23.0 && lat <= 30.5 && lng >= 69.0 && lng <= 78.5) return 'rajasthan';
+    // Maharashtra
+    if (lat >= 15.5 && lat <= 22.5 && lng >= 72.5 && lng <= 80.9) return 'maharashtra';
+    // Karnataka
+    if (lat >= 11.5 && lat <= 18.5 && lng >= 74.0 && lng <= 78.5) return 'karnataka';
+    // Gujarat
+    if (lat >= 20.0 && lat <= 24.5 && lng >= 68.0 && lng <= 74.5) return 'gujarat';
+    // Uttar Pradesh / Bihar
+    if (lat >= 24.0 && lat <= 28.5 && lng >= 77.0 && lng <= 88.5) return 'uttar_pradesh';
+
+    return 'punjab'; // national default
+  }
+
+  /**
+   * Shared state-computation logic after a calendar has been resolved.
+   */
+  async _computeStateFromCalendar(field, calendar, fieldId, existingState) {
+    // Fetch real daily temperature history from weather_snapshots to enable proper GDD
+    let temperatureHistory = null;
+    try {
+      const snapshots = await weatherRepo.getRecentSnapshots(fieldId, 90);
+      if (snapshots.length > 0) {
+        temperatureHistory = {
+          temp_max_c: snapshots.map((s) => s.temp_max ?? s.temperature_max ?? 0),
+          temp_min_c: snapshots.map((s) => s.temp_min ?? s.temperature_min ?? 0),
+        };
+      }
+    } catch {
+      // weather data unavailable — phenology falls back to 15 GDD/day estimate
+    }
+
+    // Call Python FastAPI for GDD calculation with real temperature data
     const phenology = await PythonClient.calculatePhenology(
       field.sowing_date,
       calendar,
+      temperatureHistory,
     );
 
     const newState = {
@@ -62,7 +117,7 @@ export class Layer2Service {
       confirmed_variety: field.crop_variety,
       current_stage: phenology.current_stage,
       stage_description: phenology.stage_description,
-      stage_confidence: "high",
+      stage_confidence: phenology.gdd_method === "real_temperature" ? "high" : "medium",
       stage_conflict: existingState?.stage_conflict ?? false,
       accumulated_gdd: phenology.accumulated_gdd,
       last_updated_from: "calendar_estimate",

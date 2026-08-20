@@ -70,13 +70,22 @@ export class PythonClient {
     return res.json();
   }
 
-  static async calculatePhenology(sowingDate, calendar) {
+  /**
+   * Calculate crop phenology (GDD + stage).
+   * @param {string} sowingDate - ISO date string
+   * @param {object} calendar - crop calendar with stages
+   * @param {object} [temperatureHistory] - optional { temp_max_c: number[], temp_min_c: number[] }
+   *   from weather_snapshots. When provided, real GDD is computed instead of the 15/day stub.
+   */
+  static async calculatePhenology(sowingDate, calendar, temperatureHistory = null) {
     const res = await fetch(`${PYTHON_API_URL}/phenology/gdd`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sowing_date: sowingDate,
         calendar: calendar,
+        temp_max_c: temperatureHistory?.temp_max_c ?? null,
+        temp_min_c: temperatureHistory?.temp_min_c ?? null,
       }),
     });
     if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);

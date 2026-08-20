@@ -34,7 +34,6 @@ export const EarthEngineProvider = ({ children }) => {
               null,
               null,
               () => {
-                console.log('Earth Engine initialized successfully.');
                 setIsAuthenticated(true);
                 resolve();
               },
@@ -57,7 +56,6 @@ export const EarthEngineProvider = ({ children }) => {
 
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
-      console.log('OAuth Success, initializing EE...');
       initializeEarthEngine(tokenResponse.access_token);
     },
     onError: (errorResponse) => {

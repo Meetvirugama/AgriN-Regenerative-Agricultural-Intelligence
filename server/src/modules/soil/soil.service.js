@@ -49,7 +49,6 @@ class SoilService {
           ...soilData,
           source: "soilgrids",
         });
-        console.log(`[Soil] Fetched real SoilGrids data for field ${fieldId} (lat:${field.lat}, lng:${field.lng})`);
         return profile;
       } catch (err) {
         console.warn(`[Soil] SoilGrids unavailable for field ${fieldId}: ${err.message}. Falling back to regional baseline.`);
@@ -60,7 +59,6 @@ class SoilService {
     const region = this._inferRegion(field?.lat, field?.lng);
     const baseline = await soilRepo.findRegionalBaseline(region);
     if (baseline) {
-      console.log(`[Soil] Using regional baseline (${region}) for field ${fieldId}`);
       return {
         field_id: fieldId,
         source: "regional_inference",
@@ -75,9 +73,12 @@ class SoilService {
 
   /**
    * Parse and save a farmer-submitted lab report (image/PDF via Gemini Vision).
+   * @param {string} fieldId
+   * @param {Buffer} fileBuffer - raw file bytes
+   * @param {string} [mimeType="image/jpeg"] - real MIME type from multer
    */
-  async parseAndSaveLabReport(fieldId, fileBuffer) {
-    const parsed = await DocumentParser.parseSoilReport(fileBuffer);
+  async parseAndSaveLabReport(fieldId, fileBuffer, mimeType = "image/jpeg") {
+    const parsed = await DocumentParser.parseSoilReport(fileBuffer, mimeType);
     if (!parsed) throw new Error("Could not parse soil report document.");
 
     return soilRepo.saveProfile({

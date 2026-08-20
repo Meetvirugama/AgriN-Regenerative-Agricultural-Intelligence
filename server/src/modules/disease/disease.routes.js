@@ -69,7 +69,7 @@ router.post("/:fieldId/diagnose", async (req, res) => {
     res.json(observation);
   } catch (err) {
     console.error("[Diagnosis] Error:", err.message);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
@@ -84,7 +84,7 @@ router.get("/:fieldId/observations", async (req, res) => {
     const history = await observationService.getObservations(fieldId, limit);
     res.json({ observations: history, count: history.length });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
@@ -96,7 +96,7 @@ router.get("/:fieldId/diagnoses", async (req, res) => {
     const history = await observationService.getObservations(req.params.fieldId);
     res.json({ history });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
@@ -127,7 +127,7 @@ router.put("/:fieldId/observations/:obsId", async (req, res) => {
     res.json({ success: true, observation: updated });
   } catch (err) {
     console.error("[Diagnosis] Error updating outcome:", err.message);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 

@@ -9,14 +9,15 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
-const MODEL = "gemini-3.6-flash";
+// Use unified GEMINI_MODEL env var (same as advisory, chat, disease modules)
+const MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
 
 /**
  * GET /api/v1/intelligence
  * Fetches real field/health data from the DB and uses Gemini to generate
  * an aggregated intelligence summary with recommendations.
  */
-router.get("/", async (req, res) => {
+router.get("/", async (req, res, next) => {
   try {
     const farmerId = req.farmer.sub;
 
@@ -122,7 +123,7 @@ Respond ONLY with valid JSON array, no markdown, no explanation:
     });
   } catch (err) {
     console.error("[Intelligence] Error:", err.message);
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 

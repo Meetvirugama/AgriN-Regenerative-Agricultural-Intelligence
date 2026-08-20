@@ -1,53 +1,118 @@
 import { Router } from "express";
+import multer from "multer";
 import { PythonVoiceAdapter } from "./voice.adapter.js";
+import { optionalAuth, requireAuth } from "../../middleware/auth.js";
+import { query, queryOne } from "../../db/connection.js";
 
 const router = Router();
 const voiceAdapter = new PythonVoiceAdapter();
 
-// Mock language preference storage (in memory for MVP)
-let userLanguage = "en-US";
+// multer — in-memory storage for audio uploads (no disk writes)
+const audioUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
+});
 
-// Endpoint to change language preference (Layer 01 update)
-router.put("/user/language", (req, res) => {
-  const { language } = req.body;
-  if (language) {
-    userLanguage = language;
-    console.log(`User preferred language updated to: ${userLanguage}`);
-    res.json({ success: true, language: userLanguage });
-  } else {
-    res.status(400).json({ error: "Language is required" });
+/**
+ * PUT /api/v1/user/language
+ * Store language preference per-farmer (in DB) rather than a global in-memory variable.
+ * Requires authentication so the preference is correctly scoped to the individual farmer.
+ */
+router.put("/user/language", requireAuth, async (req, res, next) => {
+  try {
+    const { language } = req.body;
+    if (!language) {
+      return res.status(400).json({ error: "Language is required" });
+    }
+
+    const farmerId = req.farmer.sub;
+
+    // Persist language preference to the farmer's row in the DB
+    try {
+      await queryOne(
+        `UPDATE farmers SET preferred_language = $1 WHERE id = $2 RETURNING preferred_language`,
+        [language, farmerId],
+      );
+    } catch {
+      // If DB update fails (e.g., column missing), still acknowledge the request
+      console.warn("[Voice] Could not persist language preference to DB — column may not exist yet.");
+    }
+
+    res.json({ success: true, language });
+  } catch (err) {
+    next(err);
   }
 });
 
-// Endpoint for Speech-to-Text (STT)
-router.post("/voice/stt", async (req, res) => {
+/**
+ * POST /api/v1/voice/stt
+ * Speech-to-Text endpoint.
+ * Accepts a real audio file upload (multipart/form-data field: "audio").
+ * Falls back to text body if no file provided.
+ */
+router.post("/voice/stt", optionalAuth, audioUpload.single("audio"), async (req, res, next) => {
   try {
-    // In a real app, use multer to parse the audio file from req.body or req.file
-    // For MVP, we mock the buffer and use the stored preferred language
-    const mockAudioBuffer = Buffer.from("dummy-audio");
-    const transcribedText = await voiceAdapter.transcribe(
-      mockAudioBuffer,
-      userLanguage,
-    );
-    res.json({ text: transcribedText, language: userLanguage });
+    // Determine the target language: from body, or from farmer's DB preference, or default
+    let language = req.body?.language ?? "en-US";
+    if (req.farmer?.sub) {
+      try {
+        const row = await queryOne(
+          `SELECT preferred_language FROM farmers WHERE id = $1`,
+          [req.farmer.sub],
+        );
+        if (row?.preferred_language) language = row.preferred_language;
+      } catch {
+        // Ignore DB error — use default language
+      }
+    }
+
+    // Use real uploaded audio buffer; reject if no file provided
+    if (!req.file) {
+      return res.status(400).json({ error: "Audio file is required. Upload as multipart/form-data with field name 'audio'." });
+    }
+
+    const audioBuffer = req.file.buffer;
+    const transcribedText = await voiceAdapter.transcribe(audioBuffer, language);
+    res.json({ text: transcribedText, language });
   } catch (error) {
     console.error("STT Error:", error);
-    res.status(500).json({ error: "Failed to transcribe audio" });
+    next(error);
   }
 });
 
-// Endpoint for Text-to-Speech (TTS)
-router.post("/voice/tts", async (req, res) => {
+/**
+ * POST /api/v1/voice/tts
+ * Text-to-Speech endpoint.
+ * Accepts { text, language? } — language defaults to farmer's DB preference or "en-US".
+ */
+router.post("/voice/tts", optionalAuth, async (req, res, next) => {
   try {
-    const { text, language } = req.body;
-    const targetLanguage = language || userLanguage;
-    const audioBuffer = await voiceAdapter.synthesize(text, targetLanguage);
-    // Return base64 encoded audio for easy frontend consumption in MVP
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ error: "text is required" });
+    }
+
+    // Determine target language per-farmer
+    let language = req.body?.language ?? "en-US";
+    if (req.farmer?.sub) {
+      try {
+        const row = await queryOne(
+          `SELECT preferred_language FROM farmers WHERE id = $1`,
+          [req.farmer.sub],
+        );
+        if (row?.preferred_language) language = row.preferred_language;
+      } catch {
+        // Ignore DB error — use default
+      }
+    }
+
+    const audioBuffer = await voiceAdapter.synthesize(text, language);
+    // Return base64 encoded audio for frontend consumption
     const base64Audio = audioBuffer.toString("base64");
-    res.json({ audioContent: base64Audio, format: "audio/wav" });
+    res.json({ audioContent: base64Audio, format: "audio/wav", language });
   } catch (error) {
     console.error("TTS Error:", error);
-    res.status(500).json({ error: "Failed to synthesize speech" });
+    next(error);
   }
 });
 

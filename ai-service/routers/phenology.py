@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 router = APIRouter()
@@ -17,11 +17,26 @@ class CropCalendar(BaseModel):
 class PhenologyRequest(BaseModel):
     sowing_date: str
     calendar: CropCalendar
+    # Optional: daily temperature history from weather_snapshots
+    # If provided, real GDD is computed. If absent, falls back to a 15 GDD/day estimate.
+    temp_max_c: Optional[List[float]] = None  # one value per day since sowing, most recent last
+    temp_min_c: Optional[List[float]] = None  # paired with temp_max_c
 
 class PhenologyResponse(BaseModel):
     accumulated_gdd: int
     current_stage: str
     stage_description: str
+    gdd_method: str  # "real_temperature" | "estimated_15_per_day"
+
+# Base temperatures (°C) by crop — below this, no GDD accumulates
+BASE_TEMPS: dict[str, float] = {
+    "wheat":   4.0,
+    "rice":    10.0,
+    "maize":   10.0,
+    "cotton":  15.5,
+    "soybean": 10.0,
+    "sugarcane": 10.0,
+}
 
 def get_stage_description(stage: str, crop_type: str) -> str:
     descriptions = {
@@ -52,13 +67,37 @@ def get_stage_description(stage: str, crop_type: str) -> str:
 async def calculate_phenology(request: PhenologyRequest):
     """
     Calculates accumulated GDD and infers the current crop stage.
+
+    Uses real daily temperature data (temp_max_c / temp_min_c) when provided
+    by the Node caller (sourced from weather_snapshots). Falls back to the
+    15 GDD/day estimate when temperature history is unavailable.
     """
     try:
-        # Stub: Assumes 15 GDD accumulated per day on average
         sowing = datetime.fromisoformat(request.sowing_date.replace('Z', '+00:00'))
         now = datetime.now(sowing.tzinfo)
-        diff_days = (now - sowing).days
-        gdd = max(0, diff_days * 15)
+        diff_days = max(0, (now - sowing).days)
+
+        gdd_method = "estimated_15_per_day"
+        gdd = 0
+
+        # Real GDD calculation when temperature data is available
+        if (
+            request.temp_max_c
+            and request.temp_min_c
+            and len(request.temp_max_c) == len(request.temp_min_c)
+            and len(request.temp_max_c) > 0
+        ):
+            crop = request.calendar.crop_type.lower()
+            base_temp = BASE_TEMPS.get(crop, 10.0)
+            for t_max, t_min in zip(request.temp_max_c, request.temp_min_c):
+                mean_temp = (t_max + t_min) / 2.0
+                daily_gdd = max(0.0, mean_temp - base_temp)
+                gdd += daily_gdd
+            gdd = int(round(gdd))
+            gdd_method = "real_temperature"
+        else:
+            # Fallback: 15 GDD/day average estimate
+            gdd = max(0, diff_days * 15)
         
         # Infer stage
         sorted_stages = sorted(request.calendar.stages, key=lambda x: x.gdd_threshold)
@@ -75,7 +114,8 @@ async def calculate_phenology(request: PhenologyRequest):
         return PhenologyResponse(
             accumulated_gdd=gdd,
             current_stage=current_stage,
-            stage_description=description
+            stage_description=description,
+            gdd_method=gdd_method,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { layer1Service, STUB_FARMER_ID } from "./field.service.js";
-import { requireAuth } from "../../middleware/auth.js";
+import { requireAuth, optionalAuth } from "../../middleware/auth.js";
 
 const router = Router();
 
@@ -11,17 +11,17 @@ async function triggerWeatherPrefetch(fieldId) {
   try {
     const { layer3Service } = await import("../weather/weather.service.js");
     await layer3Service.fetchAndStoreForecast(fieldId);
-    console.log(`[Weather] Pre-fetched for new field ${fieldId}`);
   } catch (err) {
     console.warn(`[Weather] Pre-fetch failed for field ${fieldId} (non-fatal):`, err.message);
   }
 }
 
-// GET /api/v1/fields
-router.get("/", async (req, res, next) => {
+// GET /api/v1/fields — optionalAuth: authenticated farmers see only their fields
+router.get("/", optionalAuth, async (req, res, next) => {
   try {
-    const farmerId = req.user?.id || STUB_FARMER_ID;
-    if (!req.user) {
+    // req.farmer.sub is set by optionalAuth if a valid token is present
+    const farmerId = req.farmer?.sub || STUB_FARMER_ID;
+    if (!req.farmer) {
       await layer1Service.getOrCreateMockFarmer();
     }
     const fields = await layer1Service.getAllFieldsForFarmer(farmerId);
@@ -44,11 +44,12 @@ router.get("/:fieldId", async (req, res, next) => {
   }
 });
 
-// POST /api/v1/fields
-router.post("/", async (req, res, next) => {
+// POST /api/v1/fields — optionalAuth: creates under authenticated farmer if present
+router.post("/", optionalAuth, async (req, res, next) => {
   try {
-    const farmerId = req.user?.id || STUB_FARMER_ID;
-    if (!req.user) await layer1Service.getOrCreateMockFarmer();
+    // Scope to authenticated farmer when token present; fall back to stub for dev
+    const farmerId = req.farmer?.sub || STUB_FARMER_ID;
+    if (!req.farmer) await layer1Service.getOrCreateMockFarmer();
 
     const {
       name,
@@ -100,8 +101,8 @@ router.put("/:fieldId", requireAuth, async (req, res, next) => {
       return res.status(404).json({ error: { message: "Field not found" } });
     }
 
-    // Ownership check — only the farmer who owns the field can edit it
-    if (req.user?.id && existing.farmer_id !== req.user.id) {
+    // Ownership check — req.farmer.sub is the authenticated farmer's UUID (set by requireAuth)
+    if (req.farmer?.sub && existing.farmer_id !== req.farmer.sub) {
       return res.status(403).json({ error: { message: "Forbidden" } });
     }
 
@@ -129,8 +130,8 @@ router.delete("/:fieldId", requireAuth, async (req, res, next) => {
       return res.status(404).json({ error: { message: "Field not found" } });
     }
 
-    // Ownership check
-    if (req.user?.id && existing.farmer_id !== req.user.id) {
+    // Ownership check — req.farmer.sub is the authenticated farmer's UUID (set by requireAuth)
+    if (req.farmer?.sub && existing.farmer_id !== req.farmer.sub) {
       return res.status(403).json({ error: { message: "Forbidden" } });
     }
 

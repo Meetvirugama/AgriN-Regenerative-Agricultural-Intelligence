@@ -18,7 +18,6 @@ const MIGRATIONS_DIR = path.join(__dirname, "migrations");
  *   npx tsx src/db/migrate.ts
  */
 async function runMigrations() {
-  console.log("[Migrate] Starting migration runner...");
 
   const client = await pool.connect();
 
@@ -48,7 +47,6 @@ async function runMigrations() {
 
     for (const file of files) {
       if (appliedSet.has(file)) {
-        console.log(`[Migrate] ⏩ Skipping ${file} (already applied)`);
         skipped++;
         continue;
       }
@@ -56,7 +54,6 @@ async function runMigrations() {
       const filePath = path.join(MIGRATIONS_DIR, file);
       const sql = fs.readFileSync(filePath, "utf-8");
 
-      console.log(`[Migrate] ▶  Running ${file}...`);
 
       await client.query("BEGIN");
       try {
@@ -66,7 +63,6 @@ async function runMigrations() {
           [file],
         );
         await client.query("COMMIT");
-        console.log(`[Migrate] ✅ ${file} applied successfully`);
         ran++;
       } catch (err) {
         await client.query("ROLLBACK");
@@ -75,7 +71,6 @@ async function runMigrations() {
       }
     }
 
-    console.log(
       `[Migrate] Done. Ran: ${ran}, Skipped (already applied): ${skipped}`,
     );
   } finally {

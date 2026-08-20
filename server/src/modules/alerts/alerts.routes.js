@@ -20,13 +20,16 @@ const timeSince = (date) => {
 };
 
 // Endpoint to get alerts
-router.get("/", async (req, res) => {
+// Handles both authenticated (/api/v1/alerts with requireAuth) and
+// legacy unauthenticated (/api/alerts) — returns [] when no auth present.
+router.get("/", async (req, res, next) => {
   try {
-    // No auth on legacy /api/alerts — return empty array gracefully
-    if (!req.farmer?.sub) {
+    const farmerId = req.farmer?.sub;
+    if (!farmerId) {
+      // Legacy unauthenticated mount: return empty array gracefully
       return res.json([]);
     }
-    const farmerId = req.farmer.sub;
+
     const dbAlerts = await alertsRepository.findAlertsByFarmerId(farmerId);
     
     // Map to the format expected by the frontend
@@ -43,18 +46,22 @@ router.get("/", async (req, res) => {
 
     res.json(formattedAlerts);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Endpoint to create a new alert (for testing/seeding)
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   try {
-    const farmerId = req.farmer.sub;
+    const farmerId = req.farmer?.sub;
+    // Guard against unauthenticated POST via legacy mount
+    if (!farmerId) {
+      return res.status(401).json({ error: { message: "Authentication required to create alerts.", status: 401 } });
+    }
     const newAlert = await alertsRepository.createAlert(farmerId, req.body);
     res.status(201).json(newAlert);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 

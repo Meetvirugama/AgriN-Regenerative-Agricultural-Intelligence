@@ -11,7 +11,6 @@ import { layer1Service } from "../field/field.service.js";
  */
 function createSatelliteProvider() {
   if (process.env.CDSE_CLIENT_ID && process.env.CDSE_CLIENT_SECRET) {
-    console.log("[Satellite] ✅ Using CopernicusProvider — real Sentinel-2 data");
     return new CopernicusProvider();
   }
   console.warn("[Satellite] ⚠ No CDSE credentials — using MockSatelliteProvider. Data is NOT real.");
@@ -21,39 +20,58 @@ function createSatelliteProvider() {
 class SatelliteService {
   constructor() {
     this.provider = createSatelliteProvider();
+    // Keep a mock instance ready for fallback when Copernicus fails
+    this.mockProvider = new MockSatelliteProvider();
   }
 
   /**
    * Fetch (or return cached) latest satellite tile for a field.
    * Returns the tile with cloud quality badge.
+   * @param {string} fieldId
+   * @param {boolean} [forceRefresh=false] — when true, bypasses cache and fetches fresh data
    */
-  async getLatestForField(fieldId) {
+  async getLatestForField(fieldId, forceRefresh = false) {
     const field = await layer1Service.getField(fieldId);
     if (!field) throw new Error(`Field ${fieldId} not found`);
 
-    // Check if we have a recent non-obstructed tile (< 6 days old)
-    const cached = await queryOne(
-      `SELECT id, field_id, capture_date::text AS observation_date,
-              provider, ndvi_mean::float, ndvi_median::float,
-              ndvi_min::float, ndvi_max::float, ndvi_std::float,
-              moisture_proxy::float AS ndmi_mean,
-              cloud_cover_pct::float, cloud_obstructed,
-              scene_id, pixel_count, ingested_at::text
-       FROM satellite_tiles
-       WHERE field_id = $1
-         AND ingested_at > NOW() - INTERVAL '6 days'
-       ORDER BY ingested_at DESC
-       LIMIT 1`,
-      [fieldId],
-    );
+    if (!forceRefresh) {
+      // Check if we have a recent non-obstructed tile (< 6 days old)
+      const cached = await queryOne(
+        `SELECT id, field_id, capture_date::text AS observation_date,
+                provider, ndvi_mean::float, ndvi_median::float,
+                ndvi_min::float, ndvi_max::float, ndvi_std::float,
+                moisture_proxy::float AS ndmi_mean,
+                cloud_cover_pct::float, cloud_obstructed,
+                scene_id, pixel_count, ingested_at::text
+         FROM satellite_tiles
+         WHERE field_id = $1
+           AND ingested_at > NOW() - INTERVAL '6 days'
+         ORDER BY ingested_at DESC
+         LIMIT 1`,
+        [fieldId],
+      );
 
-    if (cached) return this._formatTile(cached);
+      if (cached) return this._formatTile(cached);
+    }
 
     // Use the real PostGIS-derived GeoJSON polygon for the Copernicus API.
     // For the mock provider, geojson can be null.
     const geojson = field.geojson ?? null;
 
-    const raw = await this.provider.fetchLatestTile(geojson, fieldId);
+    let raw;
+    try {
+      raw = await this.provider.fetchLatestTile(geojson, fieldId);
+    } catch (providerErr) {
+      // Copernicus failed — fall back to mock provider with a clear warning
+      if (this.provider !== this.mockProvider) {
+        console.warn(
+          `[Satellite] CopernicusProvider failed (${providerErr.message}) — falling back to MockSatelliteProvider. Data will be simulated.`
+        );
+        raw = await this.mockProvider.fetchLatestTile(geojson, fieldId);
+      } else {
+        throw providerErr; // Mock also failed — propagate
+      }
+    }
 
     // Persist all NDVI stats
     const saved = await this._saveTile(fieldId, raw);

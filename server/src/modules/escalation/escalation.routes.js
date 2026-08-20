@@ -17,7 +17,10 @@ router.post("/trigger", async (req, res, next) => {
         });
       return;
     }
+    // Pass authenticated farmer's ID — req.farmer is set by requireAuth middleware
+    const farmerId = req.farmer?.sub ?? null;
     const ticket = await EscalationService.triggerEscalation(
+      farmerId,
       fieldId,
       reason,
       source,

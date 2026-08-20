@@ -75,6 +75,18 @@ export class FieldRepository {
     );
   }
 
+  /**
+   * Return ALL fields across all farmers — used by background jobs
+   * (e.g., nightly stage recompute) that must process every field.
+   */
+  async findAllFields() {
+    return query(
+      `SELECT ${this.#SELECT_FIELDS}
+       FROM fields
+       ORDER BY created_at ASC`,
+    );
+  }
+
   async upsertField(field) {
     // Plain INSERT without PostGIS geometry columns — works on any PostgreSQL instance
     const row = await queryOne(

@@ -5,7 +5,7 @@ import { layer1Service } from "../field/field.service.js";
 const router = Router();
 
 // Endpoint for climate risk prediction — delegates to Python AI service
-router.get("/fields/:fieldId/climate-risk", async (req, res) => {
+router.get("/fields/:fieldId/climate-risk", async (req, res, next) => {
   try {
     const { fieldId } = req.params;
     const field = await layer1Service.getField(fieldId);
@@ -22,10 +22,8 @@ router.get("/fields/:fieldId/climate-risk", async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("[ClimateRisk] Error:", error.message);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 export default router;
-
-

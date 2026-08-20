@@ -84,9 +84,7 @@ export const SatelliteDetailView = ({ fieldId, fieldBoundary, onClose }) => {
               <Button
                 size="sm"
                 className="whitespace-nowrap"
-                onClick={() =>
-                  console.log("Deep link to Layer 07 Diagnosis flow")
-                }
+                onClick={() => {}}
               >
                 <Camera size={16} /> INSPECT ON GROUND
               </Button>

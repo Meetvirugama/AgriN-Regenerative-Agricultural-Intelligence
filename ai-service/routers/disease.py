@@ -149,7 +149,6 @@ async def get_known_classes(crop_type: str):
     Returns the known disease/condition class list for a crop type.
     Used by the frontend to show what conditions are detectable.
     """
-    from models.schemas import KNOWN_CONDITIONS
     crop_key = crop_type.lower().split()[0]
     classes = KNOWN_CONDITIONS.get(crop_key, KNOWN_CONDITIONS["default"])
     return {"crop_type": crop_type, "classes": classes, "count": len(classes)}
