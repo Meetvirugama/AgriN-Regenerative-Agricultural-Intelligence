@@ -230,33 +230,34 @@ export const AddFieldWizard = () => {
         {/* STEP 1: LOCATION */}
         {step === 1 && (
           <div className="wizard-step-content cols-3">
+            {/* MAIN COLUMN */}
             <div className="wizard-main-col wizard-col-flex">
               <div>
                 <h2 className="wizard-step-title">Step 1: Location</h2>
                 <p className="wizard-step-subtitle">Search for your field or use your current location</p>
               </div>
 
-              <div className="wizard-search-bar" style={{ position: 'relative' }}>
+              <div className="wizard-search-bar">
                 <div className="wizard-search-input-wrapper">
                   <Search size={18} className="wizard-search-icon" />
                   <Autocomplete
                     onLoad={autocomplete => { autocompleteRef.current = autocomplete; }}
                     onPlaceChanged={onPlaceChanged}
                   >
-                    <input 
-                      type="text" 
-                      placeholder="Search location (e.g. Madhopur)..." 
+                    <input
+                      type="text"
+                      placeholder="Search location (e.g. Madhopur)..."
                       className="wizard-input wizard-form-input with-icon"
                       style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', paddingLeft: '2.75rem' }}
                     />
                   </Autocomplete>
                 </div>
-                <button className="wizard-target-btn" onClick={useMyLocation} title="Use My Location" style={{ color: 'var(--primary)'}}>
+                <button className="wizard-target-btn" onClick={useMyLocation} title="Use My Location" style={{ color: 'var(--primary)' }}>
                   <Crosshair size={20} />
                 </button>
               </div>
 
-              <div className="wizard-map-wrapper" style={{ height: '400px', zIndex: 1 }}>
+              <div className="wizard-map-wrapper" style={{ zIndex: 1 }}>
                 <GoogleMap
                   mapContainerStyle={mapContainerStyle}
                   center={mapCenter}
@@ -272,7 +273,6 @@ export const AddFieldWizard = () => {
                     mapId: 'AGRIMESH_MAP',
                   }}
                 >
-                  {/* Pin rendered as overlay instead of deprecated Marker */}
                   <LocationPin position={{ lat: location.lat, lng: location.lng }} map={mapRef.current} />
                 </GoogleMap>
               </div>
@@ -286,17 +286,27 @@ export const AddFieldWizard = () => {
               </div>
             </div>
 
+            {/* SIDE COLUMN */}
             <div className="wizard-side-col">
               <div className="wizard-side-card">
                 <h3 className="wizard-card-title">Why we need your field location</h3>
                 <div className="wizard-feature-list">
-                  <div className="wizard-feature-item"><div className="wizard-feature-icon"><Satellite size={24} strokeWidth={1.5} /></div><p className="wizard-feature-text">Accurate field satellite imagery</p></div>
-                  <div className="wizard-feature-item"><div className="wizard-feature-icon"><CloudRain size={24} strokeWidth={1.5} /></div><p className="wizard-feature-text">Field-local weather forecasts</p></div>
-                  <div className="wizard-feature-item"><div className="wizard-feature-icon"><MapIcon size={24} strokeWidth={1.5} /></div><p className="wizard-feature-text">Advice specific to your field context</p></div>
+                  <div className="wizard-feature-item">
+                    <div className="wizard-feature-icon"><Satellite size={24} strokeWidth={1.5} /></div>
+                    <p className="wizard-feature-text">Accurate field satellite imagery</p>
+                  </div>
+                  <div className="wizard-feature-item">
+                    <div className="wizard-feature-icon"><CloudRain size={24} strokeWidth={1.5} /></div>
+                    <p className="wizard-feature-text">Field-local weather forecasts</p>
+                  </div>
+                  <div className="wizard-feature-item">
+                    <div className="wizard-feature-icon"><MapIcon size={24} strokeWidth={1.5} /></div>
+                    <p className="wizard-feature-text">Advice specific to your field context</p>
+                  </div>
                 </div>
-                
+
                 <div className="wizard-divider"></div>
-                
+
                 <h3 className="wizard-card-title">Selected Location</h3>
                 <div className="wizard-selected-location">
                   <div className="wizard-selected-info">
@@ -308,10 +318,17 @@ export const AddFieldWizard = () => {
                   </div>
                 </div>
               </div>
-              
+
+              {/* ACTION BUTTONS — always visible */}
               <div className="wizard-actions">
                 <button onClick={() => navigate('/fields')} className="wizard-btn-outline">Cancel</button>
-                <button onClick={() => setStep(2)} className="wizard-btn-solid">Next</button>
+                <button
+                  id="step1-next-btn"
+                  onClick={() => setStep(2)}
+                  className="wizard-btn-solid"
+                >
+                  Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
               </div>
             </div>
           </div>
@@ -320,6 +337,7 @@ export const AddFieldWizard = () => {
         {/* STEP 2: BOUNDARY — manual click-to-draw */}
         {step === 2 && (
           <div className="wizard-step-content cols-4">
+            {/* MAIN COLUMN */}
             <div className="wizard-main-col-xl wizard-col-flex tall">
               <div className="wizard-step-header-row">
                 <div>
@@ -327,16 +345,16 @@ export const AddFieldWizard = () => {
                   <p className="wizard-step-subtitle">Click the map to place points around your field boundary</p>
                 </div>
                 <div className="wizard-inline-info">
-                  <Info size={16} /> Click map corners, then press "Finish Drawing"
+                  <Info size={16} /> Click corners → "Finish Drawing"
                 </div>
               </div>
 
               {/* Drawing toolbar */}
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {!isDrawingMode && boundaryCoords.length === 0 && (
                   <button
                     onClick={startDrawing}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem', fontFamily: 'inherit' }}
                   >
                     <PenTool size={16} /> Start Drawing
                   </button>
@@ -344,25 +362,25 @@ export const AddFieldWizard = () => {
                 {isDrawingMode && (
                   <>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(34,197,94,0.1)', color: 'var(--success)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>
-                      <MousePointer2 size={16} /> Drawing... ({draftPoints.length} pts)
+                      <MousePointer2 size={16} /> Drawing… ({draftPoints.length} pts)
                     </span>
                     <button
                       onClick={undoLastPoint}
                       disabled={draftPoints.length === 0}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem', opacity: draftPoints.length === 0 ? 0.4 : 1 }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem', opacity: draftPoints.length === 0 ? 0.4 : 1, fontFamily: 'inherit' }}
                     >
                       <Undo2 size={16} /> Undo
                     </button>
                     <button
                       onClick={finishDrawing}
                       disabled={draftPoints.length < 3}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--success)', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem', opacity: draftPoints.length < 3 ? 0.5 : 1 }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--success)', color: '#fff', border: 'none', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', fontSize: '0.875rem', opacity: draftPoints.length < 3 ? 0.5 : 1, fontFamily: 'inherit' }}
                     >
                       <Check size={16} /> Finish Drawing
                     </button>
                     <button
                       onClick={clearBoundary}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontWeight: '600', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.875rem' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontWeight: '600', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.875rem', fontFamily: 'inherit' }}
                     >
                       <X size={16} /> Cancel
                     </button>
@@ -371,21 +389,16 @@ export const AddFieldWizard = () => {
                 {boundaryCoords.length > 0 && (
                   <button
                     onClick={clearBoundary}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontWeight: '600', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.875rem' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0.5rem', fontWeight: '600', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.875rem', fontFamily: 'inherit' }}
                   >
                     <Trash2 size={16} /> Clear & Redraw
                   </button>
                 )}
               </div>
 
-              <div 
-                className="wizard-map-wrapper" 
-                style={{ 
-                  height: '500px', 
-                  zIndex: 1, 
-                  position: 'relative',
-                  cursor: isDrawingMode ? 'crosshair' : 'default'
-                }}
+              <div
+                className="wizard-map-wrapper"
+                style={{ zIndex: 1, position: 'relative', cursor: isDrawingMode ? 'crosshair' : 'default' }}
               >
                 <GoogleMap
                   mapContainerStyle={mapContainerStyle}
@@ -402,46 +415,38 @@ export const AddFieldWizard = () => {
                     mapId: 'AGRIMESH_MAP',
                   }}
                 >
-                  {/* Show draft polygon while drawing */}
                   {draftPoints.length >= 3 && (
                     <Polygon
                       paths={draftPoints}
-                      options={{
-                        fillColor: '#22c55e',
-                        fillOpacity: 0.2,
-                        strokeColor: '#22c55e',
-                        strokeOpacity: 0.8,
-                        strokeWeight: 2,
-                        strokeDasharray: '8,4',
-                      }}
+                      options={{ fillColor: '#22c55e', fillOpacity: 0.2, strokeColor: '#22c55e', strokeOpacity: 0.8, strokeWeight: 2 }}
                     />
                   )}
-                  {/* Show finalized polygon */}
                   {boundaryCoords.length > 0 && (
                     <Polygon
                       paths={boundaryCoords}
-                      options={{
-                        fillColor: '#22c55e',
-                        fillOpacity: 0.4,
-                        strokeColor: '#22c55e',
-                        strokeOpacity: 1,
-                        strokeWeight: 2
-                      }}
+                      options={{ fillColor: '#22c55e', fillOpacity: 0.4, strokeColor: '#22c55e', strokeOpacity: 1, strokeWeight: 2 }}
                     />
                   )}
                 </GoogleMap>
               </div>
             </div>
 
+            {/* SIDE COLUMN */}
             <div className="wizard-side-col tall">
               <div className="wizard-side-card">
                 <p className="wizard-area-label">Field Area</p>
                 <h3 className="wizard-area-value">{areaHectares} Hectares</h3>
                 <p className="wizard-area-sub">({Math.round(areaHectares * 10000)} m²)</p>
 
-                <div className="wizard-stats-list" style={{marginTop: '2rem'}}>
-                  <div className="wizard-stat-row"><div className="wizard-stat-label"><MapPin size={16} className="icon"/> Latitude</div><span className="wizard-stat-value">{location.lat.toFixed(4)}° N</span></div>
-                  <div className="wizard-stat-row"><div className="wizard-stat-label"><MapPin size={16} className="icon"/> Longitude</div><span className="wizard-stat-value">{location.lng.toFixed(4)}° E</span></div>
+                <div className="wizard-stats-list">
+                  <div className="wizard-stat-row">
+                    <div className="wizard-stat-label"><MapPin size={16} className="icon" /> Latitude</div>
+                    <span className="wizard-stat-value">{location.lat.toFixed(4)}° N</span>
+                  </div>
+                  <div className="wizard-stat-row">
+                    <div className="wizard-stat-label"><MapPin size={16} className="icon" /> Longitude</div>
+                    <span className="wizard-stat-value">{location.lng.toFixed(4)}° E</span>
+                  </div>
                 </div>
 
                 <div className="wizard-success-banner">
@@ -454,10 +459,12 @@ export const AddFieldWizard = () => {
                 </div>
               </div>
 
+              {/* ACTION BUTTONS — always visible */}
               <div className="wizard-actions">
-                <button onClick={() => setStep(1)} className="wizard-btn-outline">Previous</button>
-                <button onClick={() => setStep(3)} className="wizard-btn-solid">
-                  {boundaryCoords.length === 0 ? 'Skip (draw later)' : 'Next'} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                <button onClick={() => setStep(1)} className="wizard-btn-outline">← Back</button>
+                <button id="step2-next-btn" onClick={() => setStep(3)} className="wizard-btn-solid">
+                  {boundaryCoords.length === 0 ? 'Skip (draw later)' : 'Next'}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
                 </button>
               </div>
             </div>

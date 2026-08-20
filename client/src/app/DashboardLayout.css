@@ -341,9 +341,10 @@
 .dashboard-content {
   padding: 24px 40px 40px 40px;
   flex: 1;
-  max-width: 1400px;
+  max-width: 100%;
   width: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 @media (min-width: 769px) {
@@ -351,6 +352,11 @@
   .dashboard-content:has(.ask-minimal-viewport) {
     overflow: hidden !important;
     padding: 16px 36px 20px 36px;
+  }
+  /* Wizard page: let it scroll naturally */
+  .dashboard-content:has(.wizard-container) {
+    overflow-y: auto !important;
+    padding: 16px 32px 40px 32px;
   }
 }
 
