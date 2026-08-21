@@ -1,7 +1,8 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./providers/AuthProvider";
 import { Loader2 } from "lucide-react";
+import "./ProtectedRoute.css";
 
 /**
  * ProtectedRoute
@@ -16,11 +17,12 @@ export const ProtectedRoute = ({
   redirectIfAuthenticated = false,
 }) => {
   const { isLoading, isAuthenticated } = useAuth();
+  const location = useLocation();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 size={32} className="animate-spin text-primary" />
+      <div className="protected-route-loader-container">
+        <Loader2 size={32} className="protected-route-spinner" />
       </div>
     );
   }
@@ -30,7 +32,7 @@ export const ProtectedRoute = ({
   }
 
   if (!redirectIfAuthenticated && !isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

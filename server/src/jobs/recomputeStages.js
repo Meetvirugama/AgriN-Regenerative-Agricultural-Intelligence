@@ -11,13 +11,17 @@ import { fieldRepo } from "../db/repositories/farmerRepository.js";
 const CONCURRENCY = 5;
 
 async function mapWithConcurrency(items, fn, concurrency) {
+  const results = [];
   const executing = new Set();
   for (const item of items) {
     const p = fn(item).finally(() => executing.delete(p));
+    results.push(p);
     executing.add(p);
-    if (executing.size >= concurrency) await Promise.race(executing);
+    if (executing.size >= concurrency) {
+      await Promise.race(executing);
+    }
   }
-  return Promise.allSettled([...executing]);
+  return Promise.allSettled(results);
 }
 
 export async function runNightlyStageRecompute() {
@@ -58,11 +62,16 @@ export async function runNightlyStageRecompute() {
 
 // If run directly: node src/jobs/recomputeStages.js
 import { fileURLToPath } from 'url';
+import { pool } from '../db/connection.js';
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   runNightlyStageRecompute()
-    .then(() => process.exit(0))
-    .catch((err) => {
+    .then(async () => {
+      await pool.end();
+      process.exit(0);
+    })
+    .catch(async (err) => {
       console.error(err);
+      await pool.end();
       process.exit(1);
     });
 }

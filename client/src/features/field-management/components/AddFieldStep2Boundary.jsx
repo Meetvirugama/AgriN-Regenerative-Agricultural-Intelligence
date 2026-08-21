@@ -16,12 +16,29 @@ export const AddFieldStep2Boundary = () => {
   const lat = parseFloat(searchParams.get("lat") || "29.731");
   const lng = parseFloat(searchParams.get("lng") || "78.265");
   const address = searchParams.get("address") || "Madhopur, Uttar Pradesh, India";
+  
+  // Also read boundary and area if navigating back from Step 3
+  const initialArea = parseFloat(searchParams.get("area") || "0");
+  const boundaryRaw = searchParams.get("boundary");
+  let initialBoundary = [];
+  try {
+    if (boundaryRaw) {
+      const ring = JSON.parse(boundaryRaw);
+      // Remove the closing point that we added in goNext
+      if (ring.length > 0 && ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1]) {
+        ring.pop();
+      }
+      initialBoundary = ring.map(coord => ({ lng: coord[0], lat: coord[1] }));
+    }
+  } catch (e) {
+    console.warn("Failed to parse initial boundary", e);
+  }
 
   const [mapCenter] = useState({ lat, lng });
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [draftPoints, setDraftPoints] = useState([]);
-  const [boundaryCoords, setBoundaryCoords] = useState([]);
-  const [areaHectares, setAreaHectares] = useState(0);
+  const [boundaryCoords, setBoundaryCoords] = useState(initialBoundary);
+  const [areaHectares, setAreaHectares] = useState(initialArea);
 
   const mapRef = useRef(null);
   const onMapLoad = useCallback((map) => { mapRef.current = map; }, []);

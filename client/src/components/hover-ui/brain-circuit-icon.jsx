@@ -3,6 +3,7 @@
 import { forwardRef, useImperativeHandle, useCallback , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const BrainCircuitIcon = forwardRef(
   (
@@ -62,6 +63,13 @@ const BrainCircuitIcon = forwardRef(
       startAnimation,
       stopAnimation,
     }));
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered]);
 
     return (
       <div

@@ -158,6 +158,8 @@ async def calculate_phenology(
                 max_temps,
                 min_temps,
             ):
+                if t_max is None or t_min is None:
+                    continue
 
                 if t_max < t_min:
                     raise ValueError(

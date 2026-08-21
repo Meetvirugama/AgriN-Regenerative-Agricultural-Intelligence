@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useCallback, useRef , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const MapPinIcon = forwardRef(
   (
@@ -57,7 +58,7 @@ const MapPinIcon = forwardRef(
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
         style={{ overflow: "visible" }}
       >
         {/* Pin Body - Perfectly Static */}

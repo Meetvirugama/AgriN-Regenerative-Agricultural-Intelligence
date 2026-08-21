@@ -40,7 +40,7 @@ export const aiLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100, // Increased for development testing
+  max: process.env.NODE_ENV === "production" ? 10 : 100, // Strict in prod to prevent OTP brute force
   standardHeaders: true,
   legacyHeaders: false,
   message: {

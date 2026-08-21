@@ -1,52 +1,53 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import "./HealthDimensionCard.css";
 
 export const HealthDimensionCard = ({ title, dimension, icon }) => {
   const [expanded, setExpanded] = useState(false);
 
-  let statusColor = "bg-success";
-  if (dimension?.severity === "red") statusColor = "bg-danger";
-  if (dimension?.severity === "amber") statusColor = "bg-warning";
+  let statusColor = "dimension-status-success";
+  if (dimension?.severity === "red") statusColor = "dimension-status-danger";
+  if (dimension?.severity === "amber") statusColor = "dimension-status-warning";
 
   return (
-    <div className="bg-background border border-border flex flex-col">
+    <div className="dimension-card-container">
       <div
-        className="p-4 flex items-center justify-between cursor-pointer hover:bg-surface transition-colors"
+        className="dimension-card-header"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-3">
-          <div className="text-text-muted">{icon}</div>
+        <div className="dimension-card-title-group">
+          <div className="dimension-card-icon">{icon}</div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted">
+            <h3 className="dimension-card-title">
               {title}
             </h3>
-            <p className="font-semibold">{dimension?.value ?? dimension?.score ?? "N/A"}</p>
+            <p className="dimension-card-value">{dimension?.value ?? dimension?.score ?? "N/A"}</p>
             {dimension?.label && (
-              <p className="text-xs text-text-muted">{dimension.label}</p>
+              <p className="dimension-card-label">{dimension.label}</p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className={`w-3 h-3 rounded-full ${statusColor}`} />
+        <div className="dimension-card-status-group">
+          <div className={`dimension-card-status-dot ${statusColor}`} />
           {expanded ? (
-            <ChevronUp size={20} className="text-text-muted" />
+            <ChevronUp size={20} className="dimension-card-chevron" />
           ) : (
-            <ChevronDown size={20} className="text-text-muted" />
+            <ChevronDown size={20} className="dimension-card-chevron" />
           )}
         </div>
       </div>
 
       {expanded && (
-        <div className="p-4 pt-0 border-t border-border/50 bg-surface text-sm animate-fade-in">
-          <ul className="space-y-2 mt-4 list-disc list-inside">
+        <div className="dimension-card-body">
+          <ul className="dimension-card-list">
             {dimension?.basis?.map((reason, idx) => (
-              <li key={idx} className="text-text-main">
+              <li key={idx} className="dimension-card-list-item">
                 {reason}
               </li>
             ))}
             {(!dimension?.basis || dimension.basis.length === 0) && (
-              <li className="text-text-muted">
+              <li className="dimension-card-empty-item">
                 No specific details available.
               </li>
             )}

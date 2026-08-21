@@ -110,29 +110,17 @@ export class ObservationService {
    */
   async _callPythonService(imageBuffer, mimeType, context, opts = {}) {
     try {
-      const { default: FormData } = await import("form-data");
-      const { default: fetch } = await import("node-fetch");
-
       const form = new FormData();
 
       // Primary image blob
-      form.append("image", imageBuffer, {
-        filename: "crop.jpg",
-        contentType: mimeType,
-      });
+      form.append("image", new Blob([imageBuffer], { type: mimeType }), "crop.jpg");
 
       // Extra images (whole plant, close-up)
       if (opts.imageBuffer2) {
-        form.append("image2", opts.imageBuffer2, {
-          filename: "crop2.jpg",
-          contentType: opts.mimeType2 || "image/jpeg",
-        });
+        form.append("image2", new Blob([opts.imageBuffer2], { type: opts.mimeType2 || "image/jpeg" }), "crop2.jpg");
       }
       if (opts.imageBuffer3) {
-        form.append("image3", opts.imageBuffer3, {
-          filename: "crop3.jpg",
-          contentType: opts.mimeType3 || "image/jpeg",
-        });
+        form.append("image3", new Blob([opts.imageBuffer3], { type: opts.mimeType3 || "image/jpeg" }), "crop3.jpg");
       }
 
       // Crop context
@@ -158,7 +146,6 @@ export class ObservationService {
       const response = await fetch(`${PYTHON_SERVICE_URL}/disease/diagnose`, {
         method: "POST",
         body: form,
-        headers: form.getHeaders(),
         signal: AbortSignal.timeout(30000), // 30s timeout
       });
 
@@ -373,7 +360,7 @@ Respond ONLY with valid JSON in EXACTLY this format:
 
   async _persist(fieldId, imageBuffer, mimeType, diagnosis, context, opts) {
     // Store image as base64 data URL (for MVP — replace with S3 URL in production)
-    const imageUrl = `data:${mimeType};base64,${imageBuffer.toString("base64").slice(0, 100)}...`;
+    const imageUrl = `data:${mimeType};base64,${imageBuffer.toString("base64")}`;
 
     const row = await queryOne(
       `INSERT INTO field_observations (

@@ -1,0 +1,94 @@
+/* HealthDimensionCard.css */
+
+.dimension-card-container {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.dimension-card-header {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dimension-card-header:hover {
+  background-color: var(--surface);
+}
+
+.dimension-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dimension-card-icon {
+  color: var(--text-muted);
+}
+
+.dimension-card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.dimension-card-value {
+  font-weight: 600;
+  margin: 0;
+}
+
+.dimension-card-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.dimension-card-status-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dimension-card-status-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+}
+
+.dimension-status-success { background-color: var(--success); }
+.dimension-status-warning { background-color: var(--warning); }
+.dimension-status-danger { background-color: var(--danger); }
+
+.dimension-card-chevron {
+  color: var(--text-muted);
+}
+
+.dimension-card-body {
+  padding: 0 1rem 1rem 1rem;
+  border-top: 1px solid rgba(115, 115, 115, 0.5); /* border/50 */
+  background-color: var(--surface);
+  font-size: 0.875rem;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.dimension-card-list {
+  margin-top: 1rem;
+  list-style-type: disc;
+  list-style-position: inside;
+}
+
+.dimension-card-list-item {
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.dimension-card-empty-item {
+  color: var(--text-muted);
+}

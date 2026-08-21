@@ -20,39 +20,47 @@ import { runNightlyStageRecompute } from "./recomputeStages.js";
 export function startScheduler() {
   console.log("[Scheduler] Starting background job scheduler...");
 
+let isWeatherRunning = false;
   // ─── Weather Ingestion ─────────────────────────────────────────────────────
-  // Every hour — keeps the 7-day forecast fresh for all fields.
-  // Open-Meteo is free and generous; hourly ingestion is well within limits.
   cron.schedule(
     "0 * * * *",
     async () => {
       const label = "[Job:Weather]";
-      console.log(
-        `${label} Hourly ingestion triggered at ${new Date().toISOString()}`,
-      );
+      if (isWeatherRunning) {
+        console.warn(`${label} Previous run still active. Skipping this tick to prevent overlap.`);
+        return;
+      }
+      isWeatherRunning = true;
+      console.log(`${label} Hourly ingestion triggered at ${new Date().toISOString()}`);
       try {
         await runDailyWeatherIngestion();
       } catch (err) {
         console.error(`${label} Job crashed:`, err.message);
+      } finally {
+        isWeatherRunning = false;
       }
     },
     { timezone: "UTC" },
   );
 
+  let isStagesRunning = false;
   // ─── Crop Stage Recompute ─────────────────────────────────────────────────
-  // Every day at 01:00 UTC — recomputes GDD-based crop stage for all fields.
-  // Runs after weather is guaranteed fresh (weather job runs at 00:00 UTC).
   cron.schedule(
     "0 1 * * *",
     async () => {
       const label = "[Job:Stages]";
-      console.log(
-        `${label} Nightly recompute triggered at ${new Date().toISOString()}`,
-      );
+      if (isStagesRunning) {
+        console.warn(`${label} Previous run still active. Skipping this tick to prevent overlap.`);
+        return;
+      }
+      isStagesRunning = true;
+      console.log(`${label} Nightly recompute triggered at ${new Date().toISOString()}`);
       try {
         await runNightlyStageRecompute();
       } catch (err) {
         console.error(`${label} Job crashed:`, err.message);
+      } finally {
+        isStagesRunning = false;
       }
     },
     { timezone: "UTC" },

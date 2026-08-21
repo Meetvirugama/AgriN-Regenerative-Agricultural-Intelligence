@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronRight, Leaf, MapPin, Calendar } from "lucide-react";
-import { useAuth } from "../app/providers/AuthProvider";
 import { cropApi } from "../features/crop-context/api/cropApi";
 
 import "./Onboarding.css";
 
 
 export const Onboarding = () => {
-  const { farmer } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   // Form State
   const [fieldName, setFieldName] = useState("");
@@ -21,10 +20,11 @@ export const Onboarding = () => {
   const handleComplete = async () => {
     if (!fieldName || !sowingDate) return;
     setIsSubmitting(true);
+    setError(null);
     try {
       // Create the field using the real API
-      const newField = await cropApi.createField({
-        name: fieldName,
+      await cropApi.createField({
+        name: fieldName.trim(),
         cropType,
         sowingDate,
       });
@@ -32,6 +32,7 @@ export const Onboarding = () => {
       navigate("/fields");
     } catch (err) {
       console.error(err);
+      setError(err.message || "Failed to set up field. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -119,11 +120,17 @@ export const Onboarding = () => {
                   <input
                     type="date"
                     value={sowingDate}
+                    max={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setSowingDate(e.target.value)}
                     className="onboarding-input"
                   />
                 </div>
 
+                {error && (
+                  <div style={{ color: "#dc2626", fontSize: "0.875rem", textAlign: "center", marginBottom: "0.5rem" }}>
+                    {error}
+                  </div>
+                )}
                 <div className="onboarding-btn-group">
                   <button
                     onClick={() => setStep(1)}

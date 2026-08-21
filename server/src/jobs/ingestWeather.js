@@ -78,9 +78,13 @@ export async function runDailyWeatherIngestion() {
 import { fileURLToPath } from 'url';
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   runDailyWeatherIngestion()
-    .then(() => process.exit(0))
-    .catch((err) => {
+    .then(async () => {
+      await pool.end();
+      process.exit(0);
+    })
+    .catch(async (err) => {
       console.error(err);
+      await pool.end();
       process.exit(1);
     });
 }

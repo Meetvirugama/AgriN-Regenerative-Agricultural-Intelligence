@@ -1,10 +1,11 @@
 import React from "react";
 import { Card } from "./Card";
 import { Loader2 } from "lucide-react";
+import "./LoadingSkeleton.css";
 
 export const LoadingSkeleton = ({ message = "Loading data..." }) => (
-  <Card className="flex flex-col items-center justify-center p-8 animate-pulse text-text-muted text-sm font-bold uppercase tracking-widest gap-4">
-    <Loader2 className="w-8 h-8 animate-spin" />
+  <Card className="loading-skeleton">
+    <Loader2 className="loading-skeleton-icon" />
     {message}
   </Card>
 );

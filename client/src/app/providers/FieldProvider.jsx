@@ -10,6 +10,7 @@ const FieldContext = createContext({
   error: null,
   refreshCropState: async () => {},
   setCropState: () => {},
+  switchField: async () => {},
 });
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -83,6 +84,18 @@ export const FieldProvider = ({ children }) => {
     }
   };
 
+  const switchField = async (fieldId) => {
+    setActiveFieldId(fieldId);
+    sessionStorage.setItem(FIELD_ID_SESSION_KEY, fieldId);
+    setCropState(null); // Clear previous state while loading new one
+    try {
+      const state = await cropApi.fetchCropState(fieldId);
+      setCropState(state);
+    } catch (err) {
+      console.warn("[FieldProvider] fetchCropState failed on switch:", err.message);
+    }
+  };
+
   return (
     <FieldContext.Provider
       value={{
@@ -92,6 +105,7 @@ export const FieldProvider = ({ children }) => {
         error,
         refreshCropState,
         setCropState,
+        switchField,
       }}
     >
       {children}

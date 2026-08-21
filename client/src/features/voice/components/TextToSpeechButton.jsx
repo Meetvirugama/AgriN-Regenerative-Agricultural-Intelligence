@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { voiceApi } from "../api/voiceApi";
+import "./TextToSpeechButton.css";
 
 export const TextToSpeechButton = ({ textToRead, className = "" }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -22,27 +23,35 @@ export const TextToSpeechButton = ({ textToRead, className = "" }) => {
     }
 
     setIsLoading(true);
-    // First try our backend API
-    const audioDataUrl = await voiceApi.tts(
-      textToRead,
-      localStorage.getItem("agri_lang") || "en-US",
-    );
-    setIsLoading(false);
-    setIsPlaying(true);
+    try {
+      // First try our backend API
+      const audioDataUrl = await voiceApi.tts(
+        textToRead,
+        localStorage.getItem("agri_lang") || "en-US",
+      );
+      
+      setIsLoading(false);
+      setIsPlaying(true);
 
-    if (
-      audioDataUrl &&
-      audioDataUrl !== "data:audio/wav;base64,bW9jay1hdWRpby1kYXRh"
-    ) {
-      // Play returned audio
-      const audio = new Audio(audioDataUrl);
-      audio.onended = () => setIsPlaying(false);
-      audio.play().catch((err) => {
-        console.error("Audio playback failed", err);
+      if (
+        audioDataUrl &&
+        audioDataUrl !== "data:audio/wav;base64,bW9jay1hdWRpby1kYXRh"
+      ) {
+        // Play returned audio
+        const audio = new Audio(audioDataUrl);
+        audio.onended = () => setIsPlaying(false);
+        audio.play().catch((err) => {
+          console.error("Audio playback failed", err);
+          fallbackSpeech();
+        });
+      } else {
+        // Fallback to native SpeechSynthesis if backend returns mock buffer
         fallbackSpeech();
-      });
-    } else {
-      // Fallback to native SpeechSynthesis if backend returns mock buffer or fails
+      }
+    } catch (err) {
+      console.error("TTS API failed", err);
+      setIsLoading(false);
+      setIsPlaying(true);
       fallbackSpeech();
     }
   };
@@ -63,14 +72,14 @@ export const TextToSpeechButton = ({ textToRead, className = "" }) => {
   return (
     <button
       onClick={handlePlay}
-      className={`p-2 rounded-full transition-colors ${isPlaying ? "bg-primary text-white" : "bg-neutral/20 text-text-muted hover:bg-neutral/30"} ${className}`}
+      className={`tts-button ${isPlaying ? "tts-button-playing" : "tts-button-idle"} ${className}`}
       aria-label="Read text aloud"
       disabled={isLoading}
     >
       {isLoading ? (
-        <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+        <svg className="tts-icon tts-loading-icon" fill="none" viewBox="0 0 24 24">
           <circle
-            className="opacity-25"
+            className="tts-spinner-track"
             cx="12"
             cy="12"
             r="10"
@@ -78,14 +87,14 @@ export const TextToSpeechButton = ({ textToRead, className = "" }) => {
             strokeWidth="4"
           ></circle>
           <path
-            className="opacity-75"
+            className="tts-spinner-head"
             fill="currentColor"
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
           ></path>
         </svg>
       ) : (
         <svg
-          className="w-5 h-5"
+          className="tts-icon"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { 
-  Plus, Mic, MoreVertical,
-  Droplets, MessageSquare, Bell, Loader2
+  Plus, MoreVertical, Loader2
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { cropApi } from "../features/crop-context/api/cropApi";
@@ -19,6 +18,11 @@ const HomeAlertItem = ({ alert }) => {
   const priorityClass = alert.priority === "High" ? "poor" : alert.priority === "Medium" ? "moderate" : "good";
   const iconClass = alert.priority === "High" ? "danger" : alert.priority === "Medium" ? "warning" : "info";
   const IconComponent = alert.priority === "High" || alert.priority === "Medium" ? TriangleAlertIcon : InfoCircleIcon;
+  const formatTime = (isoString) => {
+    if (!isoString) return "Just now";
+    return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div 
       className="home-alert-item"
@@ -36,7 +40,7 @@ const HomeAlertItem = ({ alert }) => {
       </div>
       <div className="home-alert-meta">
         <span className={`home-card-badge ${priorityClass}`} style={{margin: 0}}>{alert.priority}</span>
-        <span>{alert.time || "Just now"}</span>
+        <span>{formatTime(alert.createdAt || alert.time)}</span>
       </div>
     </div>
   );
@@ -68,20 +72,21 @@ export const Home = () => {
     fetchData();
   }, []);
 
-  const displayFields = fields.map(f => ({
-    id: f.id,
-    name: f.name,
-    crop_type: f.crop_type,
-    subtitle: f.area_hectares ? `${f.crop_type} • ${f.area_hectares} ha` : `${f.crop_type} • 1.2 ha`,
-    status: f.crop_type === 'rice' ? 'Moderate' : 'Good',
-    statusClass: f.crop_type === 'rice' ? 'moderate' : 'good',
-    img: f.crop_type === 'wheat' ? "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop" 
-       : f.crop_type === 'rice' ? "https://images.unsplash.com/photo-1593414902194-e34346bbdbf9?w=150&h=150&fit=crop"
-       : "https://images.unsplash.com/photo-1587334274328-64186a80aeee?w=150&h=150&fit=crop"
-  }));
-
-  const activeAlertsCount = alerts.filter(a => !a.resolved).length;
-  const fieldsNeedAttentionCount = displayFields.filter(f => f.statusClass !== 'good').length;
+  const displayFields = fields.map(f => {
+    const cropTypeSafe = (f.crop_type || 'unknown').toLowerCase();
+    const cropNameDisplay = f.crop_type ? f.crop_type.charAt(0).toUpperCase() + f.crop_type.slice(1) : 'Unknown';
+    return {
+      id: f.id,
+      name: f.name,
+      crop_type: cropNameDisplay,
+      subtitle: f.area_hectares ? `${cropNameDisplay} • ${f.area_hectares} ha` : `${cropNameDisplay} • 1.2 ha`,
+      status: cropTypeSafe === 'rice' ? 'Moderate' : 'Good',
+      statusClass: cropTypeSafe === 'rice' ? 'moderate' : 'good',
+      img: cropTypeSafe === 'wheat' ? "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=150&h=150&fit=crop" 
+         : cropTypeSafe === 'rice' ? "https://images.unsplash.com/photo-1593414902194-e34346bbdbf9?w=150&h=150&fit=crop"
+         : "https://images.unsplash.com/photo-1587334274328-64186a80aeee?w=150&h=150&fit=crop"
+    };
+  });
 
   return (
     <div className="home-container">

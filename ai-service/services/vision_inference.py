@@ -69,6 +69,7 @@ def _load_efficientnet_b0(weights_path: Path, num_classes: int, device: torch.de
         if isinstance(model, dict):
             raise TypeError("Loaded object is a dict (likely state_dict), not a full model.")
         model.eval()
+        model = model.to(device)
         print(f"[Vision] Loaded full model from {weights_path}")
         return model
     except Exception as full_err:
@@ -85,6 +86,7 @@ def _load_efficientnet_b0(weights_path: Path, num_classes: int, device: torch.de
             state = state["model_state_dict"]
         model.load_state_dict(state)
         model.eval()
+        model = model.to(device)
         print(f"[Vision] Loaded state_dict from {weights_path} (num_classes={num_classes})")
         return model
     except Exception as sd_err:
@@ -103,7 +105,11 @@ class CropVisionPredictor:
     """
 
     def __init__(self):
-        self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() 
+            else "mps" if torch.backends.mps.is_available() 
+            else "cpu"
+        )
         self._registry = _load_registry()
         # Lazy cache: crop_key → {"model": nn.Module, "classes": list, "transform": Compose}
         self._models: dict[str, dict] = {}

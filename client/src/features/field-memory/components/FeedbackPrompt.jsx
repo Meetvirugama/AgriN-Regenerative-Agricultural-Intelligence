@@ -3,6 +3,8 @@ import { ThumbsUp, ThumbsDown, X, Camera } from "lucide-react";
 import { memoryApi } from "../api/memoryApi";
 import { TextToSpeechButton } from "../../voice/components/TextToSpeechButton";
 
+import "./FeedbackPrompt.css";
+
 export const FeedbackPrompt = ({ prompt, onDismiss }) => {
   const [expanded, setExpanded] = useState(false);
   const [note, setNote] = useState("");
@@ -32,64 +34,64 @@ export const FeedbackPrompt = ({ prompt, onDismiss }) => {
   };
 
   return (
-    <div className="bg-surface border-2 border-primary/50 p-5 rounded-2xl shadow-lg mb-6 animate-fade-in">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-black text-lg tracking-tight text-text flex items-center gap-2">
+    <div className="feedback-prompt-container">
+      <div className="feedback-header">
+        <h3 className="feedback-title">
           Did this advice help?
           <TextToSpeechButton
             textToRead={`Did this advice help? ${prompt.summary}`}
-            className="w-7 h-7 p-1"
+            className="w-7 h-7 p-1" // Keep this minimal tailwind for TextToSpeech button sizing if needed, or we can leave it as is.
           />
         </h3>
         <button
           onClick={handleSkip}
-          className="text-text-muted hover:bg-neutral/20 p-1 rounded-full transition-colors"
+          className="feedback-dismiss-btn"
         >
           <X size={20} />
         </button>
       </div>
 
-      <p className="text-sm font-medium text-text-muted mb-4">
+      <p className="feedback-summary">
         "{prompt.summary}"
       </p>
 
       {!expanded ? (
-        <div className="flex gap-3 mt-4">
+        <div className="feedback-buttons">
           <button
             onClick={() => handleResponse("helped")}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-success/10 text-success hover:bg-success/20 border border-success/30 rounded-xl font-bold transition-colors"
+            className="feedback-btn feedback-btn-yes"
           >
             <ThumbsUp size={20} /> Yes, it helped
           </button>
           <button
             onClick={() => handleResponse("didnt_help")}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-error/10 text-error hover:bg-error/20 border border-error/30 rounded-xl font-bold transition-colors"
+            className="feedback-btn feedback-btn-no"
           >
             <ThumbsDown size={20} /> Not really
           </button>
         </div>
       ) : (
-        <div className="mt-4 animate-fade-in-up">
-          <label className="block text-xs font-bold uppercase tracking-widest text-text-muted mb-2">
+        <div className="feedback-expanded">
+          <label className="feedback-label">
             Add a quick note or photo (Optional)
           </label>
-          <div className="flex gap-2">
+          <div className="feedback-input-row">
             <input
               type="text"
               placeholder="What actually happened?"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="flex-1 bg-background border border-neutral/50 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+              className="feedback-input"
             />
 
-            <button className="bg-neutral/10 text-text-muted border border-neutral/30 p-2 rounded-xl hover:bg-neutral/20 transition-colors">
+            <button className="feedback-camera-btn">
               <Camera size={20} />
             </button>
           </div>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full mt-4 bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="feedback-submit-btn"
           >
             {isSubmitting ? "Saving..." : "Submit Feedback"}
           </button>

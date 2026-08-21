@@ -58,13 +58,8 @@ pool.on("connect", (client) => {
  * Use this for SELECT queries.
  */
 export async function query(sql, params) {
-  const client = await pool.connect();
-  try {
-    const result = await client.query(sql, params);
-    return result.rows;
-  } finally {
-    client.release();
-  }
+  const result = await pool.query(sql, params);
+  return result.rows;
 }
 
 /**
@@ -81,13 +76,8 @@ export async function queryOne(sql, params) {
  * Use this for INSERT/UPDATE/DELETE.
  */
 export async function execute(sql, params) {
-  const client = await pool.connect();
-  try {
-    const result = await client.query(sql, params);
-    return result.rowCount ?? 0;
-  } finally {
-    client.release();
-  }
+  const result = await pool.query(sql, params);
+  return result.rowCount ?? 0;
 }
 
 /**
@@ -108,7 +98,11 @@ export async function transaction(fn) {
     await client.query("COMMIT");
     return result;
   } catch (err) {
-    await client.query("ROLLBACK");
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackErr) {
+      console.error("[DB] Failed to rollback transaction:", rollbackErr.message);
+    }
     throw err;
   } finally {
     client.release();

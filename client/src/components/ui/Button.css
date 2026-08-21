@@ -1,0 +1,68 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+  min-height: 44px; /* Touch target ≥44px */
+  min-width: 44px;
+}
+
+/* Variants */
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--primary-content);
+}
+.btn-primary:hover {
+  background-color: var(--text-muted);
+}
+
+.btn-secondary {
+  background-color: var(--surface);
+  border: 1px solid var(--neutral);
+  color: var(--text);
+}
+.btn-secondary:hover {
+  background-color: rgba(156, 163, 175, 0.5); /* neutral/50 */
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+}
+.btn-ghost:hover {
+  background-color: rgba(156, 163, 175, 0.2); /* neutral/20 */
+}
+
+.btn-destructive {
+  background-color: var(--danger);
+  color: #ffffff;
+}
+.btn-destructive:hover {
+  background-color: rgba(239, 68, 68, 0.9); /* danger/90 */
+}
+
+/* Sizes */
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.btn-md {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}

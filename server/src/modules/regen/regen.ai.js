@@ -21,6 +21,8 @@ export class RegenAI {
       return {
         practices: result.practices,
         next_season_options: result.next_season_options,
+        carbon_credits_estimate: result.carbon_credits_estimate,
+        summary: result.summary,
       };
     } catch (pythonErr) {
       console.warn("[RegenAI] Python service unavailable, falling back to Gemini:", pythonErr.message);
@@ -42,10 +44,22 @@ Soil profile: ${context.soil ? JSON.stringify(context.soil) : "unavailable"}
 Return ONLY valid JSON in this format:
 {
   "practices": [
-    { "name": "Practice name", "status": "Recommended | Optional", "benefit": "Short description", "implementation": "How to implement" }
+    {
+      "id": "p1",
+      "title": "Practice Name",
+      "description": "How to do it",
+      "effort_level": "low|medium|high",
+      "reasoning": "Why it helps"
+    }
   ],
   "next_season_options": [
-    { "crop": "Crop name", "rationale": "Why this crop suits the field", "benefit": "Ecological or economic benefit" }
+    {
+      "crop_type": "Crop Name",
+      "variety": "Optional variety or null",
+      "suitability_score": 85,
+      "reasoning": "Why this rotation is good",
+      "risk_factors": ["risk1"]
+    }
   ],
   "carbon_credits_estimate": 0.0,
   "summary": "Brief regenerative plan summary for this field"

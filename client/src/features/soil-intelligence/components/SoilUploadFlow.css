@@ -1,0 +1,226 @@
+/* SoilUploadFlow.css */
+
+.soil-upload-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  animation: fade-in 0.2s ease-out;
+}
+
+.soil-upload-modal {
+  width: 100%;
+  max-width: 32rem; /* max-w-lg */
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  background-color: var(--surface);
+  padding: 1.5rem;
+  border-radius: 2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* shadow-2xl */
+}
+
+@media (min-width: 640px) {
+  .soil-upload-modal {
+    padding: 2rem;
+  }
+}
+
+.soil-upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.soil-upload-eyebrow {
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(115, 115, 115, 0.6); /* text-muted/60 */
+  margin-bottom: 0.5rem;
+}
+
+.soil-upload-title {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.soil-upload-desc {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  line-height: 1.625;
+}
+
+.soil-upload-close-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: rgba(115, 115, 115, 0.1); /* neutral/10 */
+  color: var(--text-main);
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.soil-upload-close-btn:hover:not(:disabled) {
+  background-color: rgba(115, 115, 115, 0.2);
+}
+
+.soil-upload-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.soil-upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 15rem;
+  margin-top: 0.5rem;
+  padding: 1.5rem;
+  border: 2px dashed var(--border);
+  border-radius: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.soil-upload-dropzone:hover:not(.soil-upload-dropzone-active, .soil-upload-dropzone-selected) {
+  border-color: rgba(115, 115, 115, 0.5); /* neutral/50 */
+  background-color: rgba(115, 115, 115, 0.05); /* neutral/5 */
+}
+
+.soil-upload-dropzone-active {
+  border-color: var(--primary);
+  background-color: rgba(16, 185, 129, 0.05); /* primary/5 */
+}
+
+.soil-upload-dropzone-selected {
+  background-color: rgba(16, 185, 129, 0.05); /* success/5 */
+  border-color: rgba(16, 185, 129, 0.3); /* success/30 */
+}
+
+.soil-upload-dropzone:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.soil-upload-icon-wrapper {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background-color: rgba(115, 115, 115, 0.1); /* neutral/10 */
+  color: var(--text-main);
+  margin-bottom: 1rem;
+}
+
+.soil-upload-filename {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.soil-upload-filesize {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 0.375rem;
+}
+
+.soil-upload-hint {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(115, 115, 115, 0.6); /* text-muted/60 */
+  margin-top: 1.5rem;
+}
+
+.soil-upload-error {
+  margin-top: 1rem;
+  padding: 0.875rem;
+  background-color: rgba(239, 68, 68, 0.1); /* error/10 */
+  color: var(--error-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 0.75rem;
+}
+
+.soil-upload-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.soil-upload-cancel-btn {
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  background-color: rgba(115, 115, 115, 0.1);
+  color: var(--text-main);
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.soil-upload-cancel-btn:hover:not(:disabled) {
+  background-color: rgba(115, 115, 115, 0.2);
+}
+
+.soil-upload-cancel-btn:focus-visible {
+  outline: 2px solid var(--primary);
+}
+
+.soil-upload-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.soil-upload-submit-btn {
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  background-color: var(--primary);
+  color: var(--surface);
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.soil-upload-submit-btn:hover:not(:disabled) {
+  background-color: rgba(16, 185, 129, 0.9); /* primary/90 */
+}
+
+.soil-upload-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.soil-upload-submit-btn:focus-visible {
+  outline: 2px solid var(--primary);
+}

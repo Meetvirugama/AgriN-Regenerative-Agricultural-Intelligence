@@ -1,3 +1,4 @@
 -- AgriMesh Migration 015: Add irrigation_type to fields table
-ALTER TABLE fields
-  ADD COLUMN IF NOT EXISTS irrigation_type VARCHAR(50);
+-- [DEAD CODE REMOVED] This migration is a duplicate of 014_advisory_evidence.sql
+-- which already added irrigation_type to the fields table.
+-- The file is preserved as a tombstone so the migration runner skips it gracefully.

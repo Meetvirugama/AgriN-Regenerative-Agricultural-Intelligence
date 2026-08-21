@@ -14,19 +14,37 @@ export const GlobalMicButton = () => {
 
       // Simulate a small delay for recording stop
       await new Promise((r) => setTimeout(r, 500));
-      const text = await voiceApi.stt(
-        new Blob(),
-        localStorage.getItem("agri_lang") || "en-US",
-      );
+      const lang = localStorage.getItem("agri_lang") || "en-US";
+      const text = await voiceApi.stt(new Blob(), lang);
       setIsProcessing(false);
       setResponse(text);
 
-      // Auto-play response
-      if ("speechSynthesis" in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = localStorage.getItem("agri_lang") || "en-US";
-        window.speechSynthesis.speak(utterance);
+      // Auto-play response using AI backend
+      const fallbackSpeech = (textToRead, langCode) => {
+        if ("speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(textToRead);
+          utterance.lang = langCode;
+          window.speechSynthesis.speak(utterance);
+        }
+      };
+
+      try {
+        const audioDataUrl = await voiceApi.tts(text, lang);
+        if (audioDataUrl && audioDataUrl !== "data:audio/wav;base64,bW9jay1hdWRpby1kYXRh") {
+          const audio = new Audio(audioDataUrl);
+          audio.play().catch((err) => {
+            console.error("Audio playback failed", err);
+            fallbackSpeech(text, lang);
+          });
+        } else {
+          fallbackSpeech(text, lang);
+        }
+      } catch (err) {
+        console.error("TTS API failed", err);
+        fallbackSpeech(text, lang);
       }
+
       // Clear after 5 seconds
       setTimeout(() => setResponse(null), 5000);
     } else {

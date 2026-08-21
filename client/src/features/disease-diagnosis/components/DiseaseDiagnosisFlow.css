@@ -1,0 +1,546 @@
+/* ─── DiseaseDiagnosisFlow.css ────────────────────────────────────────── */
+
+/* ── Wrapper & Layout ─────────────────────────────────────────────────── */
+.ddf-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+}
+
+/* ── Confidence bar ──────────────────────────────────────────────────────── */
+.ddf-confidence {
+  margin-bottom: 0.5rem;
+}
+
+.ddf-confidence-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.ddf-confidence-label-text {
+  color: var(--text-muted, #6b7280);
+}
+
+.ddf-confidence-value {
+  font-weight: 700;
+}
+
+.ddf-confidence-track {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--border, #e5e7eb);
+  overflow: hidden;
+}
+
+.ddf-confidence-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+
+/* ── Differential List ───────────────────────────────────────────────────── */
+.ddf-differential {
+  margin-top: 1rem;
+}
+
+.ddf-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.ddf-diff-item {
+  margin-bottom: 0.5rem;
+}
+
+.ddf-diff-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  margin-bottom: 0.15rem;
+}
+
+.ddf-diff-condition {
+  font-weight: 600;
+}
+
+.ddf-diff-pct {
+  font-weight: 700;
+}
+
+.ddf-diff-track {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--border, #e5e7eb);
+  overflow: hidden;
+}
+
+.ddf-diff-fill {
+  height: 100%;
+  border-radius: 99px;
+}
+
+.ddf-diff-rationale {
+  font-size: 0.68rem;
+  color: var(--text-muted, #6b7280);
+  margin-top: 0.1rem;
+}
+
+/* ── Evidence Graph ──────────────────────────────────────────────────────── */
+.ddf-evidence {
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.ddf-evidence-toggle {
+  width: 100%;
+  padding: 0.6rem 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-raised, var(--surface, #fff));
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ddf-evidence-body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ddf-evidence-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.ddf-evidence-row-contrary {
+  opacity: 0.7;
+}
+
+.ddf-evidence-icon {
+  margin-top: 0.1rem;
+}
+
+.ddf-evidence-icon-supporting {
+  color: #22c55e;
+}
+
+.ddf-evidence-icon-contrary {
+  color: #6b7280;
+}
+
+.ddf-evidence-finding {
+  color: var(--text-muted, #6b7280);
+}
+
+.ddf-evidence-source {
+  color: var(--text, #111827);
+}
+
+.ddf-evidence-check {
+  color: #22c55e;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── CAPTURE STEP ────────────────────────────────────────────────────────── */
+.ddf-capture-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  padding: 1.5rem 0;
+}
+
+.ddf-file-input {
+  display: none;
+}
+
+.ddf-drop-zone {
+  width: 200px;
+  height: 200px;
+  border: 2px dashed var(--primary, #16a34a);
+  border-radius: 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--primary-10, rgba(34, 197, 94, 0.05));
+  position: relative;
+}
+
+.ddf-drop-zone:focus-visible {
+  outline: 2px solid var(--primary, #16a34a);
+  outline-offset: 4px;
+}
+
+.ddf-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ddf-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+}
+
+.ddf-corner-tl {
+  top: 8px;
+  left: 8px;
+  border-top: 2.5px solid var(--primary, #16a34a);
+  border-left: 2.5px solid var(--primary, #16a34a);
+}
+
+.ddf-corner-tr {
+  top: 8px;
+  right: 8px;
+  border-top: 2.5px solid var(--primary, #16a34a);
+  border-right: 2.5px solid var(--primary, #16a34a);
+}
+
+.ddf-corner-bl {
+  bottom: 8px;
+  left: 8px;
+  border-bottom: 2.5px solid var(--primary, #16a34a);
+  border-left: 2.5px solid var(--primary, #16a34a);
+}
+
+.ddf-corner-br {
+  bottom: 8px;
+  right: 8px;
+  border-bottom: 2.5px solid var(--primary, #16a34a);
+  border-right: 2.5px solid var(--primary, #16a34a);
+}
+
+.ddf-placeholder-icon {
+  color: var(--primary, #16a34a);
+  opacity: 0.4;
+  margin-bottom: 8px;
+}
+
+.ddf-placeholder-text {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary, #16a34a);
+}
+
+.ddf-capture-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  margin-bottom: 0.35rem;
+  text-align: center;
+}
+
+.ddf-capture-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted, #6b7280);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.ddf-gps-text {
+  font-size: 0.7rem;
+  color: var(--text-muted, #6b7280);
+  margin-bottom: 1rem;
+}
+
+.ddf-error-banner {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.ddf-error-icon {
+  flex-shrink: 0;
+}
+
+.ddf-capture-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── ANALYZING STEP ──────────────────────────────────────────────────────── */
+.ddf-analyzing-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 3rem 1rem;
+  gap: 1rem;
+}
+
+.ddf-spinner {
+  color: var(--primary, #16a34a);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.ddf-analyzing-title {
+  font-weight: 800;
+  font-size: 1.15rem;
+  text-align: center;
+}
+
+.ddf-analyzing-steps {
+  font-size: 0.8rem;
+  color: var(--text-muted, #6b7280);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* ── RESULT STEP ─────────────────────────────────────────────────────────── */
+.ddf-result-step {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.875rem;
+}
+
+.ddf-quality-warning {
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: #92400e;
+}
+
+.ddf-quality-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ddf-condition-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.ddf-condition-emoji {
+  font-size: 2rem;
+}
+
+.ddf-condition-meta {
+  flex: 1;
+}
+
+.ddf-meta-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.15rem;
+}
+
+.ddf-meta-value {
+  color: var(--text, #111827);
+}
+
+.ddf-condition-name {
+  font-weight: 900;
+  font-size: 1.2rem;
+  line-height: 1.2;
+  margin: 0.15rem 0;
+}
+
+.ddf-category-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+}
+
+.ddf-severity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.ddf-info-block {
+  margin-top: 0.5rem;
+}
+
+.ddf-info-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.ddf-treatment-block {
+  background: var(--primary-10, rgba(34, 197, 94, 0.07));
+  border: 1.5px solid var(--primary, #16a34a);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+}
+
+.ddf-treatment-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--primary, #16a34a);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ddf-monitor-text {
+  font-size: 0.78rem;
+  color: var(--text-muted, #6b7280);
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
+.ddf-monitor-label {
+  font-weight: 700;
+  font-style: normal;
+  color: var(--text, #111827);
+}
+
+.ddf-result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* ── ESCALATION STEP ─────────────────────────────────────────────────────── */
+.ddf-escalation-step {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 1rem;
+}
+
+.ddf-escalation-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.ddf-escalation-icon {
+  padding: 1rem;
+  border-radius: 50%;
+}
+
+.ddf-escalation-icon-warn {
+  background: rgba(234, 179, 8, 0.15);
+  color: #d97706;
+}
+
+.ddf-escalation-icon-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.ddf-escalation-title {
+  font-weight: 900;
+  font-size: 1.2rem;
+}
+
+.ddf-escalation-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b7280);
+  line-height: 1.5;
+}
+
+.ddf-escalation-list {
+  font-size: 0.82rem;
+  color: var(--text-muted, #6b7280);
+  text-align: left;
+  list-style: disc;
+  padding-left: 1.25rem;
+  line-height: 1.8;
+}
+
+.ddf-escalation-severity {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.ddf-escalation-card {
+  background: var(--surface, #fff);
+  border: 1.5px solid var(--border, #e5e7eb);
+  border-radius: 0.875rem;
+  padding: 1rem;
+}
+
+.ddf-escalation-card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+}
+
+.ddf-escalation-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted, #6b7280);
+  margin-bottom: 0.875rem;
+  line-height: 1.5;
+}
+
+.ddf-consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--text-muted, #6b7280);
+  margin-bottom: 0.875rem;
+}
+
+.ddf-consent-checkbox {
+  margin-top: 0.15rem;
+  accent-color: var(--primary, #16a34a);
+}
+
+.ddf-escalation-footer {
+  display: flex;
+  gap: 0.5rem;
+}

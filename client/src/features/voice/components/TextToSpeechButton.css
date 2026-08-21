@@ -1,0 +1,46 @@
+.tts-button {
+  padding: 0.5rem; /* p-2 */
+  border-radius: 9999px; /* rounded-full */
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.tts-button-playing {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+
+.tts-button-idle {
+  background-color: rgba(156, 163, 175, 0.2); /* bg-neutral/20 */
+  color: var(--text-muted);
+}
+.tts-button-idle:hover {
+  background-color: rgba(156, 163, 175, 0.3); /* hover:bg-neutral/30 */
+}
+
+.tts-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.tts-loading-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tts-spinner-track {
+  opacity: 0.25;
+}
+
+.tts-spinner-head {
+  opacity: 0.75;
+}

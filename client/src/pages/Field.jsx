@@ -37,6 +37,9 @@ import {
   ThermometerSun,
   Leaf,
   ArrowLeft,
+  ThumbsUp,
+  ThumbsDown,
+  Equal
 } from "lucide-react";
 import { ErrorState } from "../components/ui/ErrorState";
 import { FeatureErrorBoundary } from "../components/ui/FeatureErrorBoundary";
@@ -58,11 +61,41 @@ const FieldHealthScoreWrapper = ({ fieldId }) => {
   }
 
   // Map new API shape (score/category/components/evidence) → UI dimension cards
+  const getSeverity = (val) => val < 40 ? "red" : val < 60 ? "amber" : "green";
+  
   const dimensions = score ? [
-    { title: "Vegetation",   icon: <Leaf size={16} />,           value: score.components?.ndvi?.score,    label: score.components?.ndvi?.satellite_available ? "Sentinel-2" : "unavailable" },
-    { title: "Weather Risk", icon: <CloudLightning size={16} />,  value: score.components?.weather?.score, label: (score.components?.weather?.active_flags ?? []).join(", ") || "clear" },
-    { title: "Soil",         icon: <Mountain size={16} />,        value: score.components?.soil?.score,    label: "SoilGrids" },
-    { title: "Crop Stage",   icon: <ThermometerSun size={16} />,  value: score.components?.stage?.score,   label: "estimated" },
+    { 
+      title: "Vegetation",   
+      icon: <Leaf size={16} />,           
+      value: score.components?.ndvi?.score,    
+      label: score.components?.ndvi?.satellite_available ? "Sentinel-2" : "unavailable",
+      basis: score.evidence?.filter(e => e.source === 'satellite').map(e => e.finding) || [],
+      severity: getSeverity(score.components?.ndvi?.score ?? 100)
+    },
+    { 
+      title: "Weather Risk", 
+      icon: <CloudLightning size={16} />,  
+      value: score.components?.weather?.score, 
+      label: (score.components?.weather?.active_flags ?? []).join(", ") || "clear",
+      basis: score.evidence?.filter(e => e.source === 'weather').map(e => e.finding) || [],
+      severity: getSeverity(score.components?.weather?.score ?? 100)
+    },
+    { 
+      title: "Soil",         
+      icon: <Mountain size={16} />,        
+      value: score.components?.soil?.score,    
+      label: "SoilGrids",
+      basis: score.evidence?.filter(e => e.source === 'soil').map(e => e.finding) || [],
+      severity: getSeverity(score.components?.soil?.score ?? 100)
+    },
+    { 
+      title: "Crop Stage",   
+      icon: <ThermometerSun size={16} />,  
+      value: score.components?.stage?.score,   
+      label: "estimated",
+      basis: score.evidence?.filter(e => e.source === 'crop_stage').map(e => e.finding) || [],
+      severity: getSeverity(score.components?.stage?.score ?? 100)
+    },
   ] : [];
 
   return (
@@ -70,11 +103,11 @@ const FieldHealthScoreWrapper = ({ fieldId }) => {
       <FieldHealthHero score={score} loading={loading} />
       {score && !loading && (
         <div className="field-health-grid">
-          {dimensions.map(({ title, icon, value, label }) => (
+          {dimensions.map(({ title, icon, value, label, basis, severity }) => (
             <HealthDimensionCard
               key={title}
               title={title}
-              dimension={{ score: value, label }}
+              dimension={{ score: value, label, basis, severity }}
               icon={icon}
             />
           ))}
@@ -154,6 +187,7 @@ export const Field = () => {
         stage: stage,
       });
       setCropState(newState);
+      setShowOverride(false);
     } catch (err) {
       console.error(err);
     }

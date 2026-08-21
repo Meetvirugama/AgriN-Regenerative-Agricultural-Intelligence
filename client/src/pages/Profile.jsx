@@ -8,17 +8,12 @@ import {
   Phone, 
   Calendar, 
   Edit3, 
-  Sprout, 
   Globe, 
-  Map, 
-  Maximize, 
-  Leaf, 
-  ShieldCheck,
+  Map,
+  Maximize,
+  Leaf,
   Camera,
-  Droplet,
-  TrendingUp,
-  AlertTriangle,
-  Syringe,
+  Sprout,
   CheckCircle2,
   ArrowRight,
   X,
@@ -125,7 +120,10 @@ export const Profile = () => {
         phone: editFormData.phone,
         email: editFormData.email,
         location: editFormData.location,
-        preferredLanguage: editFormData.preferredLanguage
+        preferredLanguage: editFormData.preferredLanguage,
+        farmingExperienceYears: editFormData.farmingExperienceYears === '' 
+          ? null 
+          : editFormData.farmingExperienceYears
       });
   
       setProfileData(response.profile);
@@ -402,6 +400,30 @@ export const Profile = () => {
             <div className="form-group">
               <label>Location</label>
               <input type="text" value={editFormData.location || ''} onChange={(e) => setEditFormData({...editFormData, location: e.target.value})} />
+            </div>
+
+            <div className="form-group">
+              <label>Preferred Language</label>
+              <select 
+                value={editFormData.preferredLanguage || 'English'} 
+                onChange={(e) => setEditFormData({...editFormData, preferredLanguage: e.target.value})}
+                style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #d1d5db', marginTop: '0.25rem' }}
+              >
+                <option value="English">English</option>
+                <option value="Hindi">Hindi</option>
+                <option value="Spanish">Spanish</option>
+                <option value="French">French</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Farming Experience (Years)</label>
+              <input 
+                type="number" 
+                min="0"
+                value={editFormData.farmingExperienceYears ?? ''} 
+                onChange={(e) => setEditFormData({...editFormData, farmingExperienceYears: e.target.value})} 
+              />
             </div>
 
             <div className="modal-footer">

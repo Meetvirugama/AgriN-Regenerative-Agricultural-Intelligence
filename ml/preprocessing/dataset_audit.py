@@ -118,8 +118,6 @@ def detect_duplicates_from_records(records: list[dict], zip_paths: dict) -> list
     Hash images from ZIP to detect exact duplicates.
     (Skipped for speed in this run).
     """
-    print("\nSkipping duplicate detection for speed...")
-    return []
     print("\nRunning duplicate detection (SHA-256, files ≤ 5 MB)...")
     hash_map = defaultdict(list)  # sha256 → [record, ...]
     MAX_SIZE = 5 * 1024 * 1024  # 5 MB

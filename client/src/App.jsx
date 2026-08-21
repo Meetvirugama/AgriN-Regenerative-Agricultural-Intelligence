@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 import { FarmerShell } from "./app/FarmerShell";
 import { ExtensionShell } from "./app/ExtensionShell";
@@ -26,13 +27,45 @@ import { AuthProvider } from "./app/providers/AuthProvider";
 import { LoginPage } from "./features/auth/components/LoginPage";
 import { ProtectedRoute } from "./app/ProtectedRoute";
 
+class GlobalErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error("[GlobalErrorBoundary] App crashed:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: "2rem", color: "#ef4444", fontFamily: "system-ui, sans-serif" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "0.5rem" }}>Something went wrong.</h1>
+          <p style={{ color: "#6b7280" }}>Please refresh the page to try again.</p>
+          {process.env.NODE_ENV !== "production" && (
+            <pre style={{ marginTop: "1rem", padding: "1rem", background: "#fee2e2", borderRadius: "0.5rem", overflowX: "auto" }}>
+              {this.state.error?.toString()}
+            </pre>
+          )}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /**
- * LoginPageWrapper — redirects to "/" after successful login.
- * Must be inside <Router> so useNavigate is available.
+ * LoginPageWrapper — redirects to the intended page (or "/") after successful login.
+ * Must be inside <Router> so useNavigate/useLocation are available.
  */
 function LoginPageWrapper() {
   const navigate = useNavigate();
-  return <LoginPage onSuccess={() => navigate("/", { replace: true })} />;
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
+  
+  return <LoginPage onSuccess={() => navigate(from, { replace: true })} />;
 }
 
 /**
@@ -100,7 +133,9 @@ function AppRoutes() {
 function App() {
   return (
     <Router>
-      <AppRoutes />
+      <GlobalErrorBoundary>
+        <AppRoutes />
+      </GlobalErrorBoundary>
     </Router>
   );
 }

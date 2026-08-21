@@ -15,6 +15,7 @@ export class PythonClient {
     const res = await fetch(`${PYTHON_API_URL}/crop/identify`, {
       method: "POST",
       body: form,
+      headers: form.getHeaders(),
     });
     if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
     return res.json();
@@ -39,6 +40,7 @@ export class PythonClient {
     const res = await fetch(`${PYTHON_API_URL}/disease/diagnose`, {
       method: "POST",
       body: form,
+      headers: form.getHeaders(),
     });
     if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
     return res.json();
@@ -150,6 +152,7 @@ export class PythonClient {
     const res = await fetch(`${PYTHON_API_URL}/soil/parse-soil-report`, {
       method: "POST",
       body: form,
+      headers: form.getHeaders(),
     });
     if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
     return res.json();
@@ -174,6 +177,7 @@ export class PythonClient {
     const res = await fetch(`${PYTHON_API_URL}/voice/stt`, {
       method: "POST",
       body: form,
+      headers: form.getHeaders(),
     });
     if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
     return res.json();

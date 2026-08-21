@@ -18,10 +18,13 @@ const MIGRATIONS_DIR = path.join(__dirname, "migrations");
  *   npx tsx src/db/migrate.ts
  */
 async function runMigrations() {
-
   const client = await pool.connect();
+  const LOCK_ID = 20240822; // Magic number for this app's migrations
 
   try {
+    console.log("[Migrate] Acquiring migration lock...");
+    await client.query("SELECT pg_advisory_lock($1)", [LOCK_ID]);
+
     // Create the tracking table if it doesn't exist yet
     await client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -54,7 +57,6 @@ async function runMigrations() {
       const filePath = path.join(MIGRATIONS_DIR, file);
       const sql = fs.readFileSync(filePath, "utf-8");
 
-
       await client.query("BEGIN");
       try {
         await client.query(sql);
@@ -65,7 +67,11 @@ async function runMigrations() {
         await client.query("COMMIT");
         ran++;
       } catch (err) {
-        await client.query("ROLLBACK");
+        try {
+          await client.query("ROLLBACK");
+        } catch (rollbackErr) {
+          console.error(`[Migrate] Failed to rollback transaction for ${file}:`, rollbackErr.message);
+        }
         console.error(`[Migrate] ❌ ${file} failed: ${err.message}`);
         throw err;
       }
@@ -75,6 +81,11 @@ async function runMigrations() {
       `[Migrate] Done. Ran: ${ran}, Skipped (already applied): ${skipped}`,
     );
   } finally {
+    try {
+      await client.query("SELECT pg_advisory_unlock($1)", [LOCK_ID]);
+    } catch (unlockErr) {
+      console.error("[Migrate] Failed to release advisory lock:", unlockErr.message);
+    }
     client.release();
     await pool.end();
   }

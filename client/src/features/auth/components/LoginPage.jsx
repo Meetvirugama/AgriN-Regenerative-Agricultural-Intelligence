@@ -16,12 +16,16 @@ const LoginContent = ({ onSuccess }) => {
       try {
         await loginWithGoogle(tokenResponse);
         onSuccess?.();
+        // NOTE: setIsLoading(false) intentionally omitted here — onSuccess
+        // triggers a route change that unmounts this component, so updating
+        // state on an unmounted component is a no-op and harmless.
       } catch (err) {
         setError(err.message || "Google login failed.");
         setIsLoading(false);
       }
     },
-    onError: () => {
+    onError: (errorResponse) => {
+      console.error("Google OAuth error:", errorResponse);
       setError("Google login was unsuccessful.");
     }
   });
@@ -42,10 +46,9 @@ const LoginContent = ({ onSuccess }) => {
             onClick={() => googleLogin()}
             disabled={isLoading}
             className="submit-btn"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
           >
             {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
+              <Loader2 size={16} className="tts-loading-icon" />
             ) : (
               <>
                 <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
@@ -60,7 +63,7 @@ const LoginContent = ({ onSuccess }) => {
           </button>
         </div>
 
-        {error && <p className="error-text" style={{ marginTop: '1rem', textAlign: 'center' }}>{error}</p>}
+        {error && <p className="error-text">{error}</p>}
       </div>
     </div>
   );

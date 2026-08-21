@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useCallback , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const Cloud2Icon = forwardRef(
   (
@@ -64,7 +65,7 @@ const Cloud2Icon = forwardRef(
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
         style={{ overflow: "visible" }}
       >
         <motion.path

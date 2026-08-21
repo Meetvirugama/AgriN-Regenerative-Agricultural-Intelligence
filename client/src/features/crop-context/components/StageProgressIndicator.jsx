@@ -1,84 +1,96 @@
 import React from "react";
 import { Check, Leaf, Sprout, Flower2, Wheat } from "lucide-react";
 import { Card } from "../../../components/ui/Card";
+import "./StageProgressIndicator.css";
 
 const STAGES = [
   { id: "germination", label: "Germination", icon: Sprout },
   { id: "vegetative", label: "Vegetative", icon: Leaf },
   { id: "flowering", label: "Flowering", icon: Flower2 },
-  { id: "maturity", label: "Maturity", icon: Wheat }
+  { id: "maturity", label: "Maturity", icon: Wheat },
 ];
 
 export function StageProgressIndicator({ currentStage }) {
   if (!currentStage) return null;
 
   const normalizedStage = currentStage.toLowerCase();
-  const currentIndex = STAGES.findIndex(s => s.id === normalizedStage);
+  const currentIndex = STAGES.findIndex((s) => s.id === normalizedStage);
 
+  // If the stage from the backend doesn't match any known stage, render nothing
+  // rather than showing a broken progress bar.
   if (currentIndex === -1) return null;
 
+  const progressPercent =
+    STAGES.length > 1
+      ? (currentIndex / (STAGES.length - 1)) * 100
+      : 0;
+
+  // Active track width: span from left edge to the center of the current node.
+  // For index 0 the track should be 0 width; for the last it should be ~100%.
+  const activeTrackWidth =
+    currentIndex === 0
+      ? "0%"
+      : `calc(${progressPercent}% - 2rem)`;
+
   return (
-    <Card className="w-full p-8 overflow-hidden bg-surface rounded-[2rem] shadow-sm border border-border/50">
-      <div className="flex items-center justify-between mb-12">
-        <h3 className="text-sm font-black text-text-muted uppercase tracking-[0.2em]">Season Progress</h3>
-        <div className="bg-success/10 text-success px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-          {(currentIndex / (STAGES.length - 1) * 100).toFixed(0)}% Complete
+    <Card className="spi-card">
+      <div className="spi-header">
+        <h3 className="spi-header-label">Season Progress</h3>
+        <div className="spi-percent-badge">
+          {progressPercent.toFixed(0)}% Complete
         </div>
       </div>
-      
-      <div className="relative px-4 sm:px-8">
+
+      <div className="spi-track-container">
         {/* Background track */}
-        <div className="absolute top-1/2 left-4 right-4 h-2 -translate-y-1/2 bg-neutral/30 rounded-full sm:left-8 sm:right-8"></div>
-        
-        {/* Active track with gradient */}
+        <div className="spi-track-bg" aria-hidden="true"></div>
+
+        {/* Active progress track */}
         <div
-          className="absolute top-1/2 left-4 h-2 -translate-y-1/2 bg-gradient-to-r from-success via-success to-primary rounded-full transition-all duration-1000 ease-out sm:left-8"
-          style={{ width: `calc(${(currentIndex / (STAGES.length - 1)) * 100}% - ${currentIndex === 0 ? '0px' : '2rem'})` }}
+          className="spi-track-active"
+          style={{ width: activeTrackWidth }}
+          aria-hidden="true"
         ></div>
 
-        {/* Nodes */}
-        <div className="relative flex justify-between items-center z-10">
+        {/* Stage nodes */}
+        <div className="spi-nodes">
           {STAGES.map((stage, idx) => {
             const isCompleted = idx < currentIndex;
             const isActive = idx === currentIndex;
             const isPending = idx > currentIndex;
             const Icon = stage.icon;
 
+            const boxClass = isCompleted
+              ? "spi-node-box-completed"
+              : isActive
+              ? "spi-node-box-active"
+              : "spi-node-box-pending";
+
+            const labelClass = isCompleted
+              ? "spi-node-label-completed"
+              : isActive
+              ? "spi-node-label-active"
+              : "spi-node-label-pending";
+
             return (
-              <div key={stage.id} className="flex flex-col items-center group relative">
-                {/* Connecting Pulse Effect for Active Stage */}
+              <div key={stage.id} className="spi-node">
+                {/* Pulse ring for active node only */}
                 {isActive && (
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-primary/20 rounded-full animate-ping pointer-events-none" />
+                  <div className="spi-node-pulse" aria-hidden="true" />
                 )}
 
-                <div 
-                  className={`
-                    w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-500 relative z-10
-                    ${isCompleted ? "bg-success text-surface shadow-md shadow-success/20 -translate-y-1" : ""}
-                    ${isActive ? "bg-surface border-4 border-primary text-primary scale-110 shadow-xl shadow-primary/20 -translate-y-2" : ""}
-                    ${isPending ? "bg-surface border-2 border-neutral/50 text-neutral/50" : ""}
-                  `}
-                >
+                <div className={`spi-node-box ${boxClass}`}>
                   {isCompleted ? (
-                    <Check className="w-6 h-6 sm:w-7 sm:h-7 stroke-[3]" />
+                    <Check className="spi-node-icon spi-node-icon-check" />
                   ) : (
-                    <Icon className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5]" />
+                    <Icon className="spi-node-icon" />
                   )}
                 </div>
-                
-                <div 
-                  className={`
-                    absolute top-16 sm:top-20 text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-500 w-32 text-center
-                    ${isCompleted ? "text-success opacity-80" : ""}
-                    ${isActive ? "text-primary scale-105" : ""}
-                    ${isPending ? "text-text-muted/40" : ""}
-                  `}
-                >
+
+                <div className={`spi-node-label ${labelClass}`}>
                   {stage.label}
                   {isActive && (
-                    <span className="block text-[10px] sm:text-xs font-bold text-primary/70 mt-1 uppercase tracking-widest">
-                      Current
-                    </span>
+                    <span className="spi-node-current-text">Current</span>
                   )}
                 </div>
               </div>
@@ -86,9 +98,9 @@ export function StageProgressIndicator({ currentStage }) {
           })}
         </div>
       </div>
-      
-      {/* Spacer for absolute positioned labels */}
-      <div className="mt-16 sm:mt-20"></div> 
+
+      {/* Spacer to push card bottom below the absolutely-positioned labels */}
+      <div className="spi-label-spacer"></div>
     </Card>
   );
 }

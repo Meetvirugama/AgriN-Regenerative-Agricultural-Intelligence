@@ -1,2 +1,7 @@
-// Optional: configure or set up testing frameworks
-import "@testing-library/react";
+import { afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
+
+// Automatically clean up the DOM after each test to prevent state leakage
+afterEach(() => {
+  cleanup();
+});

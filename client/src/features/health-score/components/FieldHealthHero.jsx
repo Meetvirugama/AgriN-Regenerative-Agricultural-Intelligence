@@ -1,12 +1,13 @@
 import React from "react";
 import { CheckCircle, AlertTriangle, AlertCircle, Info } from "lucide-react";
+import "./FieldHealthHero.css";
 
 export const FieldHealthHero = ({ score, loading }) => {
   if (loading) {
     return (
-      <div className="bg-surface p-6 border-b border-border animate-pulse">
-        <div className="h-4 w-32 bg-background mb-4"></div>
-        <div className="h-8 w-3/4 bg-background"></div>
+      <div className="health-hero-loading">
+        <div className="health-hero-skeleton-title"></div>
+        <div className="health-hero-skeleton-text"></div>
       </div>
     );
   }
@@ -34,37 +35,32 @@ export const FieldHealthHero = ({ score, loading }) => {
   }
 
   // Determine overall hero color based on the category
-  let bgColorClass = "bg-success/10";
-  let borderColorClass = "border-success/30";
-  let textColorClass = "text-success";
+  let themeClass = "health-hero-success";
+  let textThemeClass = "health-hero-success-text";
   let Icon = CheckCircle;
 
   if (category === "critical" || category === "red") {
-    bgColorClass = "bg-danger/10";
-    borderColorClass = "border-danger/30";
-    textColorClass = "text-danger";
+    themeClass = "health-hero-danger";
+    textThemeClass = "health-hero-danger-text";
     Icon = AlertCircle;
   } else if (category === "poor" || category === "moderate" || category === "amber") {
-    bgColorClass = "bg-warning/10";
-    borderColorClass = "border-warning/30";
-    textColorClass = "text-warning";
+    themeClass = "health-hero-warning";
+    textThemeClass = "health-hero-warning-text";
     Icon = AlertTriangle;
   }
 
   return (
-    <div
-      className={`p-6 border-b border-l-4 ${bgColorClass} ${borderColorClass} shadow-sm`}
-    >
-      <div className="flex items-center gap-2 mb-2 text-text-muted">
+    <div className={`health-hero-container ${themeClass}`}>
+      <div className="health-hero-header">
         <Info size={16} />
-        <span className="text-xs font-bold uppercase tracking-widest">
+        <span className="health-hero-label">
           Field Synthesis
         </span>
       </div>
 
-      <div className="flex items-start gap-4">
-        <Icon className={`${textColorClass} mt-1 flex-shrink-0`} size={32} />
-        <h2 className="text-2xl font-bold leading-tight">{synthesisText}</h2>
+      <div className="health-hero-content">
+        <Icon className={`health-hero-icon ${textThemeClass}`} size={32} />
+        <h2 className="health-hero-text">{synthesisText}</h2>
       </div>
     </div>
   );

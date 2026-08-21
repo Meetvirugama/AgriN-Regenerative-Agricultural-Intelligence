@@ -1,0 +1,30 @@
+.extension-shell-container {
+  position: relative;
+  min-height: 100vh;
+  background-color: var(--surface);
+}
+
+.extension-switch-btn {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+  background-color: rgba(156, 163, 175, 0.8); /* neutral/80 approximation */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--text-main);
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--neutral);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.extension-switch-btn:hover {
+  background-color: var(--neutral);
+}

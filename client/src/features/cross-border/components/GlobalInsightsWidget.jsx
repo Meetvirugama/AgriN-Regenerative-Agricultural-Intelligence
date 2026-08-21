@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { crossBorderApi } from "../api/crossBorderApi";
 import { Globe2, TrendingUp, Lightbulb, MapPin, Activity } from "lucide-react";
+import "./GlobalInsightsWidget.css";
 
 export const GlobalInsightsWidget = ({ fieldId }) => {
   const [insights, setInsights] = useState([]);
@@ -8,107 +9,134 @@ export const GlobalInsightsWidget = ({ fieldId }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Guard: don't attempt a fetch if there is no fieldId
+    if (!fieldId) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
     const fetchInsights = async () => {
       try {
-        const data = await crossBorderApi.getInsights(fieldId);
-        setInsights(data.insights || []);
+        setLoading(true);
         setError(null);
+        // crossBorderApi.getInsights() already returns the insights array
+        const data = await crossBorderApi.getInsights(fieldId);
+        if (!cancelled) {
+          setInsights(data);
+        }
       } catch (err) {
-        console.error("Failed to fetch cross-border insights", err);
-        setError(err.message || "Failed to load global insights.");
+        console.error("[GlobalInsightsWidget] Failed to fetch insights:", err);
+        if (!cancelled) {
+          setError(err.message || "Failed to load global insights.");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
+
     fetchInsights();
+
+    return () => {
+      cancelled = true;
+    };
   }, [fieldId]);
 
+  // ── Loading ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="bg-surface border border-neutral p-6 rounded-2xl shadow-sm animate-pulse">
-        <div className="h-6 bg-neutral/20 rounded w-1/2 mb-4"></div>
-        <div className="h-24 bg-neutral/20 rounded w-full"></div>
+      <div className="giw-skeleton">
+        <div className="giw-skeleton-title"></div>
+        <div className="giw-skeleton-body"></div>
       </div>
     );
   }
 
+  // ── Error ────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="bg-surface border border-danger p-6 rounded-2xl shadow-sm relative overflow-hidden">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="bg-danger text-background p-2 rounded-lg">
+      <div className="giw-error">
+        <div className="giw-header">
+          <div className="giw-header-icon-box giw-header-icon-box-error">
             <Globe2 size={20} />
           </div>
-          <h2 className="font-black text-xl text-text tracking-tight">
-            Global Insights
-          </h2>
+          <h2 className="giw-header-title">Global Insights</h2>
         </div>
-        <p className="text-danger font-medium text-sm">{error}</p>
+        <p className="giw-error-message">{error}</p>
       </div>
     );
   }
 
+  // ── Empty — render nothing rather than an empty card ─────────────
   if (insights.length === 0) {
     return null;
   }
 
+  // ── Success ───────────────────────────────────────────────────────
   return (
-    <div className="bg-primary/5 border border-primary/20 p-6 rounded-2xl shadow-sm relative overflow-hidden">
-      {/* Decorative background element */}
-      <div className="absolute -right-12 -top-12 text-primary/10">
+    <div className="giw-card">
+      {/* Decorative background globe */}
+      <div className="giw-bg-globe" aria-hidden="true">
         <Globe2 size={120} />
       </div>
 
-      <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="bg-primary text-primary-content p-2 rounded-lg">
+      <div className="giw-content">
+        <div className="giw-full-header">
+          <div className="giw-header-icon-box giw-header-icon-box-normal">
             <Globe2 size={20} />
           </div>
           <div>
-            <h2 className="font-black text-xl text-text tracking-tight">
-              Global Insights
-            </h2>
-            <p className="text-xs font-bold text-primary uppercase tracking-widest">
+            <h2 className="giw-header-title">Global Insights</h2>
+            <p className="giw-header-text-subtitle">
               Layer 14 Cross-Border Intelligence
             </p>
           </div>
         </div>
 
-        <div className="space-y-4">
+        <ul className="giw-list">
           {insights.map((insight) => (
-            <div
-              key={insight.id}
-              className="bg-surface rounded-xl p-4 border border-neutral shadow-sm"
-            >
-              <div className="flex justify-between items-start mb-3">
-                <span className="inline-flex items-center gap-1.5 bg-neutral/30 px-2.5 py-1 rounded-full text-xs font-bold text-text-muted">
-                  <MapPin size={12} /> {insight.sourceRegion}
+            <li key={insight.id} className="giw-insight-card">
+              <div className="giw-insight-meta">
+                <span className="giw-region-badge">
+                  <MapPin size={12} />
+                  {insight.sourceRegion}
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1">
-                  <TrendingUp size={12} /> {insight.adoptionRate}% Adoption
+                <span className="giw-adoption-rate">
+                  <TrendingUp size={12} />
+                  {insight.adoptionRate}% Adoption
                 </span>
               </div>
 
-              <p className="text-sm text-text-muted mb-2 italic">
-                "Similar farms in the {insight.comparableClimateZone} climate
-                have found that..."
+              {/* Climate zone contextual quote */}
+              <p className="giw-climate-zone">
+                &ldquo;Similar farms in the {insight.comparableClimateZone}{" "}
+                climate have found that...&rdquo;
               </p>
 
-              <div className="flex gap-3">
-                <div className="mt-1">
+              <div className="giw-recommendation">
+                <div className="giw-recommendation-icon">
                   {insight.insightType === "practice" ? (
-                    <Lightbulb size={20} className="text-warning" />
+                    <Lightbulb
+                      size={20}
+                      className="giw-recommendation-icon-practice"
+                    />
                   ) : (
-                    <Activity size={20} className="text-danger" />
+                    <Activity
+                      size={20}
+                      className="giw-recommendation-icon-risk"
+                    />
                   )}
                 </div>
-                <p className="font-semibold text-text leading-relaxed">
+                <p className="giw-recommendation-text">
                   {insight.recommendation}
                 </p>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </div>
   );

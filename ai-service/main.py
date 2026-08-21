@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from routers.health_score import router as health_score_router
 from routers.advisory import router as advisory_router
 from routers.phenology import router as phenology_router
 from routers.weather_rules import router as weather_router
@@ -48,13 +47,13 @@ async def root():
 async def health():
     return {
         "status": "healthy",
-        "gemini_configured": bool(os.environ.get("GEMINI_API_KEY"))
+        "gemini_configured": bool(os.environ.get("GEMINI_API_KEY")),
+        "groq_configured": bool(os.environ.get("GROQ_API_KEYS"))
     }
 
 # Inject the /api/v1 prefix so that the Node.js backend client logic remains functional.
 # Since your new routers already declare their specific prefix (e.g., prefix="/advisory"),
 # they will elegantly map to /api/v1/advisory when nested here.
-app.include_router(health_score_router, prefix="/api/v1")
 app.include_router(advisory_router, prefix="/api/v1")
 app.include_router(phenology_router, prefix="/api/v1")
 app.include_router(weather_router, prefix="/api/v1")

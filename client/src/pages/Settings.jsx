@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Settings as SettingsIcon,
-  Shield,
   User,
   Save,
   Brain,
@@ -13,7 +12,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { cropApi } from "../features/crop-context/api/cropApi";
-import { authApi } from "../features/auth/api/authApi";
+import { useAuth } from "../app/providers/AuthProvider";
 
 import "./Settings.css";
 
@@ -37,6 +36,7 @@ const DEFAULT_SETTINGS = {
 
 export const Settings = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState("general");
   const [portalTarget, setPortalTarget] = useState(null);
   
@@ -128,13 +128,7 @@ export const Settings = () => {
 
   const handleLogout = async () => {
     try {
-      // Clear token from local storage (if any)
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      
-      // Attempt backend logout if possible
-      // await authApi.logout(accessToken, refreshToken).catch(e => console.warn(e));
-      
+      await logout();
       navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -153,6 +147,7 @@ export const Settings = () => {
     const dashboardContent = document.querySelector('.dashboard-content');
     const originalBodyOverflow = document.body.style.overflow;
     const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalDashboardOverflow = dashboardContent ? dashboardContent.style.overflowY : '';
     
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -173,7 +168,7 @@ export const Settings = () => {
       window.removeEventListener('resize', handleResize);
       document.body.style.overflow = originalBodyOverflow;
       document.documentElement.style.overflow = originalHtmlOverflow;
-      if (dashboardContent) dashboardContent.style.overflowY = 'auto';
+      if (dashboardContent) dashboardContent.style.overflowY = originalDashboardOverflow;
     };
   }, []);
 

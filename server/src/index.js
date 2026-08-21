@@ -24,7 +24,7 @@ import profileRoutes from "./modules/profile/profile.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
-import { checkDatabaseHealth } from "./db/connection.js";
+import { checkDatabaseHealth, pool } from "./db/connection.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import { requireAuth } from "./middleware/auth.js";
 import { startScheduler } from "./jobs/scheduler.js";
@@ -79,9 +79,10 @@ app.use("/api", generalLimiter);
 
 app.use((req, _res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  // Set 15s timeout on the request socket
-  req.setTimeout(15000, () => {
-    console.warn(`[Timeout] ${req.method} ${req.path} took longer than 15s`);
+  // Set 60s timeout on the request socket to accommodate AI generation
+  req.setTimeout(60000, () => {
+    console.warn(`[Timeout] ${req.method} ${req.path} took longer than 60s`);
+    req.destroy(new Error("Request timeout"));
   });
   next();
 });
@@ -117,7 +118,7 @@ app.use("/api/v1", requireAuth, climateRiskRouter);
 app.use("/api/v1", requireAuth, advisoryRouter);
 app.use("/api/v1", voiceRoutes);
 app.use("/api/v1", requireAuth, feedbackRouter);
-app.use("/api/v1", crossBorderRoutes);
+app.use("/api/v1", requireAuth, crossBorderRoutes);
 app.use("/api/v1/escalations", requireAuth, escalationRoutes);
 app.use("/api/v1/alerts", requireAuth, alertsRoutes);
 app.use("/api/v1/chat", requireAuth, chatRoutes); // Keep legacy for backwards compatibility
@@ -151,8 +152,14 @@ const server = app.listen(PORT, () => {
 
 const shutdown = (signal) => {
   console.log(`\n${signal} received — shutting down gracefully...`);
-  server.close(() => {
-    console.log("Server closed.");
+  server.close(async () => {
+    console.log("HTTP server closed.");
+    try {
+      await pool.end();
+      console.log("Database connection pool closed.");
+    } catch (err) {
+      console.error("Error closing database pool:", err);
+    }
     process.exit(0);
   });
   // Force exit if server hasn't closed within 10 seconds

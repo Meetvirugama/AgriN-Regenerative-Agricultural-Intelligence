@@ -107,7 +107,7 @@ export const FarmerShell = () => {
         
         {isMobileMenuOpen && (
           <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"
+            className="dashboard-mobile-backdrop"
             onClick={() => setIsMobileMenuOpen(false)}
           />
         )}
@@ -121,7 +121,7 @@ export const FarmerShell = () => {
               <span>AgriMesh</span>
             </div>
             <button 
-              className="md:hidden text-text-muted hover:text-text-main p-2 rounded-lg hover:bg-slate-100 cursor-pointer flex items-center justify-center border-none bg-transparent"
+              className="dashboard-mobile-close-btn"
               onClick={() => setIsMobileMenuOpen(false)}
               type="button"
               aria-label="Close menu"
@@ -157,18 +157,18 @@ export const FarmerShell = () => {
             <header className="dashboard-header">
               {/* Mobile Menu Toggle - Always visible on mobile */}
               <button 
-                className="md:hidden p-2 -ml-4 mr-2 text-text-main hover:bg-secondary rounded-lg flex-shrink-0"
+                className="dashboard-mobile-menu-btn"
                 onClick={() => setIsMobileMenuOpen(true)}
               >
                 <Menu size={24} />
               </button>
 
               {location.pathname === '/intelligence' ? (
-                <div id="intelligence-header-portal" className="intelligence-header-portal-slot hidden md:flex"></div>
+                <div id="intelligence-header-portal" className="intelligence-header-portal-slot"></div>
               ) : location.pathname === '/alerts' ? (
-                <div id="alerts-header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
+                <div id="alerts-header-portal" className="dashboard-alerts-portal"></div>
               ) : location.pathname === '/ask' ? (
-                <div id="ask-header-portal" className="intelligence-header-portal-slot hidden md:flex"></div>
+                <div id="ask-header-portal" className="intelligence-header-portal-slot"></div>
               ) : location.pathname === '/' ? (
                 <div className="dashboard-header-search">
                   <Search size={16} />
@@ -186,7 +186,7 @@ export const FarmerShell = () => {
                   />
                 </div>
               ) : (
-                <div style={{ flex: 1 }} />
+                <div id="header-portal" className="dashboard-header-portal" />
               )}
 
               <div className="dashboard-header-actions">

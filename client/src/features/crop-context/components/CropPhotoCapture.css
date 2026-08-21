@@ -1,0 +1,274 @@
+/* ─── CropPhotoCapture.css ──────────────────────────────────────────── */
+
+.cpc-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Upload step ───────────────────────────────────────────────────── */
+.cpc-upload-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 0;
+}
+
+.cpc-camera-btn {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 9999px;
+  background-color: rgba(22, 163, 74, 0.1);
+  color: var(--primary, #16a34a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.cpc-camera-btn:hover {
+  background-color: rgba(22, 163, 74, 0.2);
+}
+
+.cpc-camera-btn:focus-visible {
+  outline: 2px solid var(--primary, #16a34a);
+  outline-offset: 2px;
+}
+
+.cpc-upload-text {
+  text-align: center;
+}
+
+.cpc-upload-title {
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.cpc-upload-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.cpc-manual-link {
+  font-size: 0.875rem;
+  color: var(--primary, #16a34a);
+  font-weight: 700;
+  text-decoration: underline;
+  margin-top: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.cpc-manual-link:focus-visible {
+  outline: 2px solid var(--primary, #16a34a);
+  outline-offset: 2px;
+}
+
+/* ── Analyzing step ────────────────────────────────────────────────── */
+.cpc-analyzing-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 0;
+}
+
+.cpc-analyzing-icon {
+  color: var(--primary, #16a34a);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.cpc-analyzing-text {
+  font-weight: 700;
+  font-size: 1.125rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Result step ───────────────────────────────────────────────────── */
+.cpc-result-box {
+  background-color: rgba(34, 197, 94, 0.1);
+  border: 1px solid var(--success, #22c55e);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.cpc-result-check-icon {
+  color: var(--success, #22c55e);
+  flex-shrink: 0;
+}
+
+.cpc-result-crop-name {
+  font-weight: 700;
+  color: var(--success, #22c55e);
+  font-size: 1.125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.cpc-confidence-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.cpc-confidence-dots {
+  display: flex;
+  gap: 0.125rem;
+}
+
+.cpc-confidence-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+}
+
+.cpc-confidence-dot-filled {
+  background-color: var(--success, #22c55e);
+}
+
+.cpc-confidence-dot-empty {
+  border: 2px solid var(--success, #22c55e);
+}
+
+.cpc-confidence-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--success, #22c55e);
+  margin-left: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cpc-result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* ── Manual step ───────────────────────────────────────────────────── */
+.cpc-manual-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cpc-warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--warning, #f59e0b);
+  background-color: rgba(245, 158, 11, 0.1);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.cpc-warning-icon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.cpc-warning-text {
+  font-size: 0.875rem;
+}
+
+.cpc-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cpc-field-label {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.cpc-select {
+  padding: 0.75rem;
+  border: 2px solid var(--neutral, #e5e7eb);
+  border-radius: 0.5rem;
+  background-color: var(--surface, #fff);
+  font-size: 1.125rem;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.cpc-select:focus {
+  border-color: var(--primary, #16a34a);
+}
+
+.cpc-select:focus-visible {
+  outline: 2px solid var(--primary, #16a34a);
+  outline-offset: 2px;
+}
+
+/* ── Shared buttons ────────────────────────────────────────────────── */
+.cpc-btn-primary {
+  width: 100%;
+  padding: 1rem;
+  background-color: var(--primary, #16a34a);
+  color: var(--primary-content, #fff);
+  font-weight: 700;
+  border-radius: 0.75rem;
+  font-size: 1.125rem;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.1s;
+}
+
+.cpc-btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.cpc-btn-primary:active {
+  transform: scale(0.95);
+}
+
+.cpc-btn-primary:focus-visible {
+  outline: 2px solid var(--primary, #16a34a);
+  outline-offset: 2px;
+}
+
+.cpc-btn-outline {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--primary, #16a34a);
+  color: var(--primary, #16a34a);
+  font-weight: 700;
+  border-radius: 0.75rem;
+  font-size: 1.125rem;
+  background: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cpc-btn-outline:hover {
+  background-color: rgba(22, 163, 74, 0.05);
+}
+
+.cpc-btn-outline:focus-visible {
+  outline: 2px solid var(--primary, #16a34a);
+  outline-offset: 2px;
+}
+
+.cpc-btn-save {
+  margin-top: 1rem;
+}

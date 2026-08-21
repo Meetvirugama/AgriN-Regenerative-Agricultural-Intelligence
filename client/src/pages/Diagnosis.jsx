@@ -93,6 +93,12 @@ export const Diagnosis = () => {
         date: new Date().toLocaleString(),
         id: data.id || `DIAG-${Date.now()}`,
         imageUrl: previewUrl,
+        severity: data.severity,
+        what_is_happening: data.what_is_happening,
+        why_is_it_happening: data.why_is_it_happening,
+        treatment_recommendation: data.treatment_recommendation,
+        differential_diagnosis: typeof data.differential_diagnosis === 'string' ? JSON.parse(data.differential_diagnosis) : data.differential_diagnosis,
+        evidence: typeof data.evidence === 'string' ? JSON.parse(data.evidence) : data.evidence
       };
       setResult(newResult);
       setHistory(prev => [newResult, ...prev]);
@@ -253,21 +259,28 @@ export const Diagnosis = () => {
             </div>
             <div className="diagnosis-tab-content">
               <p className="diagnosis-about-text">
-                Brown spot is a fungal disease that affects leaves, leaf sheaths, and glumes of wheat. It can reduce yield and grain quality if not managed early.
+                <strong>What is happening:</strong> {result.what_is_happening || "No description available."}
+              </p>
+              <p className="diagnosis-about-text mt-2">
+                <strong>Why is it happening:</strong> {result.why_is_it_happening || "No explanation available."}
               </p>
               
               <div className="diagnosis-info-3box-row">
                 <div className="diagnosis-info-box-compact">
                   <span className="diagnosis-info-label-sm">Affects</span>
-                  <span className="diagnosis-info-value-sm">Leaves, Sheath, Glumes</span>
+                  <span className="diagnosis-info-value-sm">{result.crop || "Crop"}</span>
                 </div>
                 <div className="diagnosis-info-box-compact">
-                  <span className="diagnosis-info-label-sm">Spread By</span>
-                  <span className="diagnosis-info-value-sm">Fungal spores, Wind</span>
+                  <span className="diagnosis-info-label-sm">Primary Source</span>
+                  <span className="diagnosis-info-value-sm">
+                    {result.evidence && result.evidence.length > 0 
+                      ? result.evidence[0].source 
+                      : "Visual Analysis"}
+                  </span>
                 </div>
-                <div className="diagnosis-info-box-compact alert">
+                <div className={`diagnosis-info-box-compact ${result.severity === 'high' || result.severity === 'critical' ? 'alert' : ''}`}>
                   <span className="diagnosis-info-label-sm">Risk Level</span>
-                  <span className="diagnosis-info-value-sm">High (20-30% loss)</span>
+                  <span className="diagnosis-info-value-sm capitalize">{result.severity || "Unknown"}</span>
                 </div>
               </div>
             </div>
@@ -312,20 +325,24 @@ export const Diagnosis = () => {
             </div>
             <div className="diagnosis-solutions-list compact">
               <div className="diagnosis-solution-item-compact">
-                <Leaf size={16} className="text-success shrink-0 mt-1" />
+                <ShieldCheck size={16} className="text-success shrink-0 mt-1" />
                 <div>
-                  <h4 className="diagnosis-solution-name-sm">Propiconazole 25% EC</h4>
-                  <p className="diagnosis-solution-desc-sm">Fungicide • 1 ml/L water</p>
+                  <h4 className="diagnosis-solution-name-sm">Primary Recommendation</h4>
+                  <p className="diagnosis-solution-desc-sm">{result.treatment_recommendation || "Consult local experts."}</p>
                 </div>
               </div>
-              <div className="diagnosis-solution-item-compact">
-                <Leaf size={16} className="text-success shrink-0 mt-1" />
-                <div>
-                  <h4 className="diagnosis-solution-name-sm">Trichoderma viride</h4>
-                  <p className="diagnosis-solution-desc-sm">Biocontrol • 4 kg/acre</p>
+              
+              {result.differential_diagnosis && result.differential_diagnosis.length > 0 && (
+                <div className="diagnosis-solution-item-compact">
+                  <Info size={16} className="text-warning shrink-0 mt-1" />
+                  <div>
+                    <h4 className="diagnosis-solution-name-sm">Other Possibilities</h4>
+                    <p className="diagnosis-solution-desc-sm">
+                      {result.differential_diagnosis.map(d => `${d.condition} (${Math.round(d.probability * 100)}%)`).join(", ")}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <button className="diagnosis-solution-view-all">View All Solutions</button>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const BulbSvg = forwardRef(
   (
@@ -64,6 +65,13 @@ const BulbSvg = forwardRef(
     const handleHoverEnd = () => {
       stop();
     };
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered]);
 
     return (
       <motion.div
@@ -78,7 +86,7 @@ const BulbSvg = forwardRef(
           viewBox="0 0 24 24"
           strokeWidth={strokeWidth}
           fill={color}
-          className={`bulb-icon cursor-pointer ${className}`}
+          className={`hover-icon-wrapper bulb-icon ${className}`}
         >
           <path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <motion.path

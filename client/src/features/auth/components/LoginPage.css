@@ -52,103 +52,11 @@
   gap: 1rem;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.input-label {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.input-wrapper {
-  position: relative;
-}
-
-.input-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-  pointer-events: none;
-}
-
-.login-input {
-  width: 100%;
-  padding: 0.625rem 1rem 0.625rem 2.25rem;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  color: #111827;
-  transition: all 0.2s;
-  box-sizing: border-box;
-}
-
-.login-input::placeholder {
-  color: #9ca3af;
-}
-
-.login-input:focus {
-  outline: none;
-  border-color: #16a34a;
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
-}
-
-.password-toggle {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-.password-toggle:hover {
-  color: #4b5563;
-}
-
-.error-text {
-  font-size: 0.875rem;
-  color: #ef4444;
-  font-weight: 600;
-  margin: 0;
-}
-
-.forgot-password-container {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 0.25rem;
-}
-
-.forgot-password-link {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #4b5563;
-  text-decoration: underline;
-  text-decoration-color: #d1d5db;
-  text-underline-offset: 3px;
-}
-
-.forgot-password-link:hover {
-  color: #111827;
-}
-
 .submit-btn {
   width: 100%;
   padding: 0.625rem;
   margin-top: 0.25rem;
-  background-color: #000000; /* Pitch black */
+  background-color: #000000;
   color: #ffffff;
   font-weight: 600;
   border-radius: 8px;
@@ -175,79 +83,10 @@
   cursor: not-allowed;
 }
 
-.divider-container {
-  position: relative;
-  margin: 1.25rem 0;
-}
-
-.divider-line-wrapper {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-}
-
-.divider-line {
-  width: 100%;
-  border-top: 1px solid #e5e7eb;
-}
-
-.divider-text-wrapper {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-}
-
-.divider-text {
-  background-color: #ffffff;
-  padding: 0 0.75rem;
-  color: #9ca3af;
-  font-weight: 500;
-}
-
-.otp-btn {
-  width: 100%;
-  padding: 0.625rem;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  color: #111827;
+.error-text {
+  font-size: 0.875rem;
+  color: #ef4444;
   font-weight: 600;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.otp-btn:hover {
-  background-color: #f9fafb;
-}
-
-.otp-btn:active {
-  transform: scale(0.99);
-}
-
-.signup-container {
-  margin-top: 1.5rem;
+  margin: 1rem 0 0 0;
   text-align: center;
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.signup-link {
-  font-weight: 700;
-  color: #16a34a; /* Green sign up */
-  text-decoration: none;
-}
-
-.signup-link:hover {
-  text-decoration: underline;
-  text-decoration-color: #16a34a;
-  text-underline-offset: 3px;
 }

@@ -1,15 +1,16 @@
 import React from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { ArrowRightLeft } from "lucide-react";
+import "./ExtensionShell.css";
 
 export const ExtensionShell = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-screen bg-surface">
+    <div className="extension-shell-container">
       <button
         onClick={() => navigate("/")}
-        className="fixed top-4 right-4 z-50 bg-neutral/80 backdrop-blur text-text font-bold px-4 py-2 rounded-full shadow border border-neutral flex items-center gap-2 hover:bg-neutral transition-colors"
+        className="extension-switch-btn"
       >
         <ArrowRightLeft size={16} />
         Switch to Farmer

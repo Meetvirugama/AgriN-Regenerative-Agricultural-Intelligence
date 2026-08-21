@@ -47,7 +47,7 @@ async def evaluate_rules(
 
         rain_days = [
             f for f in forecasts
-            if f.rainfall_mm >= config.rain_threshold_mm
+            if f.rainfall_mm is not None and f.rainfall_mm >= config.rain_threshold_mm
         ]
 
         if rain_days:
@@ -88,7 +88,7 @@ async def evaluate_rules(
 
         heat_days = [
             f for f in forecasts
-            if f.temp_max >= config.heat_threshold_c
+            if f.temp_max is not None and f.temp_max >= config.heat_threshold_c
         ]
 
         if heat_days:
@@ -127,7 +127,7 @@ async def evaluate_rules(
 
         humid_days = [
             f for f in forecasts
-            if f.humidity_pct >= config.humidity_threshold_pct
+            if f.humidity_pct is not None and f.humidity_pct >= config.humidity_threshold_pct
         ]
 
         if humid_days:
@@ -157,7 +157,7 @@ async def evaluate_rules(
 
         frost_days = [
             f for f in forecasts
-            if f.temp_min <= config.frost_threshold_c
+            if f.temp_min is not None and f.temp_min <= config.frost_threshold_c
         ]
 
         if frost_days:

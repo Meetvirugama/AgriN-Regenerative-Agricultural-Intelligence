@@ -563,3 +563,63 @@
 .spin { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── List View Overrides ─────────────────────────────────────────────────── */
+.myfields-grid[data-view="list"] {
+  display: flex;
+  flex-direction: column;
+}
+
+.myfields-grid[data-view="list"] .myfields-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+}
+
+.myfields-grid[data-view="list"] .myfields-card-header {
+  flex: 1;
+  margin-bottom: 0;
+  min-width: 200px;
+}
+
+.myfields-grid[data-view="list"] .myfields-card-body {
+  flex: 2;
+  flex-direction: row;
+  margin-bottom: 0;
+  gap: 2rem;
+  justify-content: flex-end;
+}
+
+.myfields-grid[data-view="list"] .myfields-card-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.myfields-grid[data-view="list"] .myfields-card-action-btn {
+  width: auto;
+  padding: 0.5rem 1rem;
+}
+
+@media (max-width: 768px) {
+  .myfields-grid[data-view="list"] .myfields-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .myfields-grid[data-view="list"] .myfields-card-header {
+    margin-bottom: 1rem;
+  }
+  .myfields-grid[data-view="list"] .myfields-card-body {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .myfields-grid[data-view="list"] .myfields-card-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .myfields-grid[data-view="list"] .myfields-card-action-btn {
+    width: 100%;
+  }
+}

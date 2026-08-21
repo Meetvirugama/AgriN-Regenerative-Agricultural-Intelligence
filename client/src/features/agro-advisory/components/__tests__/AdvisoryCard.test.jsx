@@ -8,6 +8,7 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 vi.mock("../../api/advisoryApi", () => ({
   advisoryApi: {
     getAdvisory: vi.fn(),
+    submitFeedback: vi.fn(),
   },
 }));
 
@@ -24,6 +25,7 @@ describe("AdvisoryCard Component", () => {
       why_text: "Recent weather has been optimal.",
       action_text: "Continue standard irrigation schedule.",
       severity: "Medium",
+      action_deadline: "Today",
       monitor_text: "Keep an eye on pests.",
       generated_at: new Date().toISOString(),
       trigger: "ai_generated",
@@ -36,8 +38,6 @@ describe("AdvisoryCard Component", () => {
     vi.mocked(advisoryApi.getAdvisory).mockResolvedValue(mockAdvisory);
 
     render(<AdvisoryCard fieldId="f1" />);
-
-    // Wait for the mock API to resolve and check if text appears
 
     // Wait for the mock API to resolve and check if text appears
     await waitFor(() => {

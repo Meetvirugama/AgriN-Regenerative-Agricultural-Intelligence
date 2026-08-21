@@ -15,7 +15,7 @@ export function useHealthScore(fieldId) {
       setLoading(true);
       setError(null);
       try {
-        const scoreData = await request(`fields/${fieldId}/health-score`);
+        const scoreData = await request(`fields/${fieldId}/health`);
 
         if (isMounted) {
           setData(scoreData);

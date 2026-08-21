@@ -6,8 +6,9 @@
  */
 
 export const API_BASE = (() => {
-  const envUrl = import.meta.env.VITE_API_URL;
+  let envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) {
+    envUrl = envUrl.replace(/\/+$/, '');
     return envUrl.endsWith('/v1') ? envUrl : `${envUrl}/v1`;
   }
   return "http://localhost:8000/api/v1";
@@ -33,7 +34,8 @@ export async function request(path, options = {}) {
   const headers = new Headers(options.headers || {});
   // Set default JSON headers unless we're sending FormData
   if (!(options.body instanceof FormData)) {
-    if (!headers.has("Content-Type")) {
+    // Only set Content-Type if we actually have a request body
+    if (options.body && !headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
     }
     if (!headers.has("Accept")) {
@@ -72,7 +74,12 @@ export async function request(path, options = {}) {
     let data;
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
+      const text = await response.text();
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (err) {
+        data = text; // fallback to raw text if json parsing completely fails
+      }
     } else {
       data = await response.text();
     }
@@ -90,6 +97,9 @@ export async function request(path, options = {}) {
     return data;
   } catch (error) {
     if (error instanceof ApiError) {
+      throw error;
+    }
+    if (error.name === "AbortError") {
       throw error;
     }
     // Handle network errors (offline, CORS, etc.)

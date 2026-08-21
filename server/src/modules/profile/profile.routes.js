@@ -141,6 +141,7 @@ router.patch("/", async (req, res, next) => {
       email,
       location,
       preferredLanguage,
+      farmingExperienceYears,
     } = req.body;
 
     if (!name?.trim()) {
@@ -157,8 +158,9 @@ router.patch("/", async (req, res, next) => {
         phone_number = COALESCE($2, phone_number),
         email = $3,
         location = $4,
-        preferred_language = $5
-      WHERE id = $6
+        preferred_language = $5,
+        farming_experience_years = COALESCE($6, farming_experience_years)
+      WHERE id = $7
       RETURNING
         id,
         name,
@@ -175,6 +177,9 @@ router.patch("/", async (req, res, next) => {
         email?.trim() || null,
         location?.trim() || null,
         preferredLanguage || "English",
+        (farmingExperienceYears === null || farmingExperienceYears === "") 
+          ? null 
+          : Number(farmingExperienceYears),
         farmerId,
       ]
     );

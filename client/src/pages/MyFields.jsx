@@ -5,15 +5,12 @@ import {
   LayoutGrid,
   List,
   ChevronDown,
-  Leaf,
   Droplet,
-  CloudRain,
   Activity,
   Loader2,
   MapPin,
   Sprout,
   Trash2,
-  Edit3,
   ExternalLink,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -188,7 +185,8 @@ export const MyFields = () => {
     (async () => {
       try {
         const data = await cropApi.getAllFields();
-        setFields((data || []).map(decorateField));
+        const sortedData = (data || []).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        setFields(sortedData.map(decorateField));
       } catch (err) {
         console.error("Failed to fetch fields:", err);
       } finally {
@@ -256,7 +254,7 @@ export const MyFields = () => {
       ) : fields.length === 0 ? (
         <EmptyState onAdd={() => navigate("/fields/add")} />
       ) : (
-        <div className="myfields-grid">
+        <div className="myfields-grid" data-view={viewMode}>
           {fields.map((field) => (
             <div key={field.id} className="myfields-card">
               <div className="myfields-card-header">

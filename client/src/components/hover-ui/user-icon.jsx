@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useCallback , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const UserIcon = forwardRef(
   (
@@ -62,7 +63,7 @@ const UserIcon = forwardRef(
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
         onHoverStart={start}
         onHoverEnd={stop}
       >

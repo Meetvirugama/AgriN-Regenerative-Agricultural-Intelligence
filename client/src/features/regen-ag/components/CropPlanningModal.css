@@ -1,0 +1,134 @@
+/* CropPlanningModal.css */
+
+.crop-plan-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.crop-plan-subtitle {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.crop-plan-list {
+  overflow-y: auto;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-right: 0.25rem;
+}
+
+.crop-plan-card {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 2px solid transparent;
+}
+
+.crop-plan-card-high {
+  border-color: var(--primary);
+  background-color: rgba(16, 185, 129, 0.05); /* primary/5 */
+}
+
+.crop-plan-card-medium {
+  border-color: var(--secondary);
+  background-color: rgba(14, 165, 233, 0.05); /* secondary/5 */
+}
+
+.crop-plan-card-low {
+  border-color: rgba(239, 68, 68, 0.3); /* danger/30 */
+  background-color: rgba(239, 68, 68, 0.05); /* danger/5 */
+}
+
+.crop-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.crop-plan-title {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+.crop-plan-variety {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  margin: 0;
+}
+
+.crop-plan-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.crop-plan-badge-high {
+  background-color: var(--primary);
+  color: var(--primary-content);
+}
+
+.crop-plan-badge-medium {
+  background-color: var(--secondary);
+  color: var(--secondary-content);
+}
+
+.crop-plan-badge-low {
+  background-color: var(--danger);
+  color: var(--background);
+}
+
+.crop-plan-reasoning {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  font-size: 0.875rem;
+  color: var(--text-main);
+}
+
+.crop-plan-reasoning-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.crop-plan-risks-container {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: var(--background);
+  border-radius: 0.5rem;
+  border: 1px solid var(--neutral);
+}
+
+.crop-plan-risks-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.crop-plan-warning-icon {
+  color: var(--warning);
+}
+
+.crop-plan-risks-list {
+  list-style-type: disc;
+  padding-left: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}

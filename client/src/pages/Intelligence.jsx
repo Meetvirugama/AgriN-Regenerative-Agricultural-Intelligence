@@ -13,7 +13,6 @@ import {
   CloudRain,
   Wind,
   Loader2,
-  Calendar,
   Sparkles,
   ShieldCheck,
   Thermometer,
@@ -32,7 +31,7 @@ export const Intelligence = () => {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("health"); // "health" | "recommendations" | "weather"
-  const [activeFieldFilter, setActiveFieldFilter] = useState("All Fields");
+  const [activeFieldFilter, setActiveFieldFilter] = useState("all");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [hoveredPoint, setHoveredPoint] = useState(null);
   const [headerPortalEl, setHeaderPortalEl] = useState(null);
@@ -129,10 +128,17 @@ export const Intelligence = () => {
 
   // Dynamic 7-day trend calculations with current dates
   const trendPoints = useMemo(() => {
-    if (data?.trendData?.length) {
-      return data.trendData.map((pt, idx) => {
+    let sourceData = [];
+    if (activeFieldFilter === "all") {
+      sourceData = data?.trendData || [];
+    } else {
+      sourceData = data?.trendDataByField?.[activeFieldFilter] || [];
+    }
+
+    if (sourceData.length) {
+      return sourceData.map((pt, idx) => {
         const d = new Date();
-        d.setDate(d.getDate() - (data.trendData.length - 1 - idx));
+        d.setDate(d.getDate() - (sourceData.length - 1 - idx));
         return {
           ...pt,
           date: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
@@ -140,7 +146,7 @@ export const Intelligence = () => {
       });
     }
     return [];
-  }, [data?.trendData]);
+  }, [data?.trendData, data?.trendDataByField, activeFieldFilter]);
 
   const getPointCoordinates = (index, val) => {
     const total = Math.max(trendPoints.length - 1, 1);
@@ -156,9 +162,15 @@ export const Intelligence = () => {
     : "";
 
   const availableFields = useMemo(() => {
-    const list = data?.fieldsList?.length ? data.fieldsList : [];
-    return ["All Fields", ...list];
-  }, [data?.fieldsList]);
+    const list = data?.fields?.length ? data.fields.map((f) => ({ id: f.id, name: f.name })) : [];
+    return [{ id: "all", name: "All Fields" }, ...list];
+  }, [data?.fields]);
+
+  const activeFieldLabel = useMemo(() => {
+    if (activeFieldFilter === "all") return "All Fields";
+    const field = data?.fields?.find((f) => f.id === activeFieldFilter);
+    return field ? field.name : "All Fields";
+  }, [activeFieldFilter, data?.fields]);
 
   const renderTabSwitcher = () => (
     <nav className="intelligence-tab-switcher" aria-label="Dashboard Views">
@@ -466,22 +478,22 @@ export const Intelligence = () => {
                           onClick={() => setShowFilterDropdown(!showFilterDropdown)}
                           type="button"
                         >
-                          <span>{activeFieldFilter}</span>
+                          <span>{activeFieldLabel}</span>
                           <ChevronDown size={13} className="text-text-muted" />
                         </button>
                         {showFilterDropdown && (
                           <div className="compact-dropdown-menu">
                             {availableFields.map((field) => (
                               <button
-                                key={field}
-                                className={`compact-dropdown-item ${activeFieldFilter === field ? "active" : ""}`}
+                                key={field.id}
+                                className={`compact-dropdown-item ${activeFieldFilter === field.id ? "active" : ""}`}
                                 onClick={() => {
-                                  setActiveFieldFilter(field);
+                                  setActiveFieldFilter(field.id);
                                   setShowFilterDropdown(false);
                                 }}
                                 type="button"
                               >
-                                {field}
+                                {field.name}
                               </button>
                             ))}
                           </div>
@@ -668,6 +680,8 @@ export const Intelligence = () => {
            =================================================================== */}
         {activeTab === "weather" && (() => {
           const selectedWeather = Array.isArray(data?.weatherData) ? data.weatherData.find(w => w.available) : null;
+          const selectedField = data?.fields?.find(f => f.id === selectedWeather?.fieldId);
+          const locationName = selectedField ? selectedField.name : "My Farm";
           const current = selectedWeather?.current;
           
           return (
@@ -678,7 +692,7 @@ export const Intelligence = () => {
                 <div>
                   <h2 className="compact-card-title">Current Microclimate</h2>
                   <span className="compact-card-subtitle">
-                    {data?.locationName || "My Farm"}
+                    {locationName}
                   </span>
                 </div>
                 <span className="compact-card-badge weather">Live Sensors</span>

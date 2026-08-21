@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { TextToSpeechButton } from "../../voice/components/TextToSpeechButton";
 
-export function WeatherAlertBanner({ flags }) {
+export function WeatherAlertBanner({ flags = [] }) {
   const [dismissedIds, setDismissedIds] = useState(new Set());
 
   // Only show the highest severity, non-dismissed active flag to avoid spamming the farmer

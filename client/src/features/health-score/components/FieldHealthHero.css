@@ -1,0 +1,84 @@
+/* FieldHealthHero.css */
+
+.health-hero-container {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  border-left: 4px solid transparent; /* Replaced dynamically */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.health-hero-loading {
+  background-color: var(--surface);
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
+}
+
+.health-hero-skeleton-title {
+  height: 1rem;
+  width: 8rem;
+  background-color: var(--background);
+  margin-bottom: 1rem;
+}
+
+.health-hero-skeleton-text {
+  height: 2rem;
+  width: 75%;
+  background-color: var(--background);
+}
+
+.health-hero-success {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-left-color: rgba(34, 197, 94, 0.3);
+}
+.health-hero-success-text { color: var(--success); }
+
+.health-hero-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left-color: rgba(239, 68, 68, 0.3);
+}
+.health-hero-danger-text { color: var(--danger); }
+
+.health-hero-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-left-color: rgba(245, 158, 11, 0.3);
+}
+.health-hero-warning-text { color: var(--warning); }
+
+.health-hero-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+}
+
+.health-hero-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.health-hero-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.health-hero-icon {
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.health-hero-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+}

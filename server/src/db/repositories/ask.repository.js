@@ -6,11 +6,13 @@ import { query, queryOne } from "../connection.js";
 export async function getActiveField(farmerId) {
   const row = await queryOne(
     `SELECT
-       f.id, f.name, f.area_hectares as "areaHectares", f.location_lat as latitude, f.location_lng as longitude,
-       f.crop_type as "cropName", f.crop_variety as "cropVariety", f.sowing_date as "sowingDate", f.growth_stage as "growthStage",
-       fa.language as "farmerLanguage"
+       f.id, f.name, f.area_hectares as "areaHectares", f.lat as latitude, f.lng as longitude,
+       f.crop_type as "cropName", f.crop_variety as "cropVariety", f.sowing_date as "sowingDate", 
+       fs.current_stage as "growthStage",
+       fa.preferred_language as "farmerLanguage"
      FROM fields f
      JOIN farmers fa ON fa.id = f.farmer_id
+     LEFT JOIN field_crop_states fs ON fs.field_id = f.id
      WHERE f.farmer_id = $1
      ORDER BY f.created_at DESC LIMIT 1`,
     [farmerId]

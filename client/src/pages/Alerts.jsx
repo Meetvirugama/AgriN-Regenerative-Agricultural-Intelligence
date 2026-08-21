@@ -38,10 +38,9 @@ const normalizeAlert = (alert) => ({
   description: alert.description || "",
   field: alert.field || alert.fieldName || "Unknown Field",
   fieldId: alert.fieldId || alert.field_id || null,
-  priority:
-    alert.priority?.charAt(0).toUpperCase() +
-      alert.priority?.slice(1).toLowerCase() ||
-    "Low",
+  priority: alert.priority
+    ? alert.priority.charAt(0).toUpperCase() + alert.priority.slice(1).toLowerCase()
+    : "Low",
   type: alert.type || "general",
   resolved: Boolean(alert.resolved),
   read: Boolean(alert.read),

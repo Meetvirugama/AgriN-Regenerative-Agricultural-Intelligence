@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "../../lib/cn";
+import "./Card.css";
 
 export const Card = ({
   children,
@@ -9,17 +10,17 @@ export const Card = ({
   ...props
 }) => {
   const paddingClasses = {
-    none: "p-0",
-    sm: "p-4",
-    md: "p-6",
-    lg: "p-8",
+    none: "card-padding-none",
+    sm: "card-padding-sm",
+    md: "card-padding-md",
+    lg: "card-padding-lg",
   };
 
   return (
     <div
       className={cn(
-        "border border-neutral rounded-xl",
-        elevation === "none" ? "bg-surface" : "bg-surface-raised shadow-md",
+        "card",
+        elevation === "none" ? "card-elevation-none" : "card-elevation-raised",
         paddingClasses[padding],
         className,
       )}

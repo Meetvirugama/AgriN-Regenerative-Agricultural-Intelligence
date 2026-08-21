@@ -29,7 +29,7 @@ router.post("/:fieldId/identify-crop", async (req, res, next) => {
     const imageBuffer = Buffer.from(base64Data, "base64");
 
     // Call Python AI service
-    const { PythonClient } = await import("../../services/pythonClient");
+    const { PythonClient } = await import("../../services/pythonClient.js");
     const result = await PythonClient.identifyCrop(imageBuffer, mimeType);
     res.json(result);
   } catch (err) {

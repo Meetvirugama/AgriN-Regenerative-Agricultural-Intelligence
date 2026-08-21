@@ -46,7 +46,7 @@ const getFields = async (farmerId) => {
     `
     SELECT 
       id, name, crop_type, crop_variety, sowing_date::text, 
-      latitude, longitude, area_hectares, irrigation_source, created_at
+      lat as latitude, lng as longitude, area_hectares, irrigation_type, created_at
     FROM fields
     WHERE farmer_id = $1
     ORDER BY created_at ASC
@@ -215,23 +215,42 @@ const buildRealTrend = async (fields) => {
   /**
    * Aggregate across actual field observations.
    */
-  const grouped = new Map();
+  const groupedAll = new Map();
+  const groupedByField = {};
 
   for (const row of result.rows) {
     // Note: row.date might be a Date object or string depending on pg config.
     // Ensure we format it to string (YYYY-MM-DD) for consistency
     const dateStr = typeof row.date === 'string' ? row.date.split('T')[0] : row.date.toISOString().split('T')[0];
     
-    if (!grouped.has(dateStr)) {
-      grouped.set(dateStr, []);
+    if (!groupedAll.has(dateStr)) {
+      groupedAll.set(dateStr, []);
     }
-    grouped.get(dateStr).push(Number(row.score));
+    groupedAll.get(dateStr).push(Number(row.score));
+
+    if (!groupedByField[row.field_id]) {
+      groupedByField[row.field_id] = new Map();
+    }
+    if (!groupedByField[row.field_id].has(dateStr)) {
+      groupedByField[row.field_id].set(dateStr, []);
+    }
+    groupedByField[row.field_id].get(dateStr).push(Number(row.score));
   }
 
-  return Array.from(grouped.entries()).map(([dateStr, values]) => ({
+  const farmTrend = Array.from(groupedAll.entries()).map(([dateStr, values]) => ({
     date: dateStr,
     value: average(values),
   }));
+
+  const fieldTrends = {};
+  for (const [fieldId, dateMap] of Object.entries(groupedByField)) {
+    fieldTrends[fieldId] = Array.from(dateMap.entries()).map(([dateStr, values]) => ({
+      date: dateStr,
+      value: average(values),
+    }));
+  }
+
+  return { farmTrend, fieldTrends };
 };
 
 export const intelligenceService = {
@@ -267,7 +286,7 @@ export const intelligenceService = {
       };
     }
 
-    const [healthResults, weatherResults, trendData] = await Promise.all([
+    const [healthResults, weatherResults, trends] = await Promise.all([
       getFieldHealth(fields),
       getFieldWeather(fields),
       buildRealTrend(fields),
@@ -293,7 +312,7 @@ export const intelligenceService = {
         sowingDate: field.sowing_date ?? null,
       },
       areaHectares: field.area_hectares ?? null,
-      irrigationSource: field.irrigation_source ?? null,
+      irrigationSource: field.irrigation_type ?? null,
       health: healthByField.get(field.id) ?? {
         score: null,
         available: false,
@@ -320,7 +339,7 @@ export const intelligenceService = {
         average: avgHealth,
         distribution: healthDistribution,
       },
-      trend: trendData,
+      trend: trends.farmTrend,
     };
 
     if (settings && !settings.personalizedRecs) {
@@ -333,21 +352,21 @@ export const intelligenceService = {
       };
     } else if (settings) {
       // Respect individual permissions
-      if (!settings.permissions.weather) {
+      if (settings?.permissions?.weather === false) {
         aiContext.fields.forEach(f => f.weather = null);
       }
-      if (!settings.permissions.health) {
+      if (settings?.permissions?.health === false) {
         aiContext.health = null;
         aiContext.trend = null;
         aiContext.fields.forEach(f => f.health = null);
       }
-      if (!settings.permissions.crop) {
+      if (settings?.permissions?.crop === false) {
         aiContext.fields.forEach(f => f.crop = null);
       }
-      if (!settings.permissions.irrigation) {
+      if (settings?.permissions?.irrigation === false) {
         aiContext.fields.forEach(f => f.irrigationSource = null);
       }
-      if (!settings.permissions.history) {
+      if (settings?.permissions?.history === false) {
         // history pruning
       }
     }
@@ -368,7 +387,8 @@ export const intelligenceService = {
       healthDistribution,
       fields: fieldData,
       topRecommendations,
-      trendData,
+      trendData: trends.farmTrend,
+      trendDataByField: trends.fieldTrends,
       weatherData: weatherResults,
       meta: {
         generatedAt: new Date().toISOString(),

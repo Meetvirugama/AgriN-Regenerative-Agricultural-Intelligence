@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useCallback , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const FilledBellIcon = forwardRef(
   ({ size = 24, color = "currentColor", className = "", isHovered = false }, ref) => {
@@ -54,7 +55,7 @@ const FilledBellIcon = forwardRef(
     return (
       <motion.svg
         ref={scope}
-        className={`cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
         xmlns="http://www.w3.org/2000/svg"
         width={size}
         height={size}

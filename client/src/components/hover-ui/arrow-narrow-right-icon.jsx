@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const ArrowNarrowRightIcon = forwardRef(
   (
@@ -35,13 +36,20 @@ const ArrowNarrowRightIcon = forwardRef(
     const handleHoverEnd = () => {
       stop();
     };
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered]);
 
     return (
       <motion.div
         ref={scope}
         onHoverStart={handleHoverStart}
         onHoverEnd={handleHoverEnd}
-        className={`inline-flex cursor-pointer items-center justify-center ${className}`}
+        className={`hover-icon-wrapper ${className}`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

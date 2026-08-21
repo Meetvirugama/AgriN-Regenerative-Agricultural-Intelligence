@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle , useEffect } from "react";
 
 import { scaledStrokeWidth } from "./types";
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const GearIcon = forwardRef(
   (
@@ -67,7 +68,7 @@ const GearIcon = forwardRef(
         strokeWidth={scaledStrokeWidth(strokeWidth, 32)}
         strokeLinecap="square"
         strokeMiterlimit="10"
-        className={`cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
         style={{ overflow: "visible" }}
       >
         {/* Rotating group */}

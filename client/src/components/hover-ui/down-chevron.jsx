@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useCallback , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const DownChevron = forwardRef(
   (
@@ -42,7 +43,7 @@ const DownChevron = forwardRef(
     return (
       <motion.div
         ref={scope}
-        className={`inline-flex cursor-pointer items-center justify-center ${className}`}
+        className={`hover-icon-wrapper ${className}`}
         onHoverStart={start}
         onHoverEnd={stop}
       >

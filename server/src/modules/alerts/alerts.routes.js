@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { query } from "../../db/connection.js";
+import { query, execute } from "../../db/connection.js";
 
 const router = Router();
 
@@ -46,10 +46,10 @@ router.get("/", async (req, res, next) => {
       ORDER BY
         a.resolved ASC,
 
-        CASE a.priority
-          WHEN 'High' THEN 1
-          WHEN 'Medium' THEN 2
-          WHEN 'Low' THEN 3
+        CASE LOWER(a.priority)
+          WHEN 'high' THEN 1
+          WHEN 'medium' THEN 2
+          WHEN 'low' THEN 3
           ELSE 4
         END,
 
@@ -58,7 +58,7 @@ router.get("/", async (req, res, next) => {
       [farmerId]
     );
 
-    const alerts = result.rows.map(
+    const alerts = result.map(
       (row) => ({
         id: row.id,
 
@@ -127,7 +127,7 @@ router.patch(
       const { alertId } =
         req.params;
 
-      const result = await query(
+      const rows = await query(
         `
         UPDATE alerts
         SET
@@ -152,7 +152,7 @@ router.patch(
         ]
       );
 
-      if (!result.rowCount) {
+      if (!rows.length) {
         return res.status(404).json({
           message:
             "Alert not found.",
@@ -161,7 +161,7 @@ router.patch(
 
       res.json({
         success: true,
-        alert: result.rows[0],
+        alert: rows[0],
       });
     } catch (error) {
       next(error);
@@ -178,7 +178,7 @@ router.patch(
     try {
       const farmerId = req.farmer?.sub;
 
-      const result = await query(
+      const rowCount = await execute(
         `
         UPDATE alerts
         SET
@@ -198,7 +198,7 @@ router.patch(
       res.json({
         success: true,
         updated:
-          result.rowCount,
+          rowCount,
       });
     } catch (error) {
       next(error);

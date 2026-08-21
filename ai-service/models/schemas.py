@@ -334,8 +334,8 @@ class PhenologyRequest(BaseModel):
     sowing_date: str
     calendar: CropCalendar
 
-    temp_max_c: Optional[List[float]] = None
-    temp_min_c: Optional[List[float]] = None
+    temp_max_c: Optional[List[Optional[float]]] = None
+    temp_min_c: Optional[List[Optional[float]]] = None
 
 
 class PhenologyResponse(BaseModel):
@@ -365,10 +365,10 @@ class RuleConfig(BaseModel):
 
 class WeatherSnapshot(BaseModel):
     date: str
-    temp_min: float
-    temp_max: float
-    rainfall_mm: float = Field(default=0, ge=0)
-    humidity_pct: float = Field(
+    temp_min: Optional[float] = None
+    temp_max: Optional[float] = None
+    rainfall_mm: Optional[float] = Field(default=0, ge=0)
+    humidity_pct: Optional[float] = Field(
         default=0,
         ge=0,
         le=100

@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const BrandTelegramIcon = forwardRef(
   (
@@ -35,6 +36,13 @@ const BrandTelegramIcon = forwardRef(
     const handleHoverEnd = () => {
       stop();
     };
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered]);
 
     return (
       <motion.svg
@@ -50,7 +58,7 @@ const BrandTelegramIcon = forwardRef(
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
       >
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
         <motion.path

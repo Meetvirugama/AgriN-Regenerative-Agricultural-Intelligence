@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle, useRef , useEffect } from "react";
 
 import { scaledStrokeWidth } from "./types";
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const GlobeIcon = forwardRef(
   (
@@ -47,7 +48,7 @@ const GlobeIcon = forwardRef(
     return (
       <motion.div
         ref={scope}
-        className={`inline-flex cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
         onHoverStart={start}
         onHoverEnd={stop}
       >

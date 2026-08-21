@@ -1,0 +1,245 @@
+/* ─── StageProgressIndicator.css ───────────────────────────────────── */
+
+.spi-card {
+  width: 100%;
+  padding: 2rem;
+  overflow: hidden;
+  background-color: var(--surface, #fff);
+  border-radius: 2rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(229, 231, 235, 0.5); /* border/50 */
+}
+
+/* ── Header ────────────────────────────────────────────────────────── */
+.spi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3rem;
+}
+
+.spi-header-label {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: var(--text-muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.spi-percent-badge {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: var(--success, #22c55e);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Track container ────────────────────────────────────────────────── */
+.spi-track-container {
+  position: relative;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .spi-track-container {
+    padding: 0 2rem;
+  }
+}
+
+/* ── Background track ──────────────────────────────────────────────── */
+.spi-track-bg {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  right: 1rem;
+  height: 0.5rem;
+  transform: translateY(-50%);
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+
+@media (min-width: 640px) {
+  .spi-track-bg {
+    left: 2rem;
+    right: 2rem;
+  }
+}
+
+/* ── Active progress track ─────────────────────────────────────────── */
+.spi-track-active {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  height: 0.5rem;
+  transform: translateY(-50%);
+  background: linear-gradient(to right, var(--success, #22c55e), var(--success, #22c55e), var(--primary, #16a34a));
+  border-radius: 9999px;
+  transition: width 1s ease-out;
+}
+
+@media (min-width: 640px) {
+  .spi-track-active {
+    left: 2rem;
+  }
+}
+
+/* ── Nodes row ─────────────────────────────────────────────────────── */
+.spi-nodes {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+/* ── Single node ───────────────────────────────────────────────────── */
+.spi-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Active pulse ring */
+.spi-node-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4rem;
+  height: 4rem;
+  background-color: rgba(22, 163, 74, 0.2);
+  border-radius: 9999px;
+  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* Icon box states */
+.spi-node-box {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s;
+  position: relative;
+  z-index: 10;
+}
+
+@media (min-width: 640px) {
+  .spi-node-box {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+
+.spi-node-box-completed {
+  background-color: var(--success, #22c55e);
+  color: var(--surface, #fff);
+  box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2);
+  transform: translateY(-0.25rem);
+}
+
+.spi-node-box-active {
+  background-color: var(--surface, #fff);
+  border: 4px solid var(--primary, #16a34a);
+  color: var(--primary, #16a34a);
+  transform: translateY(-0.5rem) scale(1.1);
+  box-shadow: 0 20px 25px -5px rgba(22, 163, 74, 0.2);
+}
+
+.spi-node-box-pending {
+  background-color: var(--surface, #fff);
+  border: 2px solid rgba(156, 163, 175, 0.5);
+  color: rgba(156, 163, 175, 0.5);
+}
+
+/* Icons */
+.spi-node-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 2.5;
+}
+
+@media (min-width: 640px) {
+  .spi-node-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}
+
+.spi-node-icon-check {
+  stroke-width: 3;
+}
+
+/* ── Labels ────────────────────────────────────────────────────────── */
+.spi-node-label {
+  position: absolute;
+  top: 4rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.5s;
+  width: 8rem;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .spi-node-label {
+    top: 5rem;
+    font-size: 0.875rem;
+  }
+}
+
+.spi-node-label-completed {
+  color: var(--success, #22c55e);
+  opacity: 0.8;
+}
+
+.spi-node-label-active {
+  color: var(--primary, #16a34a);
+  transform: scale(1.05);
+}
+
+.spi-node-label-pending {
+  color: rgba(107, 114, 128, 0.4);
+}
+
+.spi-node-current-text {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: rgba(22, 163, 74, 0.7);
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+@media (min-width: 640px) {
+  .spi-node-current-text {
+    font-size: 0.75rem;
+  }
+}
+
+/* ── Spacer for absolute labels ────────────────────────────────────── */
+.spi-label-spacer {
+  margin-top: 4rem;
+}
+
+@media (min-width: 640px) {
+  .spi-label-spacer {
+    margin-top: 5rem;
+  }
+}

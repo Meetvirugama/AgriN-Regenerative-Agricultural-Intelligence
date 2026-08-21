@@ -3,11 +3,17 @@ import { request } from "../../../services/apiClient";
 export const cropApi = {
   fetchCropState: async (fieldId) => request(`fields/${fieldId}/crop-state`),
   identifyCrop: async (fieldId, imageBlob) => {
-    const formData = new FormData();
-    formData.append("image", imageBlob);
+    // The backend reads req.body.image as a base64 data URL (JSON body).
+    // Convert the Blob to base64 before sending.
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("Failed to read image blob"));
+      reader.readAsDataURL(imageBlob);
+    });
     return request(`fields/${fieldId}/identify-crop`, {
       method: "POST",
-      body: formData,
+      body: JSON.stringify({ image: base64 }),
     });
   },
   overrideCropState: async (fieldId, data) => {
@@ -47,7 +53,6 @@ export const cropApi = {
     body: JSON.stringify(payload),
   }),
   getIntelligence: async () => request("intelligence"),
-  getRecentChats: async () => request("chat/recent"),
   getRecentChats: async () => request("chat/recent"),
   getChatHistory: async ({ limit = 50, cursor = null } = {}) => {
     const params = new URLSearchParams();

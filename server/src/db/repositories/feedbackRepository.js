@@ -21,11 +21,13 @@ export class FeedbackRepository {
 
   async getPendingPrompts(fieldId) {
     return query(
-      `SELECT id, advisory_id::text, field_id::text, prompted_at::text,
-              farmer_response, follow_up_photo_url, follow_up_note, collected_at::text
-       FROM feedback_events
-       WHERE field_id = $1 AND farmer_response IS NULL
-       ORDER BY prompted_at DESC`,
+      `SELECT f.id, f.advisory_id::text, f.field_id::text, f.prompted_at::text,
+              f.farmer_response, f.follow_up_photo_url, f.follow_up_note, f.collected_at::text,
+              a.action_text AS summary
+       FROM feedback_events f
+       LEFT JOIN advisory_records a ON f.advisory_id = a.id
+       WHERE f.field_id = $1 AND f.farmer_response IS NULL
+       ORDER BY f.prompted_at DESC`,
       [fieldId],
     );
   }

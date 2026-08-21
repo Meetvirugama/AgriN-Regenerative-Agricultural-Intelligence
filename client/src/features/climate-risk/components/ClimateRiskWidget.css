@@ -1,0 +1,218 @@
+/* ─── ClimateRiskWidget.css ───────────────────────────────────────── */
+
+/* ── Card severity override ─────────────────────────────────────── */
+.crw-card {
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.crw-card-urgent {
+  border-color: rgba(239, 68, 68, 0.3);
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444; /* --danger */
+}
+
+.crw-card-attention {
+  border-color: rgba(245, 158, 11, 0.3);
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b; /* --warning */
+}
+
+.crw-card-healthy {
+  border-color: rgba(34, 197, 94, 0.3);
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e; /* --success */
+}
+
+.crw-card-info {
+  border-color: rgba(59, 130, 246, 0.3);
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6; /* --info */
+}
+
+.crw-card-neutral {
+  border-color: var(--border, #e5e7eb);
+  background-color: var(--surface, #fff);
+  color: var(--text-muted, #6b7280);
+}
+
+/* ── Inner padding wrapper ──────────────────────────────────────── */
+.crw-body {
+  padding: 1.25rem;
+}
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.crw-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.crw-header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.crw-icon-box {
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border, #e5e7eb);
+  background-color: var(--surface, #fff);
+  padding: 0.625rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.crw-icon {
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+.crw-meta {
+  min-width: 0;
+}
+
+.crw-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.crw-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crw-timeframe {
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* ── Sections ────────────────────────────────────────────────────── */
+.crw-section {
+  margin-top: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border, #e5e7eb);
+  background-color: var(--surface, #fff);
+  padding: 1rem;
+}
+
+.crw-section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.075em;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
+}
+
+.crw-action-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text, #111827);
+}
+
+/* ── Risk list ───────────────────────────────────────────────────── */
+.crw-risks {
+  margin-top: 1.25rem;
+}
+
+.crw-risks-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.075em;
+  opacity: 0.7;
+  margin-bottom: 0.75rem;
+}
+
+.crw-risk-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.crw-risk-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.crw-risk-bullet {
+  margin-top: 0.5rem;
+  height: 0.375rem;
+  width: 0.375rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: currentColor;
+}
+
+/* ── Unknown state ───────────────────────────────────────────────── */
+.crw-unknown {
+  margin-top: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border, #e5e7eb);
+  background-color: var(--surface, #fff);
+  padding: 1rem;
+}
+
+.crw-unknown-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.crw-unknown-icon {
+  margin-top: 0.125rem;
+  height: 1.25rem;
+  width: 1.25rem;
+  flex-shrink: 0;
+}
+
+.crw-unknown-title {
+  font-weight: 600;
+}
+
+.crw-unknown-desc {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--text-muted, #6b7280);
+}
+
+/* ── Retry button ────────────────────────────────────────────────── */
+.crw-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border, #e5e7eb);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.crw-retry-btn:hover {
+  background-color: var(--surface, #f9fafb);
+}
+
+.crw-retry-icon {
+  height: 1rem;
+  width: 1rem;
+}

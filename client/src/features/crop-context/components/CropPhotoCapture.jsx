@@ -1,28 +1,34 @@
 import React, { useState } from "react";
 import { Camera, Check, Search, AlertCircle } from "lucide-react";
 import { Dialog } from "../../../components/ui/Dialog";
+import "./CropPhotoCapture.css";
 
 export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }) {
   const [step, setStep] = useState("upload");
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
   const [manualCrop, setManualCrop] = useState("wheat");
   const [manualStage, setManualStage] = useState("vegetative");
 
   const handleSimulateCapture = async () => {
     setStep("analyzing");
+    setError(null);
     try {
-      // Simulate fake blob
+      // Simulate a mock blob — in production this would come from a camera/file input
       const blob = new Blob(["mock"], { type: "image/jpeg" });
       const analysis = await onIdentify(blob);
       setResult(analysis);
       setStep("result");
-    } catch {
-      setStep("manual"); // fallback
+    } catch (err) {
+      console.error("[CropPhotoCapture] Identification failed:", err);
+      setError(err?.message || "Image identification failed. Please try manually.");
+      setStep("manual"); // Graceful fallback to manual entry
     }
   };
 
   const handleConfirmResult = async () => {
-    // Only update the crop type, leave stage as undefined to let backend preserve/recompute
+    if (!result?.crop) return;
+    // Only update crop type; leave stage for backend to recompute from GDD
     await onOverrideConfirm(result.crop);
     onClose();
   };
@@ -32,6 +38,10 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }) {
     onClose();
   };
 
+  // Derive confidence dot states: 1 dot = low, 2 = moderate, 3 = high
+  const confidenceLevels = { low: 1, moderate: 2, high: 3 };
+  const filledDots = result ? (confidenceLevels[result.confidence] ?? 1) : 0;
+
   return (
     <Dialog
       isOpen={true}
@@ -39,76 +49,84 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }) {
       title="Update Crop Information"
       className="max-w-md"
     >
-      <div className="flex flex-col gap-6">
+      <div className="cpc-content">
+        {/* ── Step: upload ── */}
         {step === "upload" && (
-          <div className="flex flex-col items-center justify-center gap-4 py-8">
+          <div className="cpc-upload-step">
             <button
+              type="button"
               onClick={handleSimulateCapture}
-              className="w-24 h-24 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+              className="cpc-camera-btn"
+              aria-label="Capture crop photo for AI identification"
             >
               <Camera size={40} />
             </button>
-            <div className="text-center">
-              <p className="font-bold text-lg">Take a photo of your crop</p>
-              <p className="text-sm text-text-muted">
+            <div className="cpc-upload-text">
+              <p className="cpc-upload-title">Take a photo of your crop</p>
+              <p className="cpc-upload-subtitle">
                 Our AI will identify the crop and growth stage
               </p>
             </div>
             <button
+              type="button"
               onClick={() => setStep("manual")}
-              className="text-sm text-primary font-bold underline mt-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+              className="cpc-manual-link"
             >
               Enter manually instead
             </button>
           </div>
         )}
 
+        {/* ── Step: analyzing ── */}
         {step === "analyzing" && (
-          <div className="flex flex-col items-center justify-center gap-4 py-12">
-            <Search size={48} className="text-primary animate-pulse" />
-            <p className="font-bold text-lg animate-pulse">
-              Analyzing image...
-            </p>
+          <div className="cpc-analyzing-step">
+            <Search size={48} className="cpc-analyzing-icon" />
+            <p className="cpc-analyzing-text">Analyzing image...</p>
           </div>
         )}
 
+        {/* ── Step: result ── */}
         {step === "result" && result && (
-          <div className="flex flex-col gap-6">
-            <div className="bg-success/10 border border-success p-4 rounded-xl flex items-start gap-4">
-              <Check size={28} className="text-success shrink-0" />
+          <div>
+            <div className="cpc-result-box">
+              <Check size={28} className="cpc-result-check-icon" />
               <div>
-                <h4 className="font-bold text-success text-lg uppercase tracking-wide">
-                  {result.crop} • {result.variety}
+                <h4 className="cpc-result-crop-name">
+                  {result.crop}
+                  {result.variety ? ` • ${result.variety}` : ""}
                 </h4>
-                <div className="flex items-center gap-1 mt-2">
-                  <div className="flex gap-0.5">
-                    <div
-                      className={`w-3 h-3 rounded-full ${result.confidence === "high" || result.confidence === "moderate" || result.confidence === "low" ? "bg-success" : "border-2 border-success"}`}
-                    ></div>
-                    <div
-                      className={`w-3 h-3 rounded-full ${result.confidence === "high" || result.confidence === "moderate" ? "bg-success" : "border-2 border-success"}`}
-                    ></div>
-                    <div
-                      className={`w-3 h-3 rounded-full ${result.confidence === "high" ? "bg-success" : "border-2 border-success"}`}
-                    ></div>
+                <div className="cpc-confidence-row">
+                  <div className="cpc-confidence-dots">
+                    {[1, 2, 3].map((n) => (
+                      <div
+                        key={n}
+                        className={`cpc-confidence-dot ${
+                          n <= filledDots
+                            ? "cpc-confidence-dot-filled"
+                            : "cpc-confidence-dot-empty"
+                        }`}
+                      />
+                    ))}
                   </div>
-                  <span className="text-xs font-bold text-success ml-1 uppercase tracking-wider">
+                  <span className="cpc-confidence-label">
                     {result.confidence} Match
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 mt-4">
+            <div className="cpc-result-actions">
               <button
+                type="button"
                 onClick={handleConfirmResult}
-                className="w-full py-4 bg-primary text-primary-content font-bold rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+                className="cpc-btn-primary"
               >
                 Yes, this is correct
               </button>
               <button
+                type="button"
                 onClick={() => setStep("manual")}
-                className="w-full py-4 border-2 border-primary text-primary font-bold rounded-xl text-lg hover:bg-primary/5 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+                className="cpc-btn-outline"
               >
                 No, let me fix it
               </button>
@@ -116,23 +134,33 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }) {
           </div>
         )}
 
+        {/* ── Step: manual ── */}
         {step === "manual" && (
-          <div className="flex flex-col gap-5">
-            <div className="flex items-start gap-3 text-warning bg-warning/10 p-3 rounded-lg border border-warning/30">
-              <AlertCircle size={20} className="shrink-0 mt-0.5" />
-              <p className="text-sm">
-                Manually setting your crop will reset the automated growth stage
-                tracking.
-              </p>
-            </div>
+          <div className="cpc-manual-step">
+            {error && (
+              <div className="cpc-warning-banner">
+                <AlertCircle size={20} className="cpc-warning-icon" />
+                <p className="cpc-warning-text">{error}</p>
+              </div>
+            )}
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="manual-crop-select" className="font-bold text-sm">
+            {!error && (
+              <div className="cpc-warning-banner">
+                <AlertCircle size={20} className="cpc-warning-icon" />
+                <p className="cpc-warning-text">
+                  Manually setting your crop will reset the automated growth
+                  stage tracking.
+                </p>
+              </div>
+            )}
+
+            <div className="cpc-field-group">
+              <label htmlFor="manual-crop-select" className="cpc-field-label">
                 Crop Type
               </label>
               <select
                 id="manual-crop-select"
-                className="p-3 border-2 border-neutral rounded-lg bg-surface text-lg font-medium outline-none focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary transition-colors"
+                className="cpc-select"
                 value={manualCrop}
                 onChange={(e) => setManualCrop(e.target.value)}
               >
@@ -143,16 +171,13 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }) {
               </select>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="manual-stage-select"
-                className="font-bold text-sm"
-              >
+            <div className="cpc-field-group">
+              <label htmlFor="manual-stage-select" className="cpc-field-label">
                 Current Growth Stage
               </label>
               <select
                 id="manual-stage-select"
-                className="p-3 border-2 border-neutral rounded-lg bg-surface text-lg font-medium outline-none focus:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary transition-colors"
+                className="cpc-select"
                 value={manualStage}
                 onChange={(e) => setManualStage(e.target.value)}
               >
@@ -164,8 +189,9 @@ export function CropPhotoCapture({ onClose, onIdentify, onOverrideConfirm }) {
             </div>
 
             <button
+              type="button"
               onClick={handleManualSubmit}
-              className="w-full mt-4 py-4 bg-primary text-primary-content font-bold rounded-xl text-lg hover:brightness-110 active:scale-95 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+              className="cpc-btn-primary cpc-btn-save"
             >
               Save Changes
             </button>

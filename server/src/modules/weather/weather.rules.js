@@ -4,6 +4,7 @@ const DEFAULT_CONFIG = {
   rain_threshold_mm: 15,
   heat_threshold_c: 35,
   humidity_threshold_pct: 85,
+  frost_threshold_c: 2.0,
 };
 
 export class WeatherRuleEngine {

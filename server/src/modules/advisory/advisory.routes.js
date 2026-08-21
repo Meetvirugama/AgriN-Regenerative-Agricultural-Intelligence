@@ -26,7 +26,7 @@ router.get("/fields/:fieldId/advisory", async (req, res, next) => {
 /**
  * Record farmer response to an advisory (followed / ignored / overridden).
  */
-router.post("/fields/:fieldId/advisory/response", async (req, res) => {
+router.post("/fields/:fieldId/advisory/response", async (req, res, next) => {
   const { fieldId } = req.params;
   const { advisoryId, action, reason } = req.body;
 

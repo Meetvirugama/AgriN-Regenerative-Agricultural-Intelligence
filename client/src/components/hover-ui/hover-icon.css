@@ -1,0 +1,6 @@
+.hover-icon-wrapper {
+  display: inline-flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}

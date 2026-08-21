@@ -14,9 +14,13 @@ export const voiceApi = {
 
   stt: async (audioBlob, language) => {
     try {
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "audio.webm");
+      if (language) formData.append("language", language);
+
       const data = await request("voice/stt", {
         method: "POST",
-        body: JSON.stringify({ language }),
+        body: formData,
       });
       return data.text;
     } catch (error) {

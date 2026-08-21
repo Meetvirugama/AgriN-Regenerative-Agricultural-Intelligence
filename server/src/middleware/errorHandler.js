@@ -6,6 +6,10 @@
  * consistent JSON error shape so the frontend always gets the same structure.
  */
 export function globalErrorHandler(err, req, res, _next) {
+  if (res.headersSent) {
+    return _next(err);
+  }
+
   const status = err.status ?? err.statusCode ?? 500;
   const message =
     process.env.NODE_ENV === "production" && status === 500

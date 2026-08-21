@@ -1,0 +1,31 @@
+.card {
+  border: 1px solid var(--neutral, #e5e7eb);
+  border-radius: 0.75rem; /* rounded-xl */
+}
+
+/* Elevations */
+.card-elevation-none {
+  background-color: var(--surface, #ffffff);
+}
+
+.card-elevation-raised {
+  background-color: var(--surface-raised, #ffffff);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+}
+
+/* Paddings */
+.card-padding-none {
+  padding: 0;
+}
+
+.card-padding-sm {
+  padding: 1rem;
+}
+
+.card-padding-md {
+  padding: 1.5rem;
+}
+
+.card-padding-lg {
+  padding: 2rem;
+}

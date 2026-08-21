@@ -6,6 +6,7 @@ import { Button } from "../../../components/ui/Button";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { mapSeverityToStatus } from "../../../types/status";
 import { ErrorState } from "../../../components/ui/ErrorState";
+import "./AdvisoryCard.css";
 
 export const AdvisoryCard = ({ fieldId }) => {
   const [advisory, setAdvisory] = useState(null);
@@ -59,13 +60,13 @@ export const AdvisoryCard = ({ fieldId }) => {
 
   if (loading) {
     return (
-      <Card className="animate-pulse">
-        <div className="h-6 bg-neutral/20 rounded w-1/3 mb-4"></div>
-        <div className="h-4 bg-neutral/20 rounded w-full mb-2"></div>
-        <div className="h-4 bg-neutral/20 rounded w-5/6 mb-6"></div>
-        <div className="flex gap-2">
-          <div className="h-10 bg-neutral/20 rounded w-1/3"></div>
-          <div className="h-10 bg-neutral/20 rounded w-1/3"></div>
+      <Card className="advisory-skeleton">
+        <div className="advisory-skeleton-line-1"></div>
+        <div className="advisory-skeleton-line-2"></div>
+        <div className="advisory-skeleton-line-3"></div>
+        <div className="advisory-skeleton-buttons">
+          <div className="advisory-skeleton-btn"></div>
+          <div className="advisory-skeleton-btn"></div>
         </div>
       </Card>
     );
@@ -81,8 +82,8 @@ export const AdvisoryCard = ({ fieldId }) => {
     advisory.severity === "Low"
   ) {
     return (
-      <Card className="bg-success/10 border-success/30">
-        <h3 className="font-bold text-success mb-2 flex items-center gap-2">
+      <Card className="advisory-card-good">
+        <h3 className="advisory-card-good-title">
           <svg
             className="w-5 h-5"
             fill="none"
@@ -98,7 +99,7 @@ export const AdvisoryCard = ({ fieldId }) => {
           </svg>
           Conditions are good
         </h3>
-        <p className="text-sm text-text-muted">
+        <p className="advisory-card-good-desc">
           Nothing to do today. We'll keep monitoring your field.
         </p>
       </Card>
@@ -115,13 +116,13 @@ export const AdvisoryCard = ({ fieldId }) => {
   };
 
   return (
-    <Card className="relative overflow-hidden pt-6">
+    <Card className="advisory-card-main">
       <div
-        className={`absolute top-0 left-0 w-1 h-full ${statusColors[status].split(" ")[0]}`}
+        className={`advisory-status-bar ${statusColors[status].split(" ")[0]}`}
       ></div>
 
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="font-black text-xl tracking-tight text-text flex items-center gap-2">
+      <div className="advisory-header">
+        <h3 className="advisory-title">
           AgriMesh Advisory
           <TextToSpeechButton
             textToRead={`AgriMesh Advisory: ${advisory.severity} Priority. ${advisory.action_text} ${advisory.action_deadline}. ${advisory.what_text} ${advisory.why_text}. What to monitor: ${advisory.monitor_text}`}
@@ -131,20 +132,20 @@ export const AdvisoryCard = ({ fieldId }) => {
         <StatusBadge status={status}>{advisory.severity} Priority</StatusBadge>
       </div>
 
-      <div className="space-y-4 mb-6">
-        <p className="text-lg font-bold leading-tight">
+      <div className="advisory-content">
+        <p className="advisory-action">
           {advisory.action_text}{" "}
-          <span className="text-primary">{advisory.action_deadline}</span>.
+          <span className="advisory-deadline">{advisory.action_deadline}</span>.
         </p>
 
-        <p className="text-text-muted leading-relaxed">
+        <p className="advisory-desc">
           {advisory.what_text} {advisory.why_text}
         </p>
 
         {advisory.historical_parallel_callout && (
-          <div className="bg-primary/10 border border-primary/30 p-3 rounded-lg flex items-start gap-3">
+          <div className="advisory-historical">
             <svg
-              className="w-5 h-5 text-primary shrink-0 mt-0.5"
+              className="advisory-historical-icon"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -156,14 +157,14 @@ export const AdvisoryCard = ({ fieldId }) => {
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="text-sm font-medium text-text">
+            <p className="advisory-historical-text">
               {advisory.historical_parallel_callout}
             </p>
           </div>
         )}
 
-        <p className="text-sm font-semibold text-text/80 bg-neutral/10 p-3 rounded-lg border border-neutral/20">
-          <span className="uppercase tracking-widest text-xs text-text-muted block mb-1">
+        <p className="advisory-monitor">
+          <span className="advisory-monitor-label">
             What to monitor
           </span>
           {advisory.monitor_text}
@@ -171,11 +172,11 @@ export const AdvisoryCard = ({ fieldId }) => {
       </div>
 
       {!feedbackGiven ? (
-        <div className="space-y-3">
-          <p className="text-xs uppercase tracking-widest font-bold text-text-muted">
+        <div className="advisory-feedback-container">
+          <p className="advisory-feedback-label">
             Farmer Response
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="advisory-feedback-buttons">
             <Button size="sm" onClick={() => handleFeedback("followed")}>
               I'll do this
             </Button>
@@ -196,13 +197,13 @@ export const AdvisoryCard = ({ fieldId }) => {
           </div>
 
           {showOverrideInput && (
-            <div className="mt-4 flex gap-2 animate-fade-in">
+            <div className="advisory-override-container">
               <input
                 type="text"
                 value={overrideReason}
                 onChange={(e) => setOverrideReason(e.target.value)}
                 placeholder="Why not? (e.g. Too wet to spray)"
-                className="flex-1 px-4 py-2 bg-background border border-neutral rounded-none outline-none focus:border-text-main"
+                className="advisory-override-input"
                 autoFocus
               />
 
@@ -218,7 +219,7 @@ export const AdvisoryCard = ({ fieldId }) => {
           )}
         </div>
       ) : (
-        <div className="mt-4 text-sm font-bold text-success flex items-center gap-2">
+        <div className="advisory-feedback-success">
           <svg
             className="w-5 h-5"
             fill="none"
@@ -236,13 +237,13 @@ export const AdvisoryCard = ({ fieldId }) => {
         </div>
       )}
 
-      <div className="mt-6 pt-4 border-t border-neutral/20 text-[10px] uppercase tracking-widest text-text-muted/60">
+      <div className="advisory-sources">
         Sources: {(advisory.source_layers ?? []).join(" • ")}
       </div>
 
       {status === "urgent" && !escalationSent && (
-        <div className="mt-6 p-4 bg-danger/5 border border-danger/20 rounded-xl">
-          <h4 className="font-bold text-danger text-sm mb-2 flex items-center gap-2">
+        <div className="advisory-escalation">
+          <h4 className="advisory-escalation-title">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -258,23 +259,23 @@ export const AdvisoryCard = ({ fieldId }) => {
             </svg>
             High Severity Risk Detected
           </h4>
-          <p className="text-xs text-text-muted mb-4 leading-relaxed">
+          <p className="advisory-escalation-desc">
             This issue could significantly impact your yield. We recommend
             escalating this data to an extension officer for review.
           </p>
 
-          <div className="flex items-start gap-2 text-left mb-4">
+          <div className="advisory-consent-container">
             <input
               type="checkbox"
               id="advisory-consent"
               checked={consentGiven}
               onChange={(e) => setConsentGiven(e.target.checked)}
-              className="mt-0.5 w-3.5 h-3.5 text-danger rounded focus:ring-danger accent-danger flex-shrink-0"
+              className="advisory-consent-checkbox"
             />
 
             <label
               htmlFor="advisory-consent"
-              className="text-[11px] text-text-muted font-medium cursor-pointer leading-tight"
+              className="advisory-consent-label"
             >
               I consent to share this advisory, my field history, and satellite
               context with my local extension network.
@@ -311,8 +312,8 @@ export const AdvisoryCard = ({ fieldId }) => {
       )}
 
       {escalationSent && (
-        <div className="mt-6 p-4 bg-success/10 border border-success/30 rounded-xl text-center">
-          <p className="text-sm font-bold text-success flex items-center justify-center gap-2">
+        <div className="advisory-escalation-success">
+          <p className="advisory-escalation-success-title">
             <svg
               className="w-5 h-5"
               fill="none"
@@ -328,7 +329,7 @@ export const AdvisoryCard = ({ fieldId }) => {
             </svg>
             Escalation Sent
           </p>
-          <p className="text-xs text-text-muted mt-1">
+          <p className="advisory-escalation-success-desc">
             An expert will review your field data.
           </p>
         </div>

@@ -1,0 +1,22 @@
+.protected-route-loader-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background);
+}
+
+.protected-route-spinner {
+  color: var(--primary);
+  /* lucide-react Loader2 inherently supports spin animation via standard CSS if we add it, but since it's just rotating: */
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

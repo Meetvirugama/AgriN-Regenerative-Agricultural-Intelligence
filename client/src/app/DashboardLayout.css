@@ -206,6 +206,19 @@
   overflow: hidden;
 }
 
+.dashboard-alerts-portal {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-header-portal {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
 .intelligence-unified-nav-bar {
   display: flex;
   align-items: center;
@@ -498,5 +511,60 @@
 
   .dashboard-header-profile {
     padding-left: 16px;
+  }
+}
+
+/* ==========================================================================
+   MOBILE MENU OVERLAYS & BUTTONS
+   ========================================================================== */
+.dashboard-mobile-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  transition: opacity 0.3s ease;
+}
+
+.dashboard-mobile-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  color: #6B7280;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.dashboard-mobile-close-btn:hover {
+  color: #111827;
+  background-color: #F3F4F6;
+}
+
+.dashboard-mobile-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  margin-left: -16px;
+  margin-right: 8px;
+  color: #111827;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.dashboard-mobile-menu-btn:hover {
+  background-color: #F3F4F6;
+}
+
+@media (min-width: 769px) {
+  .dashboard-mobile-backdrop,
+  .dashboard-mobile-close-btn,
+  .dashboard-mobile-menu-btn {
+    display: none !important;
   }
 }

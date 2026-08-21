@@ -34,13 +34,26 @@ export class FarmerRepository {
 
   async upsertFarmer(farmer) {
     const row = await queryOne(
-      `INSERT INTO farmers (id, phone_number, name, preferred_language)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO farmers (id, phone_number, name, preferred_language, email, location, profile_image_url, farming_experience_years)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        ON CONFLICT (phone_number) DO UPDATE
          SET name = EXCLUDED.name,
-             preferred_language = EXCLUDED.preferred_language
-       RETURNING id, phone_number, name, preferred_language, created_at::text`,
-      [farmer.id, farmer.phone_number, farmer.name, farmer.preferred_language],
+             preferred_language = EXCLUDED.preferred_language,
+             email = COALESCE(EXCLUDED.email, farmers.email),
+             location = COALESCE(EXCLUDED.location, farmers.location),
+             profile_image_url = COALESCE(EXCLUDED.profile_image_url, farmers.profile_image_url),
+             farming_experience_years = COALESCE(EXCLUDED.farming_experience_years, farmers.farming_experience_years)
+       RETURNING id, phone_number, name, preferred_language, email, location, profile_image_url, farming_experience_years, created_at::text`,
+      [
+        farmer.id, 
+        farmer.phone_number, 
+        farmer.name, 
+        farmer.preferred_language,
+        farmer.email ?? null,
+        farmer.location ?? null,
+        farmer.profile_image_url ?? null,
+        farmer.farming_experience_years ?? null
+      ],
     );
     return row;
   }
@@ -92,8 +105,8 @@ export class FieldRepository {
     const row = await queryOne(
       `INSERT INTO fields
          (id, farmer_id, name, crop_type, crop_variety, sowing_date,
-          lat, lng, location_name, area_hectares, boundary_geojson)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          lat, lng, location_name, area_hectares, boundary_geojson, irrigation_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        ON CONFLICT (id) DO UPDATE
          SET name = EXCLUDED.name,
              crop_type = EXCLUDED.crop_type,
@@ -104,6 +117,7 @@ export class FieldRepository {
              location_name = EXCLUDED.location_name,
              area_hectares = EXCLUDED.area_hectares,
              boundary_geojson = EXCLUDED.boundary_geojson,
+             irrigation_type = COALESCE(EXCLUDED.irrigation_type, fields.irrigation_type),
              updated_at = NOW()
        RETURNING ${this.#SELECT_FIELDS}`,
       [
@@ -112,6 +126,7 @@ export class FieldRepository {
         field.lat ?? null, field.lng ?? null, field.location_name ?? null,
         field.area_hectares ?? null,
         field.boundary_geojson ? JSON.stringify(field.boundary_geojson) : null,
+        field.irrigation_type ?? null,
       ],
     );
     return row;
@@ -155,12 +170,18 @@ export class FieldRepository {
     if (row?.id) {
       try {
         if (geojsonStr) {
+          // ST_GeomFromGeoJSON expects a Geometry, not a Feature.
+          // Extract the geometry part if it's a Feature.
+          const geomStr = boundaryGeojson?.type === 'Feature' && boundaryGeojson.geometry 
+            ? JSON.stringify(boundaryGeojson.geometry) 
+            : geojsonStr;
+            
           await execute(
             `UPDATE fields
              SET geometry = ST_GeomFromGeoJSON($1),
                  centroid = ST_Centroid(ST_GeomFromGeoJSON($1))
              WHERE id = $2`,
-            [geojsonStr, row.id],
+            [geomStr, row.id],
           );
         } else if (lat != null && lng != null) {
           await execute(

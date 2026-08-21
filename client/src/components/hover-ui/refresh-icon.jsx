@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const RefreshIcon = forwardRef(
   (
@@ -60,7 +61,7 @@ const RefreshIcon = forwardRef(
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
         style={{ transformOrigin: "50% 50%" }}
       >
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />

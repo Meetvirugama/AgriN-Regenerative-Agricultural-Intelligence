@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const CheckedIcon = forwardRef(
   (
@@ -72,6 +73,13 @@ const CheckedIcon = forwardRef(
     const handleHoverEnd = () => {
       stop();
     };
+    useEffect(() => {
+      if (isHovered) {
+        start();
+      } else {
+        stop();
+      }
+    }, [isHovered]);
 
     return (
       <motion.div
@@ -89,7 +97,7 @@ const CheckedIcon = forwardRef(
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`cursor-pointer ${className}`}
+          className={`hover-icon-wrapper ${className}`}
         >
           <motion.path stroke="none" d="M0 0h24v24H0z" fill="none" />
           <motion.path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />

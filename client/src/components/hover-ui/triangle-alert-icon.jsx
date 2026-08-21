@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useCallback , useEffect } from "react";
 
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const TriangleAlertIcon = forwardRef(
   (
@@ -87,7 +88,7 @@ const TriangleAlertIcon = forwardRef(
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
       >
         <motion.path
           className="triangle"

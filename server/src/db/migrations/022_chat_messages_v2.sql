@@ -4,7 +4,7 @@
 -- Add idempotency and relation columns
 ALTER TABLE chat_messages
 ADD COLUMN IF NOT EXISTS client_message_id UUID,
-ADD COLUMN IF NOT EXISTS parent_message_id UUID;
+ADD COLUMN IF NOT EXISTS parent_message_id UUID REFERENCES chat_messages(id) ON DELETE SET NULL;
 
 -- Add structured payload columns
 ALTER TABLE chat_messages

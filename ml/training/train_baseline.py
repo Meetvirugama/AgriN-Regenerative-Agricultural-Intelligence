@@ -62,12 +62,15 @@ class ZipImageDataset:
         self._zip_handles = {}
 
     def _get_zip(self, zip_name: str):
-        if zip_name not in self._zip_handles:
+        import os
+        pid = os.getpid()
+        key = (pid, zip_name)
+        if key not in self._zip_handles:
             path = ZIP_PATHS.get(zip_name)
             if not path or not path.exists():
                 raise FileNotFoundError(f"ZIP not found: {zip_name}")
-            self._zip_handles[zip_name] = zipfile.ZipFile(path, "r")
-        return self._zip_handles[zip_name]
+            self._zip_handles[key] = zipfile.ZipFile(path, "r")
+        return self._zip_handles[key]
 
     def __len__(self):
         return len(self.records)
@@ -209,7 +212,6 @@ def train_epoch(model, loader, optimizer, criterion, device):
     return total_loss / total, correct / total
 
 
-@torch.no_grad() if False else lambda f: f   # decorator placeholder
 def eval_epoch(model, loader, criterion, device):
     import torch
     model.eval()
@@ -313,7 +315,7 @@ def main():
                 lr=args.lr_finetune, weight_decay=1e-4,
             )
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                optimizer, T_max=args.epochs - args.phase2_epoch
+                optimizer, T_max=args.epochs - args.phase2_epoch + 1
             )
 
         t0 = time.time()

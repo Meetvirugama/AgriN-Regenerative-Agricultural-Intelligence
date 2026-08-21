@@ -67,11 +67,11 @@ export class EscalationService {
     let topIssues = [];
     try {
       const issueRows = await query(
-        `SELECT primary_diagnosis AS issue, COUNT(*) AS cnt
+        `SELECT condition_name AS issue, COUNT(*) AS cnt
          FROM field_observations
-         WHERE observed_at > NOW() - INTERVAL '30 days'
-           AND primary_diagnosis IS NOT NULL
-         GROUP BY primary_diagnosis
+         WHERE submitted_at > NOW() - INTERVAL '30 days'
+           AND condition_name IS NOT NULL
+         GROUP BY condition_name
          ORDER BY cnt DESC
          LIMIT 5`,
         [],

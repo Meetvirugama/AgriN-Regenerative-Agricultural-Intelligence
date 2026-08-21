@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Sprout, ArrowRight, Leaf } from "lucide-react";
 import { regenApi } from "../api/regenApi";
 import { CropPlanningModal } from "./CropPlanningModal";
+import "./RegenPlanningCard.css";
 
 export function RegenPlanningCard({ fieldId }) {
   const [plan, setPlan] = useState(null);
@@ -30,25 +31,25 @@ export function RegenPlanningCard({ fieldId }) {
 
   if (loading) {
     return (
-      <div className="bg-surface border border-neutral p-6 rounded-xl shadow-sm animate-pulse">
-        <div className="h-6 w-1/2 bg-neutral/20 rounded mb-4"></div>
-        <div className="h-16 bg-neutral/20 rounded"></div>
+      <div className="regen-planning-skeleton">
+        <div className="regen-planning-skeleton-title"></div>
+        <div className="regen-planning-skeleton-body"></div>
       </div>
     );
   }
 
   if (error || !plan) {
     return (
-      <div className="bg-surface border border-danger p-6 rounded-xl shadow-sm relative overflow-hidden">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="bg-danger text-background p-2 rounded-lg">
+      <div className="regen-planning-error">
+        <div className="regen-planning-error-header">
+          <div className="regen-planning-error-icon-wrapper">
             <Leaf size={20} />
           </div>
-          <h3 className="font-bold text-xl text-text tracking-tight">
+          <h3 className="regen-planning-error-title">
             Regen Planning
           </h3>
         </div>
-        <p className="text-danger font-medium text-sm">
+        <p className="regen-planning-error-message">
           {error || "Could not load planning insights"}
         </p>
       </div>
@@ -58,23 +59,23 @@ export function RegenPlanningCard({ fieldId }) {
   const topPractice = plan.practices[0];
 
   return (
-    <div className="bg-surface border border-primary/30 p-6 rounded-xl shadow-sm relative overflow-hidden">
-      <div className="absolute -top-4 -right-4 text-primary/10">
+    <div className="regen-planning-container">
+      <div className="regen-planning-bg-icon">
         <Leaf size={120} />
       </div>
 
-      <div className="relative z-10">
-        <h3 className="font-bold mb-4 tracking-wide text-sm text-primary uppercase flex items-center gap-2">
+      <div className="regen-planning-content">
+        <h3 className="regen-planning-header">
           <Sprout size={16} /> Soil Health & Future Planning
         </h3>
 
         {topPractice && (
-          <div className="mb-6">
-            <h4 className="text-xl font-bold mb-2">{topPractice.title}</h4>
-            <p className="text-text-muted text-sm leading-relaxed mb-3">
+          <div className="regen-practice-section">
+            <h4 className="regen-practice-title">{topPractice.title}</h4>
+            <p className="regen-practice-reasoning">
               {topPractice.reasoning}
             </p>
-            <div className="inline-block px-2 py-1 bg-background border border-neutral rounded text-xs font-bold text-text-muted uppercase tracking-wider">
+            <div className="regen-practice-effort">
               Effort: {topPractice.effort_level}
             </div>
           </div>
@@ -82,7 +83,7 @@ export function RegenPlanningCard({ fieldId }) {
 
         <button
           onClick={() => setShowModal(true)}
-          className="w-full py-3 bg-background border-2 border-primary text-primary font-bold rounded-xl text-sm hover:bg-primary/5 transition-all flex items-center justify-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+          className="regen-explore-btn"
         >
           Explore Next Season Options <ArrowRight size={16} />
         </button>

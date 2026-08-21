@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle , useEffect } from "react";
 
 import { scaledStrokeWidth } from "./types";
 import { motion, useAnimate } from "framer-motion";
+import "./hover-icon.css";
 
 const MagnifierIcon = forwardRef(
   (
@@ -64,7 +65,7 @@ const MagnifierIcon = forwardRef(
         stroke={color}
         strokeWidth={scaledStrokeWidth(strokeWidth, 32)}
         strokeMiterlimit="10"
-        className={`cursor-pointer ${className}`}
+        className={`hover-icon-wrapper ${className}`}
         style={{ overflow: "visible" }}
       >
         {/* 🔁 Animate THIS group */}

@@ -40,7 +40,7 @@ export class OpenMeteoProvider {
       rainfall_mm: daily.precipitation_sum[i] ?? 0,
       temp_min: daily.temperature_2m_min[i] ?? 15,
       temp_max: daily.temperature_2m_max[i] ?? 28,
-      humidity_pct: daily.relative_humidity_2m_max[i] ?? 60,
+      humidity_pct: daily.relative_humidity_2m_max?.[i] ?? 60,
       forecast_confidence: isForecast
         ? i < 3
           ? "high"
