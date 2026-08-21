@@ -125,33 +125,44 @@ def generate_text(prompt: str, schema_class=None) -> dict:
             "content": f"You must respond in valid JSON format matching this schema: {schema_str}"
         })
 
-    headers = {
-        "Authorization": f"Bearer {current_key}",
-        "Content-Type": "application/json"
-    }
+    max_retries = len(groq_keys)
     
-    try:
-        response = httpx.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            json=payload,
-            headers=headers,
-            timeout=30.0
-        )
-        response.raise_for_status()
-        result_json = response.json()
+    for attempt in range(max_retries):
+        current_key = next(groq_key_cycle)
+        headers = {
+            "Authorization": f"Bearer {current_key}",
+            "Content-Type": "application/json"
+        }
         
-        content = result_json["choices"][0]["message"]["content"]
-        
-        if schema_class:
-            return json.loads(content)
-        return {"text": content}
-        
-    except Exception as e:
-        print(f"[Groq] Error generating text: {e}")
-        # Try to print the raw response if available for debugging
-        if hasattr(e, 'response') and e.response:
-            print(f"[Groq] Raw response: {e.response.text}")
-        raise ValueError(f"Groq API call failed: {e}")
+        try:
+            response = httpx.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                json=payload,
+                headers=headers,
+                timeout=30.0
+            )
+            response.raise_for_status()
+            result_json = response.json()
+            
+            content = result_json["choices"][0]["message"]["content"]
+            
+            if schema_class:
+                return json.loads(content)
+            return {"text": content}
+            
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                print(f"[Groq] Key rate limited (429). Trying next key... (Attempt {attempt+1}/{max_retries})")
+                continue # Try the next key
+            else:
+                print(f"[Groq] HTTP Error: {e.response.status_code} - {e.response.text}")
+                raise ValueError(f"Groq API call failed: {e}")
+                
+        except Exception as e:
+            print(f"[Groq] Error generating text: {e}")
+            raise ValueError(f"Groq API call failed: {e}")
+            
+    raise ValueError("All Groq API keys are currently rate limited (429). Please try again later.")
 
 
 # =============================================================================
