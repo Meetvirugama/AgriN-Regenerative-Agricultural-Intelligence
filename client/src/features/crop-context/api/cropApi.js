@@ -33,12 +33,24 @@ export const cropApi = {
   getAlerts: async () => request("alerts"),
   getIntelligence: async () => request("intelligence"),
   getRecentChats: async () => request("chat/recent"),
-  getChatHistory: async () => request("chat/history"),
-  sendChatMessage: async (message) => {
-    return request("chat", {
+  getRecentChats: async () => request("chat/recent"),
+  getChatHistory: async ({ limit = 50, cursor = null } = {}) => {
+    const params = new URLSearchParams();
+    params.set("limit", String(limit));
+    if (cursor) {
+      params.set("cursor", cursor);
+    }
+    const response = await request(`ask/history?${params.toString()}`);
+    return Array.isArray(response) ? response : (response?.messages || []);
+  },
+  sendChatMessage: async ({ message, clientMessageId, signal }) => {
+    return request("ask/message", {
       method: "POST",
-      body: JSON.stringify({ message }),
+      signal,
+      body: JSON.stringify({ message, clientMessageId }),
     });
   },
+  getAskContext: async () => request("ask/context"),
+  clearChatHistory: async () => request("ask/history", { method: "DELETE" }),
 };
 

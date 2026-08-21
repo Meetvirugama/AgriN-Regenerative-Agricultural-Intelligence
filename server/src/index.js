@@ -18,6 +18,7 @@ import escalationRoutes from "./modules/escalation/escalation.routes.js";
 import crossBorderRoutes from "./modules/cross-border/cross-border.routes.js";
 import alertsRoutes from "./modules/alerts/alerts.routes.js";
 import chatRoutes from "./modules/chat/chat.routes.js";
+import askRoutes from "./modules/ask/ask.routes.js";
 import intelligenceRoutes from "./modules/intelligence/intelligence.routes.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
@@ -117,7 +118,8 @@ app.use("/api/v1", requireAuth, feedbackRouter);
 app.use("/api/v1", crossBorderRoutes);
 app.use("/api/v1/escalations", requireAuth, escalationRoutes);
 app.use("/api/v1/alerts", requireAuth, alertsRoutes);
-app.use("/api/v1/chat", requireAuth, chatRoutes);
+app.use("/api/v1/chat", requireAuth, chatRoutes); // Keep legacy for backwards compatibility
+app.use("/api/v1/ask", requireAuth, askRoutes); // New structured Ask API
 app.use("/api/v1/intelligence", requireAuth, intelligenceRoutes);
 
 
