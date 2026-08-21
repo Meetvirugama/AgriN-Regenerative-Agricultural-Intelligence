@@ -5,7 +5,7 @@ import { GoogleMap, useJsApiLoader, Autocomplete } from "@react-google-maps/api"
 
 import "./AddFieldStep.css";
 
-const libraries = ["places"];
+const libraries = ["places", "geometry"];
 const mapContainerStyle = { width: "100%", height: "100%" };
 
 export const AddFieldStep1Location = () => {
