@@ -28,6 +28,7 @@ You are an agricultural climate-risk analyst.
 Assess climate risk for:
 
 Crop: {request.crop_type}
+Current growth stage: {request.crop_stage}
 Location: latitude {request.lat}, longitude {request.lng}
 Sowing date: {request.sowing_date}
 

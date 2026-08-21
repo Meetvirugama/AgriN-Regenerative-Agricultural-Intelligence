@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PythonClient } from "../../services/pythonClient.js";
 import { layer1Service } from "../field/field.service.js";
+import { layer2Service } from "../crop/crop.service.js";
 
 const router = Router();
 
@@ -12,9 +13,28 @@ router.get("/fields/:fieldId/climate-risk", async (req, res, next) => {
     if (!field) {
       return res.status(404).json({ error: { message: "Field not found" } });
     }
+    // ClimateRiskRequest (ai-service/models/schemas.py) requires `crop_stage`.
+    // It was never being sent here, so FastAPI rejected every request with
+    // 422 "Field required" (loc: body -> crop_stage), surfacing to the user
+    // as "Unable to load climate risk". Fetch the field's current phenology
+    // stage the same way crop.routes.js does, and fall back gracefully
+    // (instead of failing the whole widget) if that lookup itself errors —
+    // e.g. no crop calendar yet configured for this crop/region.
+    let cropStage = "unknown";
+    try {
+      const cropState = await layer2Service.getFieldCropState(fieldId);
+      cropStage = cropState?.current_stage ?? "unknown";
+    } catch (stageError) {
+      console.warn(
+        `[ClimateRisk] Could not resolve crop stage for field ${fieldId}, defaulting to "unknown":`,
+        stageError.message,
+      );
+    }
+
     const result = await PythonClient.assessClimateRisk({
       field_id: fieldId,
       crop_type: field.crop_type,
+      crop_stage: cropStage,
       lat: field.lat,
       lng: field.lng,
       sowing_date: field.sowing_date,
