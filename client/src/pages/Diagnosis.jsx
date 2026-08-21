@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   ChevronRight, 
   Upload, 
@@ -35,6 +35,31 @@ export const Diagnosis = () => {
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
+
+  useEffect(() => {
+    if (activeFieldId) {
+      diagnosisApi.getObservations(activeFieldId, 50).then(data => {
+        const formattedHistory = data.map(obs => ({
+          disease: obs.condition_name || "Unknown",
+          confidence: obs.confidence ? Math.round(obs.confidence * 100) : null,
+          crop: obs.crop_type || "Unknown",
+          date: new Date(obs.submitted_at).toLocaleString(),
+          id: obs.id,
+          imageUrl: obs.image_url,
+          
+          // extra fields for result view
+          severity: obs.severity,
+          what_is_happening: obs.what_is_happening,
+          why_is_it_happening: obs.why_is_it_happening,
+          treatment_recommendation: obs.treatment_recommendation,
+          differential_diagnosis: typeof obs.differential_diagnosis === 'string' ? JSON.parse(obs.differential_diagnosis) : obs.differential_diagnosis,
+          evidence: typeof obs.evidence === 'string' ? JSON.parse(obs.evidence) : obs.evidence
+        }));
+        setHistory(formattedHistory);
+      }).catch(err => console.error("Failed to fetch diagnosis history", err));
+    }
+  }, [activeFieldId]);
+
   const handleFileSelect = (event) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -62,11 +87,11 @@ export const Diagnosis = () => {
 
       const data = await diagnosisApi.diagnoseCrop(activeFieldId, base64Image);
       const newResult = {
-        disease: data.disease_name || data.diagnosis || "Unknown",
+        disease: data.condition_name || data.disease_name || data.diagnosis || "Unknown",
         confidence: data.confidence ? Math.round(data.confidence * 100) : null,
         crop: data.crop_type || "Unknown",
         date: new Date().toLocaleString(),
-        id: data.diagnosis_id || `DIAG-${Date.now()}`,
+        id: data.id || `DIAG-${Date.now()}`,
         imageUrl: previewUrl,
       };
       setResult(newResult);
@@ -311,27 +336,42 @@ export const Diagnosis = () => {
         <div className="diagnosis-history-container slide-in-right">
           <h2 className="diagnosis-history-title">Diagnosis History</h2>
           <div className="diagnosis-history-list">
-            {history.map((item, idx) => (
-              <div key={idx} className="diagnosis-history-card">
-                <img src={item.imageUrl} alt={item.disease} className="diagnosis-history-img" />
-                <div className="diagnosis-history-details">
-                  <h3 className="diagnosis-history-disease">{item.disease}</h3>
-                  <div className="diagnosis-history-meta">
-                    <span><CalendarClock size={14} className="inline mr-1" /> {item.date}</span>
-                    <span><ShieldAlert size={14} className="inline mr-1" /> {item.confidence}% Confidence</span>
-                  </div>
-                </div>
+            {history.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "4rem 2rem", color: "#6B7280" }}>
+                <ShieldCheck size={48} style={{ margin: "0 auto 1rem auto", opacity: 0.3 }} />
+                <h3 style={{ fontSize: "1.125rem", fontWeight: 600, color: "#374151" }}>No Diagnosis History</h3>
+                <p style={{ marginTop: "0.5rem" }}>You haven't uploaded any crop images for this field yet.</p>
                 <button 
-                  className="diagnosis-btn-outline"
-                  onClick={() => {
-                    setResult(item);
-                    setActiveTab('result');
-                  }}
+                  className="diagnosis-btn-outline" 
+                  style={{ margin: "1.5rem auto 0 auto" }}
+                  onClick={() => setActiveTab('upload')}
                 >
-                  View Details
+                  Upload an Image
                 </button>
               </div>
-            ))}
+            ) : (
+              history.map((item, idx) => (
+                <div key={idx} className="diagnosis-history-card">
+                  <img src={item.imageUrl} alt={item.disease} className="diagnosis-history-img" />
+                  <div className="diagnosis-history-details">
+                    <h3 className="diagnosis-history-disease">{item.disease}</h3>
+                    <div className="diagnosis-history-meta">
+                      <span><CalendarClock size={14} className="inline mr-1" /> {item.date}</span>
+                      <span><ShieldAlert size={14} className="inline mr-1" /> {item.confidence}% Confidence</span>
+                    </div>
+                  </div>
+                  <button 
+                    className="diagnosis-btn-outline"
+                    onClick={() => {
+                      setResult(item);
+                      setActiveTab('result');
+                    }}
+                  >
+                    View Details
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

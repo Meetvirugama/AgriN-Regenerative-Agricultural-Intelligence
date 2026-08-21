@@ -1,284 +1,180 @@
-import { useState, useRef } from "react";
-import { UploadCloud, FileWarning, CheckCircle2 } from "lucide-react";
-import { soilApi } from "../api/soilApi";
-import { Dialog } from "../../../components/ui/Dialog";
+import React, { useRef, useState } from "react";
+import { uploadSoilLabReport } from "../api/soilApi";
+import { UploadCloud, X } from "lucide-react";
 
-export function SoilUploadFlow({ fieldId, onClose, onSave }) {
-  const [step, setStep] = useState("upload");
-  const [parsedData, setParsedData] = useState(null);
-  const [editedData, setEditedData] = useState({});
-  const [isSaving, setIsSaving] = useState(false);
-  const fileInputRef = useRef(null);
+const ACCEPTED_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-  const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+export function SoilUploadFlow({ fieldId, onClose, onSuccess }) {
+  const inputRef = useRef(null);
 
-    setStep("analyzing");
-    try {
-      const data = await soilApi.parseLabReport(fieldId, file);
-      // Handle the "blurry scan" / low confidence UX requirement
-      if (data.overall_confidence < 50) {
-        setStep("blurry_error");
-        return;
-      }
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
 
-      setParsedData(data);
-      setEditedData(data);
-      setStep("review");
-    } catch (err) {
-      console.error(err);
-      console.error("Failed to parse document. Please try again.");
-      setStep("upload");
+  function validateFile(file) {
+    if (!file) return "Please select a file.";
+    if (!ACCEPTED_TYPES.includes(file.type)) return "Only PDF, JPG, PNG, or WEBP files are supported.";
+    if (file.size > MAX_FILE_SIZE) return "The file must be smaller than 10 MB.";
+    return "";
+  }
+
+  function selectFile(file) {
+    const validationError = validateFile(file);
+    setError(validationError);
+    if (validationError) {
+      setSelectedFile(null);
+      return;
     }
-  };
+    setSelectedFile(file);
+  }
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  function handleInputChange(event) {
+    selectFile(event.target.files?.[0] || null);
+  }
+
+  function handleDrop(event) {
+    event.preventDefault();
+    setDragActive(false);
+    selectFile(event.dataTransfer.files?.[0] || null);
+  }
+
+  async function handleUpload() {
+    if (!selectedFile) {
+      setError("Please select a lab report first.");
+      return;
+    }
+    setError("");
+    setUploading(true);
+
     try {
-      const savedProfile = await soilApi.saveSoilProfile(fieldId, editedData);
-      onSave(savedProfile);
-      onClose();
-    } catch (err) {
-      console.error(err);
-      console.error("Failed to save soil profile");
+      const updatedSoil = await uploadSoilLabReport(fieldId, selectedFile);
+      onSuccess?.(updatedSoil);
+    } catch (uploadError) {
+      setError(
+        uploadError?.message ||
+          "The lab report could not be uploaded. Please try again."
+      );
     } finally {
-      setIsSaving(false);
+      setUploading(false);
     }
-  };
+  }
 
   return (
-    <Dialog
-      isOpen={true}
-      onClose={onClose}
-      title="Add Soil Report"
-      className="max-w-md"
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !uploading) {
+          onClose();
+        }
+      }}
     >
-      <div className="flex flex-col">
-        {step === "upload" && (
-          <div className="text-center py-8">
-            <UploadCloud size={48} className="mx-auto text-primary mb-4" />
-            <h3 className="font-bold text-xl mb-2">Upload Lab Report</h3>
-            <p className="text-text-muted mb-6">
-              Take a photo or upload a PDF of your latest soil lab report. We'll
-              automatically extract the details.
-            </p>
-            <input
-              type="file"
-              accept="image/*,.pdf"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-            />
-
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full bg-primary text-surface py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
-            >
-              Choose File
-            </button>
-          </div>
-        )}
-
-        {step === "analyzing" && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 border-4 border-neutral border-t-primary rounded-full animate-spin mx-auto mb-6"></div>
-            <h3 className="font-bold text-xl mb-2 animate-pulse">
-              Reading your report...
-            </h3>
-            <p className="text-text-muted">
-              Our AI is extracting texture, OM%, and nutrients.
+      <div
+        className="w-full max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto bg-surface p-6 sm:p-8 rounded-[2rem] shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="soil-upload-title"
+      >
+        <div className="flex justify-between items-start gap-4 mb-6">
+          <div>
+            <div className="text-[10px] font-black tracking-[0.2em] uppercase text-text-muted/60 mb-2">SOIL HEALTH</div>
+            <h2 id="soil-upload-title" className="text-2xl font-black tracking-tight text-text">
+              Upload Lab Report
+            </h2>
+            <p className="text-sm font-medium text-text-muted mt-2 leading-relaxed">
+              We will extract the available soil measurements and update this
+              field's profile after successful processing.
             </p>
           </div>
-        )}
+          <button
+            type="button"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-neutral/10 hover:bg-neutral/20 text-text transition-colors shrink-0"
+            onClick={onClose}
+            disabled={uploading}
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-        {step === "blurry_error" && (
-          <div className="text-center py-8 animate-fade-in">
-            <FileWarning size={48} className="mx-auto text-warning mb-4" />
-            <h3 className="font-bold text-xl mb-2 text-warning">
-              Low Quality Scan
-            </h3>
-            <p className="text-text-muted mb-6">
-              We couldn't clearly read the values in that document. Please
-              ensure the photo is well-lit and in focus.
-            </p>
-            <button
-              onClick={() => setStep("upload")}
-              className="w-full bg-primary text-surface py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            >
-              Try Again
-            </button>
+        <div
+          className={`
+            flex flex-col items-center justify-center min-h-[240px] mt-2 p-6 border-2 border-dashed rounded-3xl text-center cursor-pointer transition-all duration-300
+            ${dragActive ? "border-primary bg-primary/5" : "border-border hover:border-neutral/50 hover:bg-neutral/5"}
+            ${selectedFile ? "bg-success/5 border-success/30" : ""}
+          `}
+          onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+          onDrop={handleDrop}
+          onClick={() => inputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") inputRef.current?.click();
+          }}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.webp"
+            onChange={handleInputChange}
+            hidden
+          />
+
+          <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-neutral/10 text-text mb-4">
+            <UploadCloud size={24} strokeWidth={2.5} />
           </div>
-        )}
 
-        {step === "review" && parsedData && (
-          <div className="animate-fade-in">
-            <div className="flex items-center gap-2 text-success mb-6 bg-success/10 p-3 rounded-lg">
-              <CheckCircle2 size={20} />
-              <span className="font-bold text-sm">
-                Successfully extracted! Please verify below.
+          {selectedFile ? (
+            <>
+              <strong className="text-sm font-bold text-text">{selectedFile.name}</strong>
+              <span className="text-xs font-medium text-text-muted mt-1.5">
+                {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
               </span>
-            </div>
+            </>
+          ) : (
+            <>
+              <strong className="text-sm font-bold text-text">Drop your lab report here</strong>
+              <span className="text-xs font-medium text-text-muted mt-1.5">or click to browse</span>
+            </>
+          )}
 
-            <div className="space-y-4 max-h-[50vh] overflow-y-auto px-1">
-              <div>
-                <label className="flex items-center justify-between text-sm font-bold text-text-muted mb-1">
-                  Texture
-                  {parsedData.field_confidences?.texture < 80 && (
-                    <span className="text-warning text-xs flex items-center gap-1">
-                      <FileWarning size={12} /> Verify
-                    </span>
-                  )}
-                </label>
-                <select
-                  className={`w-full p-3 bg-background border rounded-lg font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${parsedData.field_confidences?.texture < 80 ? "border-warning bg-warning/5" : "border-neutral"}`}
-                  value={editedData.texture || ""}
-                  onChange={(e) =>
-                    setEditedData({ ...editedData, texture: e.target.value })
-                  }
-                >
-                  <option value="sandy">Sandy</option>
-                  <option value="loam">Loam</option>
-                  <option value="clay">Clay</option>
-                  <option value="sandy_loam">Sandy Loam</option>
-                  <option value="clay_loam">Clay Loam</option>
-                  <option value="silt_loam">Silt Loam</option>
-                </select>
-              </div>
+          <small className="text-[10px] font-bold tracking-wider uppercase text-text-muted/60 mt-6">PDF, JPG, PNG, WEBP · Max 10 MB</small>
+        </div>
 
-              <div>
-                <label className="flex items-center justify-between text-sm font-bold text-text-muted mb-1">
-                  Organic Matter (%)
-                  {parsedData.field_confidences?.organic_matter_pct < 80 && (
-                    <span className="text-warning text-xs flex items-center gap-1">
-                      <FileWarning size={12} /> Verify
-                    </span>
-                  )}
-                </label>
-                <input
-                  type="number"
-                  className={`w-full p-3 bg-background border rounded-lg font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${parsedData.field_confidences?.organic_matter_pct < 80 ? "border-warning bg-warning/5" : "border-neutral"}`}
-                  value={editedData.organic_matter_pct || ""}
-                  onChange={(e) =>
-                    setEditedData({
-                      ...editedData,
-                      organic_matter_pct: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="flex items-center justify-between text-sm font-bold text-text-muted mb-1">
-                    Nitrogen
-                    {parsedData.field_confidences?.nitrogen_level < 80 && (
-                      <FileWarning size={12} className="text-warning" />
-                    )}
-                  </label>
-                  <select
-                    className={`w-full p-3 bg-background border rounded-lg font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${parsedData.field_confidences?.nitrogen_level < 80 ? "border-warning bg-warning/5" : "border-neutral"}`}
-                    value={editedData.nitrogen_level || ""}
-                    onChange={(e) =>
-                      setEditedData({
-                        ...editedData,
-                        nitrogen_level: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Med</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="flex items-center justify-between text-sm font-bold text-text-muted mb-1">
-                    Phosphorus
-                    {parsedData.field_confidences?.phosphorus_level < 80 && (
-                      <FileWarning size={12} className="text-warning" />
-                    )}
-                  </label>
-                  <select
-                    className={`w-full p-3 bg-background border rounded-lg font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${parsedData.field_confidences?.phosphorus_level < 80 ? "border-warning bg-warning/5" : "border-neutral"}`}
-                    value={editedData.phosphorus_level || ""}
-                    onChange={(e) =>
-                      setEditedData({
-                        ...editedData,
-                        phosphorus_level: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Med</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="flex items-center justify-between text-sm font-bold text-text-muted mb-1">
-                    Potassium
-                    {parsedData.field_confidences?.potassium_level < 80 && (
-                      <FileWarning size={12} className="text-warning" />
-                    )}
-                  </label>
-                  <select
-                    className={`w-full p-3 bg-background border rounded-lg font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${parsedData.field_confidences?.potassium_level < 80 ? "border-warning bg-warning/5" : "border-neutral"}`}
-                    value={editedData.potassium_level || ""}
-                    onChange={(e) =>
-                      setEditedData({
-                        ...editedData,
-                        potassium_level: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Med</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="flex items-center justify-between text-sm font-bold text-text-muted mb-1">
-                  pH Level
-                  {parsedData.field_confidences?.ph < 80 && (
-                    <span className="text-warning text-xs flex items-center gap-1">
-                      <FileWarning size={12} /> Verify
-                    </span>
-                  )}
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  className={`w-full p-3 bg-background border rounded-lg font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${parsedData.field_confidences?.ph < 80 ? "border-warning bg-warning/5" : "border-neutral"}`}
-                  value={editedData.ph || ""}
-                  onChange={(e) =>
-                    setEditedData({
-                      ...editedData,
-                      ph: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-neutral flex gap-3">
-              <button
-                onClick={() => setStep("upload")}
-                className="flex-1 bg-neutral/20 text-text font-bold py-3 rounded-xl hover:bg-neutral/30 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
-              >
-                Retake
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex-2 w-2/3 bg-primary text-surface font-bold py-3 rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                {isSaving ? "Saving..." : "Save Profile"}
-              </button>
-            </div>
+        {error && (
+          <div className="mt-4 p-3.5 bg-error/10 text-error-strong text-xs font-bold rounded-xl" role="alert">
+            {error}
           </div>
         )}
+
+        <div className="flex justify-end gap-3 mt-8">
+          <button
+            type="button"
+            className="px-5 py-2.5 rounded-xl text-sm font-bold bg-neutral/10 hover:bg-neutral/20 text-text transition-colors focus-visible:outline-2 focus-visible:outline-primary"
+            onClick={onClose}
+            disabled={uploading}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="px-6 py-2.5 rounded-xl text-sm font-bold bg-primary text-surface hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-primary"
+            onClick={handleUpload}
+            disabled={!selectedFile || uploading}
+          >
+            {uploading ? "Processing…" : "Upload & Replace"}
+          </button>
+        </div>
       </div>
-    </Dialog>
+    </div>
   );
 }

@@ -157,11 +157,11 @@ class AdvisoryService {
           "ai_generated",
           gemini.what_text || gemini.what_is_happening || gemini.what,
           gemini.why_text || gemini.why,
-          gemini.severity,
+          gemini.severity ? gemini.severity.charAt(0).toUpperCase() + gemini.severity.slice(1).toLowerCase() : 'Medium',
           gemini.action_text || gemini.recommended_action || gemini.action,
           gemini.action_deadline || gemini.when || gemini.deadline,
           gemini.monitor_text || gemini.monitor,
-          JSON.stringify(["weather", "satellite", "soil"]),
+          ["weather", "satellite", "soil"],
           JSON.stringify({ gemini_confidence: gemini.confidence, evidence: gemini.evidence }),
         ],
       );

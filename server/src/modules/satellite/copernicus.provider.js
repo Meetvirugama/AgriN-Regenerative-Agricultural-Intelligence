@@ -121,7 +121,7 @@ export class CopernicusProvider {
   /**
    * Find the latest cloud-free Sentinel-2 L2A scene for a field polygon.
    */
-  async findLatestScene(geojson, daysBack = 30) {
+  async findLatestScene(geojson, daysBack = 180) {
     const bbox = getBbox(geojson);
     if (!bbox) throw new Error("Invalid field geometry — cannot compute bounding box");
 
@@ -146,7 +146,7 @@ export class CopernicusProvider {
 
     const url =
       `${CDSE_CATALOG_URL}?$filter=${encodeURIComponent(filter)}` +
-      `&$orderby=ContentDate/Start desc&$top=5`;
+      `&$orderby=ContentDate/Start desc&$top=50`;
 
     const token = await fetchAccessToken(this.clientId, this.clientSecret);
     const res = await fetchWithTimeout(url, {
@@ -255,7 +255,7 @@ function evaluatePixel(sample) {
    */
   async _fetchNdviStatistical(geojson, coords, token) {
     const endDate = new Date().toISOString().split("T")[0];
-    const startDate = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+    const startDate = new Date(Date.now() - 180 * 86400000).toISOString().split("T")[0];
 
     const evalscript = `//VERSION=3
 function setup() {
@@ -365,18 +365,7 @@ function evaluatePixel(sample) {
 
     if (isObstructed) {
       console.warn(`[Copernicus] No clear Sentinel-2 scene found for field ${fieldId} (best cloud cover: ${cloudCover}%)`);
-      return {
-        fieldId,
-        captureDate: new Date().toISOString().split("T")[0],
-        provider: "sentinel-2",
-        ndviMean: null,
-        ndviBySubregion: [],
-        moistureProxy: null,
-        cloudCoverPct: cloudCover,
-        sceneId: scene?.scene_id ?? null,
-        cloud_obstructed: true,
-        source: "copernicus-cdse",
-      };
+      throw new Error(`No clear Sentinel-2 scene found for field (best cloud cover: ${cloudCover}%)`);
     }
 
     // Fetch NDVI statistics

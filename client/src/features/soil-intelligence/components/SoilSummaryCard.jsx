@@ -1,111 +1,147 @@
-  import { Leaf, Info, FileText } from "lucide-react";
-  import { TextToSpeechButton } from "../../voice/components/TextToSpeechButton";
+  import React, { useState } from "react";
+import { SoilUploadFlow } from "./SoilUploadFlow";
+import { Leaf, FileText, Info, FlaskConical, Droplets, Droplet, Hash, UploadCloud, ChevronRight } from "lucide-react";
+import { TextToSpeechButton } from "../../voice/components/TextToSpeechButton";
 
-  export function SoilSummaryCard({ profile, isLoading, onUploadClick }) {
-    if (isLoading) {
-      return (
-        <div className="bg-surface border border-neutral p-6 rounded-xl shadow-sm animate-pulse">
-          <div className="h-6 w-32 bg-neutral/20 rounded mb-4"></div>
-          <div className="h-16 bg-neutral/20 rounded"></div>
-        </div>
-      );
-    }
+const FALLBACK_METRICS = [
+  { key: "texture", label: "Texture", icon: FlaskConical, description: "Soil particle composition" },
+  { key: "organicMatter", label: "Organic Matter", icon: Leaf, description: "Organic material level" },
+  { key: "waterHolding", label: "Water Holding", icon: Droplets, description: "Estimated water retention" },
+  { key: "ph", label: "pH Level", icon: Hash, description: "Soil acidity / alkalinity" },
+];
 
-    if (!profile) {
-      // Empty state
-      return (
-        <div className="bg-surface border border-neutral p-6 rounded-xl shadow-sm text-center animate-fade-in">
-          <Leaf size={32} className="mx-auto text-text-muted mb-3 opacity-50" />
-          <h3 className="font-bold mb-2">No Soil Data</h3>
-          <p className="text-sm text-text-muted mb-4">
-            Upload a lab report to unlock hyper-local irrigation and nutrient
-            advice.
-          </p>
-          <button
-            onClick={onUploadClick}
-            className="bg-primary text-surface px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary/90 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            Add Lab Report
-          </button>
-        </div>
-      );
-    }
+function normalizeMetricValue(value) {
+  if (value === null || value === undefined || value === "") return "Unavailable";
+  return String(value);
+}
 
-    const isLabReport = profile.source === "lab_report";
-    const texture = profile.texture ? profile.texture.replace("_", " ") : "Unknown";
+function normalizeSoilData(soil) {
+  const source = soil || {};
+  return {
+    source: source.source || "regional",
+    sourceLabel: source.sourceLabel || (source.source === "lab" ? "Lab Report" : "Regional Estimate"),
+    confidence: source.confidence ?? null,
+    summary: source.summary || "Soil information is currently based on available regional data.",
+    metrics: {
+      texture: normalizeMetricValue(source.texture),
+      organicMatter: normalizeMetricValue(source.organicMatter ?? source.organic_matter),
+      waterHolding: normalizeMetricValue(source.waterHolding ?? source.water_holding),
+      ph: normalizeMetricValue(source.ph ?? source.pH),
+    },
+    updatedAt: source.updatedAt || source.updated_at || null,
+  };
+}
 
-    return (
-      <div className="bg-surface border border-neutral p-6 rounded-xl shadow-sm animate-fade-in">
-        <div className="flex justify-between items-start mb-4">
-          <h3 className="font-bold tracking-wide text-sm text-text-muted uppercase flex items-center gap-2">
-            <Leaf size={16} /> Soil Health
-          </h3>
+export function SoilSummaryCard({ fieldId, soil, onSoilUpdated, disabled = false }) {
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const normalized = normalizeSoilData(soil);
+  
+  const metrics = FALLBACK_METRICS.map((metric) => ({
+    ...metric,
+    value: normalized.metrics[metric.key],
+  }));
 
-          {/* Strict Data Provenance Badging (FE Rules) */}
-          {isLabReport ? (
-            <span className="flex items-center gap-1 bg-success/10 text-success text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-              <FileText size={12} /> From Lab Report
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 bg-neutral/20 text-text-muted text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-              <Info size={12} /> Regional Estimate
-            </span>
-          )}
-        </div>
+  const isLabReport = normalized.source === "lab";
 
-        <div className="mb-6">
-          {profile.summary_text ? (
-            <p className="font-medium text-lg leading-snug flex items-start gap-2">
-              {profile.summary_text}
-              <TextToSpeechButton
-                textToRead={`Soil Profile: ${profile.summary_text}`}
-                className="w-8 h-8 p-1 shrink-0"
-              />
+  return (
+    <>
+      <section className="glass-card hover-lift p-6 sm:p-8 rounded-3xl relative overflow-hidden group" aria-labelledby="soil-health-title">
+        
+        {/* Background Accent */}
+        <div className={`absolute -left-16 -top-16 w-64 h-64 rounded-full blur-[60px] opacity-30 transition-colors duration-700 pointer-events-none ${isLabReport ? 'bg-success' : 'bg-warning'}`}></div>
+        <div className="absolute -right-12 bottom-0 w-48 h-48 bg-primary/10 rounded-full blur-[50px] opacity-40 group-hover:bg-primary/20 transition-colors duration-700 pointer-events-none"></div>
+
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 relative z-10">
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-2">
+              <Droplet size={14} className={isLabReport ? "text-success" : "text-warning"} /> SOIL HEALTH
+            </div>
+            <h2 id="soil-health-title" className="text-3xl font-black tracking-tight text-text flex items-center gap-3">
+              Soil Composition
+            </h2>
+            <p className="text-sm font-medium text-text-muted mt-2 leading-relaxed max-w-sm">
+              {isLabReport ? "Based on your uploaded laboratory report." : "Regional estimate for this field."}
             </p>
-          ) : (
-            <p className="font-medium text-base leading-snug text-text-muted">
-              {isLabReport
-                ? `${texture} soil with pH ${profile.ph ?? "N/A"}. Organic matter at ${profile.organic_matter_pct ?? "N/A"}%. Nitrogen is ${profile.nitrogen_level ?? "unknown"}.`
-                : `Regional baseline for this area: ${texture} soil, pH ${profile.ph ?? "N/A"}. Upload your lab report for field-specific advice.`}
-            </p>
-          )}
+          </div>
+
+          <span className={`
+            flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap shrink-0 border shadow-sm
+            ${isLabReport ? "bg-success/10 text-success-strong border-success/20" : "bg-warning/10 text-warning-strong border-warning/20"}
+          `}>
+            {isLabReport ? <FileText size={14} /> : <Info size={14} />}
+            {normalized.sourceLabel}
+          </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="p-3 bg-background rounded-lg border border-neutral">
-            <span className="text-text-muted text-xs block mb-1">Texture</span>
-            <span className="font-bold capitalize">
-              {texture}
-            </span>
-          </div>
-          <div className="p-3 bg-background rounded-lg border border-neutral">
-            <span className="text-text-muted text-xs block mb-1">
-              Organic Matter
-            </span>
-            <span className="font-bold">{profile.organic_matter_pct ?? "N/A"}%</span>
-          </div>
-          <div className="p-3 bg-background rounded-lg border border-neutral">
-            <span className="text-text-muted text-xs block mb-1">
-              Water Holding
-            </span>
-            <span className="font-bold capitalize">
-              {profile.water_holding_capacity ?? "Unknown"}
-            </span>
-          </div>
-          <div className="p-3 bg-background rounded-lg border border-neutral">
-            <span className="text-text-muted text-xs block mb-1">pH Level</span>
-            <span className="font-bold">{profile.ph ?? "N/A"}</span>
+        <div className="flex flex-col sm:flex-row gap-6 mt-8 p-6 rounded-3xl bg-surface/50 border border-white/40 backdrop-blur-md relative z-10 shadow-[inset_0_2px_10px_rgba(255,255,255,0.6)] dark:shadow-none">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-3">
+              <span className="block text-xs font-black text-text-muted uppercase tracking-wider">Analysis Summary</span>
+              <TextToSpeechButton textToRead={`Soil Condition: ${normalized.summary}`} className="w-7 h-7 p-1.5 bg-white/50 rounded-full shadow-sm" />
+            </div>
+            <p className="text-base font-medium leading-relaxed text-text max-w-xl">{normalized.summary}</p>
+            {normalized.confidence !== null && (
+              <div className="mt-4 text-[10px] font-bold text-text-muted uppercase tracking-widest flex items-center gap-2">
+                Confidence: 
+                <span className={`px-2 py-0.5 rounded-full ${normalized.confidence > 0.8 ? "bg-success/10 text-success-strong" : "bg-warning/10 text-warning-strong"}`}>
+                  {Math.round(Number(normalized.confidence) * 100)}%
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        {!isLabReport && (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-6 relative z-10">
+          {metrics.map((metric, idx) => {
+            const Icon = metric.icon;
+            // Provide different colors for different metrics
+            const colors = ['text-info', 'text-success', 'text-primary', 'text-warning'];
+            const iconColor = colors[idx % colors.length];
+            return (
+              <div key={metric.key} className="flex flex-col items-start gap-3 p-4 sm:p-5 border border-white/40 rounded-2xl bg-surface/40 hover:bg-white/60 transition-colors backdrop-blur-sm shadow-sm group/metric cursor-default">
+                <div className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-xl bg-white shadow-sm ${iconColor} group-hover/metric:scale-110 transition-transform`}>
+                  <Icon size={20} strokeWidth={2.5} />
+                </div>
+                <div className="min-w-0 w-full">
+                  <span className="block text-[10px] font-bold text-text-muted uppercase tracking-widest">{metric.label}</span>
+                  <strong className="block mt-1 text-xl font-black truncate capitalize text-text/90 group-hover/metric:text-text transition-colors">{metric.value}</strong>
+                  <span className="block mt-1 text-[10px] font-medium text-text-muted/70 leading-tight">{metric.description}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-8 pt-6 border-t border-border/50 relative z-10">
           <button
-            onClick={onUploadClick}
-            className="w-full mt-4 border-2 border-primary text-primary px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary/10 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            type="button"
+            className="group flex items-center justify-center gap-2 px-5 py-2.5 bg-neutral/10 hover:bg-primary hover:text-white text-text font-black text-xs uppercase tracking-widest rounded-xl transition-all disabled:opacity-50 border border-border hover:border-primary shadow-sm"
+            onClick={() => setIsUploadOpen(true)}
+            disabled={disabled}
           >
+            <UploadCloud size={16} />
             Replace with Lab Report
+            <ChevronRight size={14} className="opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
           </button>
-        )}
-      </div>
-    );
-  }
+
+          {normalized.updatedAt && (
+            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
+              Updated {new Date(normalized.updatedAt).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+      </section>
+
+      {isUploadOpen && (
+        <SoilUploadFlow
+          fieldId={fieldId}
+          onClose={() => setIsUploadOpen(false)}
+          onSuccess={(updatedSoil) => {
+            setIsUploadOpen(false);
+            onSoilUpdated?.(updatedSoil);
+          }}
+        />
+      )}
+    </>
+  );
+}

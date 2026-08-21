@@ -56,6 +56,24 @@ export const Ask = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
+  useEffect(() => {
+    let isMounted = true;
+    const fetchHistory = async () => {
+      try {
+        const history = await cropApi.getChatHistory();
+        if (isMounted && history && history.length > 0) {
+          setMessages(history);
+        }
+      } catch (err) {
+        console.warn("Could not load chat history", err);
+      }
+    };
+    fetchHistory();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleSend = async (customPrompt) => {
     const textToSend = typeof customPrompt === "string" ? customPrompt : input;
     if (!textToSend.trim() || isTyping) return;
@@ -118,7 +136,10 @@ export const Ask = () => {
     e.target.style.height = `${Math.min(e.target.scrollHeight, 140)}px`;
   };
 
-  const handleClearChat = () => {
+  const handleClearChat = async () => {
+    // Note: To clear DB history completely we'd need an endpoint, but for now we just clear the UI.
+    // If the user refreshes, they will get history back unless we clear it from DB.
+    // Since we don't have a clear endpoint right now, this is a soft clear.
     setMessages([]);
     setInput("");
   };

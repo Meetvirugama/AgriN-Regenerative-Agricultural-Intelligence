@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useActiveField } from "../app/providers/FieldProvider";
 
 import { GrowthStageBanner } from "../features/crop-context/components/GrowthStageBanner";
@@ -9,14 +9,9 @@ import { weatherApi } from "../features/weather-intelligence/api/weatherApi";
 import { WeatherAlertBanner } from "../features/weather-intelligence/components/WeatherAlertBanner";
 import { WeatherStrip } from "../features/weather-intelligence/components/WeatherStrip";
 import { WeatherDetails } from "../features/weather-intelligence/components/WeatherDetails";
-import { soilApi } from "../features/soil-intelligence/api/soilApi";
+import { getSoilProfile } from "../features/soil-intelligence/api/soilApi";
 import { SoilSummaryCard } from "../features/soil-intelligence/components/SoilSummaryCard";
-import { SoilUploadFlow } from "../features/soil-intelligence/components/SoilUploadFlow";
-import {
-  SatelliteHealthCard,
-  SatelliteDetailView,
-  useSatelliteHealth,
-} from "../features/satellite-health";
+import { SatelliteHealthCard } from "../features/satellite-health";
 import { DiseaseDiagnosisFlow } from "../features/disease-diagnosis/components/DiseaseDiagnosisFlow";
 import { diagnosisApi } from "../features/disease-diagnosis/api/diagnosisApi";
 
@@ -31,7 +26,7 @@ import { AdvisoryCard } from "../features/agro-advisory/components/AdvisoryCard"
 import { memoryApi } from "../features/field-memory/api/memoryApi";
 import { FeedbackPrompt } from "../features/field-memory/components/FeedbackPrompt";
 import { FieldTimeline } from "../features/field-memory/components/FieldTimeline";
-import { GlobalInsightsWidget } from "../features/cross-border";
+
 import { cropApi } from "../features/crop-context/api/cropApi";
 import {
   Camera,
@@ -41,48 +36,14 @@ import {
   Bug,
   ThermometerSun,
   Leaf,
+  ArrowLeft,
 } from "lucide-react";
 import { ErrorState } from "../components/ui/ErrorState";
 import { FeatureErrorBoundary } from "../components/ui/FeatureErrorBoundary";
 
 import "./Field.css";
 
-const FieldSatelliteWrapper = ({ fieldId }) => {
-  const [showDetail, setShowDetail] = useState(false);
-  const { data, loading, error } = useSatelliteHealth(fieldId);
 
-  if (error) {
-    return (
-      <ErrorState
-        title="Satellite Data Failed"
-        message="Failed to load satellite data."
-      />
-    );
-  }
-
-  return (
-    <>
-      <SatelliteHealthCard
-        data={data}
-        loading={loading}
-        onClick={() => setShowDetail(true)}
-      />
-
-      {showDetail && (
-        <SatelliteDetailView
-          fieldId={fieldId}
-          fieldBoundary={[
-            { lat: 20.593, lng: 78.962 },
-            { lat: 20.594, lng: 78.962 },
-            { lat: 20.594, lng: 78.963 },
-            { lat: 20.593, lng: 78.963 },
-          ]}
-          onClose={() => setShowDetail(false)}
-        />
-      )}
-    </>
-  );
-};
 
 const FieldHealthScoreWrapper = ({ fieldId }) => {
   const { data: score, loading, error } = useHealthScore(fieldId);
@@ -125,6 +86,7 @@ const FieldHealthScoreWrapper = ({ fieldId }) => {
 
 export const Field = () => {
   const { fieldId } = useParams();
+  const navigate = useNavigate();
   const {
     cropState,
     isLoading,
@@ -140,7 +102,6 @@ export const Field = () => {
 
   const [soilProfile, setSoilProfile] = useState(null);
   const [isSoilLoading, setIsSoilLoading] = useState(true);
-  const [showSoilUpload, setShowSoilUpload] = useState(false);
 
   const [pendingPrompts, setPendingPrompts] = useState([]);
   const [timeline, setTimeline] = useState([]);
@@ -156,7 +117,7 @@ export const Field = () => {
       const [weatherResult, soilResult, promptsResult, timelineResult, obsResult] =
         await Promise.allSettled([
           weatherApi.getForecast(fieldId),
-          soilApi.getSoilProfile(fieldId),
+          getSoilProfile(fieldId),
           memoryApi.getPendingPrompts(fieldId),
           memoryApi.getTimeline(fieldId),
           diagnosisApi.getObservations(fieldId, 5),
@@ -213,6 +174,26 @@ export const Field = () => {
 
   return (
     <div className="field-container">
+      <div style={{ marginBottom: "1.5rem" }}>
+        <button 
+          onClick={() => navigate("/fields")} 
+          style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "0.4rem", 
+            background: "none", 
+            border: "none", 
+            color: "var(--text-muted)", 
+            cursor: "pointer", 
+            fontWeight: 600, 
+            fontSize: "0.85rem",
+            padding: 0
+          }}
+        >
+          <ArrowLeft size={16} /> Back to Fields
+        </button>
+      </div>
+
       {/* Pending feedback prompt */}
       {pendingPrompts.length > 0 && (
         <FeedbackPrompt
@@ -293,24 +274,36 @@ export const Field = () => {
         )}
       </section>
 
-      {/* Soil (Layer 04) */}
-      <section className="field-section-spaced">
-        <FeatureErrorBoundary sectionName="Soil Intelligence">
-          <SoilSummaryCard
-            profile={soilProfile}
-            isLoading={isSoilLoading}
-            onUploadClick={() => setShowSoilUpload(true)}
-          />
-        </FeatureErrorBoundary>
-      </section>
+      {/* Layer 04 & 05: Environmental Intelligence Dashboard */}
+      <section className="field-section-spaced mt-8">
+        <div className="relative rounded-[2.5rem] bg-gradient-to-br from-neutral/5 to-surface border border-white/50 shadow-[inset_0_2px_20px_rgba(255,255,255,0.7)] dark:shadow-none p-6 sm:p-10 overflow-hidden">
+          {/* Dashboard Accent */}
+          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent pointer-events-none"></div>
+          
+          <div className="flex items-center gap-3 mb-8 relative z-10">
+            <div className="h-8 w-1.5 rounded-full bg-primary"></div>
+            <h3 className="text-xl font-black text-text uppercase tracking-widest">Environmental Intelligence</h3>
+          </div>
 
-      {/* Satellite (Layer 05) */}
-      <section className="field-section-spaced">
-        {fieldId && (
-          <FeatureErrorBoundary sectionName="Satellite Health">
-            <FieldSatelliteWrapper fieldId={fieldId} />
-          </FeatureErrorBoundary>
-        )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch relative z-10">
+            {/* Soil (Layer 04) */}
+            <FeatureErrorBoundary sectionName="Soil Intelligence">
+              <SoilSummaryCard
+                fieldId={fieldId}
+                soil={soilProfile}
+                onSoilUpdated={setSoilProfile}
+                disabled={isSoilLoading}
+              />
+            </FeatureErrorBoundary>
+
+            {/* Satellite (Layer 05) */}
+            {fieldId && (
+              <FeatureErrorBoundary sectionName="Satellite Health">
+                <SatelliteHealthCard fieldId={fieldId} />
+              </FeatureErrorBoundary>
+            )}
+          </div>
+        </div>
       </section>
 
       {/* Crop Health Observations — Layer 07 history */}
@@ -420,11 +413,7 @@ export const Field = () => {
             <RegenPlanningCard fieldId={fieldId} />
           </FeatureErrorBoundary>
         )}
-        {fieldId && (
-          <FeatureErrorBoundary sectionName="Global Insights" compact>
-            <GlobalInsightsWidget fieldId={fieldId} />
-          </FeatureErrorBoundary>
-        )}
+
       </section>
 
       {/* Field History Timeline (Layer 12) */}
@@ -454,13 +443,7 @@ export const Field = () => {
         />
       )}
 
-      {showSoilUpload && fieldId && (
-        <SoilUploadFlow
-          fieldId={fieldId}
-          onClose={() => setShowSoilUpload(false)}
-          onSave={(profile) => setSoilProfile(profile)}
-        />
-      )}
+
 
       {showDiagnosisFlow && fieldId && (
         <DiseaseDiagnosisFlow

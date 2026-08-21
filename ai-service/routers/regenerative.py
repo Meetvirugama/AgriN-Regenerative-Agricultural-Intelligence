@@ -12,6 +12,9 @@ router = APIRouter(
 )
 
 
+import json
+from services.gemini_client import generate_text
+
 @router.post(
     "/generate-plan",
     response_model=RegenPlanResponse,
@@ -21,101 +24,53 @@ async def generate_regen_plan(
 ):
 
     try:
-
         context = request.context
+        soil = context.get("soil", {})
+        crop_type = context.get("current_crop", context.get("crop_type", "unknown"))
+        crop_history = context.get("crop_history", context.get("history", []))
 
-        soil = context.get(
-            "soil",
-            {},
-        )
+        prompt = f"""
+You are an expert agronomist specializing in regenerative agriculture.
+Create a regenerative farming plan for a field with the following context:
 
-        # Node's regen.service.js builds context as { crop_type, soil, history }.
-        # This handler was reading "crop_history" and "current_crop", which
-        # Node never sends — so the cover-crop recommendation and the
-        # next-season-option suggestion were always skipped, regardless of
-        # the field's actual crop history. Accept both the current Node key
-        # names and the originally-intended ones so either caller works.
-        crop_history = context.get(
-            "crop_history",
-            context.get("history", []),
-        )
+Current Crop: {crop_type}
+Soil Data: {json.dumps(soil)}
+Crop History: {json.dumps(crop_history)}
 
-        practices = []
+Generate 2-3 specific, highly practical regenerative practices and 1-2 next-season crop rotation options.
+Ensure recommendations match the soil properties.
 
-        # --------------------------------------------------
-        # Cover crop recommendation
-        # --------------------------------------------------
+Return ONLY a valid JSON object matching this schema exactly, with NO markdown formatting, NO comments, and NO surrounding text:
+{{
+  "practices": [
+    {{
+      "id": "p1",
+      "title": "Practice Name",
+      "description": "How to do it",
+      "effort_level": "low|medium|high",
+      "reasoning": "Why it helps"
+    }}
+  ],
+  "next_season_options": [
+    {{
+      "crop_type": "Crop Name",
+      "variety": "Optional variety or null",
+      "suitability_score": 85,
+      "reasoning": "Why this rotation is good",
+      "risk_factors": ["risk1"]
+    }}
+  ]
+}}
+"""
 
-        if len(crop_history) >= 2:
-
-            practices.append({
-                "id": "p1",
-                "title": "Consider a legume cover crop",
-                "description": (
-                    "Consider a legume cover crop "
-                    "between production seasons."
-                ),
-                "effort_level": "medium",
-                "reasoning": (
-                    "A diversified rotation may improve "
-                    "soil resilience and reduce continuous "
-                    "cropping pressure."
-                ),
-            })
-
-        # --------------------------------------------------
-        # Reduced tillage
-        # --------------------------------------------------
-
-        practices.append({
-            "id": "p2",
-            "title": "Reduce unnecessary soil disturbance",
-            "description": (
-                "Minimize tillage where agronomically "
-                "appropriate."
-            ),
-            "effort_level": "low",
-            "reasoning": (
-                "Reduced disturbance can help maintain "
-                "soil structure and moisture."
-            ),
-        })
-
-        # --------------------------------------------------
-        # Next-season options
-        # --------------------------------------------------
-
-        options = []
-
-        current_crop = context.get(
-            "current_crop",
-            context.get("crop_type"),
-        )
-
-        if current_crop:
-
-            options.append({
-                "crop_type": "Soybean",
-                "variety": None,
-                "suitability_score": None,
-                "reasoning": (
-                    "Potential rotation option. "
-                    "Requires local climate and market "
-                    "validation before planting."
-                ),
-                "risk_factors": [
-                    "Local suitability must be validated",
-                    "Market conditions must be checked",
-                ],
-            })
-
+        data = generate_text(prompt, schema_class=RegenPlanResponse)
+        
         return RegenPlanResponse(
-            practices=practices,
-            next_season_options=options,
+            practices=data.get("practices", []),
+            next_season_options=data.get("next_season_options", []),
         )
 
     except Exception as exc:
-
         raise HTTPException(
             status_code=500,
             detail=f"Regenerative plan failed: {exc}",

@@ -5,6 +5,7 @@ import { weatherRepo } from "../../db/repositories/weatherRepository.js";
 import { soilService } from "../soil/soil.service.js";
 import { satelliteService } from "../satellite/satellite.service.js";
 import { cropStateRepo } from "../../db/repositories/farmerRepository.js";
+import { timelineRepo } from "../../db/repositories/feedbackRepository.js";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 const VISION_MODEL = "gemini-3.6-flash";
@@ -411,6 +412,19 @@ Respond ONLY with valid JSON in EXACTLY this format:
         "001",
       ],
     );
+
+    // Log to field history timeline
+    try {
+      await timelineRepo.addEntry({
+        field_id: fieldId,
+        entry_type: "diagnosis",
+        summary_text: `Crop diagnosed: ${diagnosis.condition_name ?? "Unknown"} (${diagnosis.severity ?? "unknown"} severity)`,
+        linked_record_id: row.id,
+        season_label: "This Season",
+      });
+    } catch (err) {
+      console.error("[Disease] Failed to write timeline entry:", err);
+    }
 
     return row;
   }

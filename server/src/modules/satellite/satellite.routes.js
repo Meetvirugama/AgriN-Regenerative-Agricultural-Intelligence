@@ -5,6 +5,47 @@ import { PythonClient } from "../../services/pythonClient.js";
 const router = Router();
 
 /**
+ * GET /api/v1/fields/:fieldId/satellite-health
+ *
+ * Frontend-facing aggregated satellite health endpoint.
+ */
+router.get("/fields/:fieldId/satellite-health", async (req, res, next) => {
+  try {
+    const fieldId = req.params.fieldId;
+    const tile = await satelliteService.getLatestForField(fieldId);
+    const timeseries = await satelliteService.getTimeseries(fieldId, 60);
+    
+    // Call Python AI to process anomalies
+    const enriched = await PythonClient.processSatelliteData(
+      fieldId,
+      tile,
+      timeseries.observations
+    );
+    
+    const trend = enriched.trend || {};
+    const anomaly = enriched.activeAnomalies?.[0] || null;
+    
+    res.json({
+      healthScore: tile?.ndvi_mean ? Math.round(tile.ndvi_mean * 100) : null,
+      vegetationTrend: trend.ndviTrendDirection || "unavailable",
+      moistureTrend: trend.moistureTrend || "unavailable",
+      anomaly: anomaly ? {
+        detected: true,
+        severity: anomaly.severity,
+        location: anomaly.subregionLabel || "Unknown Area",
+        dropPercentage: anomaly.dropPercentage
+      } : null,
+      observationDate: trend.date || tile?.observation_date || null,
+      imageUrl: tile?.tile_url || null,
+      summary: trend.summaryText || "Satellite observations are available for this field."
+    });
+  } catch (err) {
+    console.error("[Satellite] health error:", err.message);
+    next(err);
+  }
+});
+
+/**
  * GET /api/v1/fields/:fieldId/satellite/latest
  *
  * Returns the latest Sentinel-2 NDVI tile for a field.

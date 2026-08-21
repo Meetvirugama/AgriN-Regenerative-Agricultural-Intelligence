@@ -23,14 +23,17 @@ const timeSince = (date) => {
 // Handles both authenticated (/api/v1/alerts with requireAuth) and
 // legacy unauthenticated (/api/alerts) — returns [] when no auth present.
 router.get("/", async (req, res, next) => {
+  console.log(`[Alerts] GET /api/v1/alerts called for farmer:`, req.farmer?.sub);
   try {
     const farmerId = req.farmer?.sub;
     if (!farmerId) {
-      // Legacy unauthenticated mount: return empty array gracefully
+      console.log(`[Alerts] No farmer ID, returning empty array`);
       return res.json([]);
     }
 
+    console.log(`[Alerts] Fetching from DB for farmer:`, farmerId);
     const dbAlerts = await alertsRepository.findAlertsByFarmerId(farmerId);
+    console.log(`[Alerts] Found ${dbAlerts.length} alerts in DB`);
     
     // Map to the format expected by the frontend
     const formattedAlerts = dbAlerts.map(alert => ({

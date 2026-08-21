@@ -2,6 +2,7 @@ import { layer1Service } from "../field/field.service.js";
 import { cropStateRepo } from "../../db/repositories/farmerRepository.js";
 import { PythonClient } from "../../services/pythonClient.js";
 import { weatherRepo } from "../../db/repositories/weatherRepository.js";
+import { timelineRepo } from "../../db/repositories/feedbackRepository.js";
 
 export class Layer2Service {
   getStageDescription(stage, cropType) {
@@ -146,6 +147,20 @@ export class Layer2Service {
     };
 
     await cropStateRepo.upsertCropState(updatedState);
+
+    // Log to field history timeline
+    try {
+      await timelineRepo.addEntry({
+        field_id: fieldId,
+        entry_type: "farmer_note",
+        summary_text: `Farmer updated crop stage to: ${stage || existingState.current_stage}`,
+        linked_record_id: null,
+        season_label: "This Season",
+      });
+    } catch (err) {
+      console.error("[Crop] Failed to write timeline entry:", err);
+    }
+
     return updatedState;
   }
 }

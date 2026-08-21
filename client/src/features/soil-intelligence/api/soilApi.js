@@ -1,30 +1,22 @@
-import { request, ApiError } from "../../../services/apiClient";
+import { request } from "../../../services/apiClient";
 
-export const soilApi = {
-  getSoilProfile: async (fieldId) => {
-    try {
-      return await request(`fields/${fieldId}/soil`);
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        throw new Error("NO_DATA");
-      }
-      throw error;
-    }
-  },
+export async function getSoilProfile(fieldId) {
+  if (!fieldId) throw new Error("fieldId is required.");
+  return request(`fields/${encodeURIComponent(fieldId)}/soil`);
+}
 
-  parseLabReport: async (fieldId, file) => {
-    const formData = new FormData();
-    formData.append("document", file, "lab_report.jpg");
-    return request(`fields/${fieldId}/soil/parse`, {
-      method: "POST",
-      body: formData,
-    });
-  },
+export async function uploadSoilLabReport(fieldId, file) {
+  if (!fieldId) throw new Error("fieldId is required.");
+  if (!(file instanceof File)) throw new Error("A valid report file is required.");
 
-  saveSoilProfile: async (fieldId, data) => {
-    return request(`fields/${fieldId}/soil/save`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  },
-};
+  const formData = new FormData();
+  formData.append("report", file);
+
+  // Note: we can't use our standard JSON request wrapper for FormData
+  // directly without some config, but apiClient's request supports it
+  // via its default handling!
+  return request(`fields/${encodeURIComponent(fieldId)}/soil/lab-report`, {
+    method: "POST",
+    body: formData,
+  });
+}

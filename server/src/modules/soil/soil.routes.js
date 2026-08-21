@@ -37,21 +37,28 @@ router.get("/:fieldId/soil", async (req, res, next) => {
         suggestion: "Add a field boundary so SoilGrids data can be fetched automatically.",
       });
     }
-    res.json(profile);
+    res.json({
+      ...profile,
+      source: profile.source === "lab_report" ? "lab" : profile.source,
+      organicMatter: profile.organic_matter_pct,
+      waterHolding: profile.water_holding_capacity,
+      ph: profile.ph,
+      updatedAt: profile.created_at || new Date().toISOString(),
+    });
   } catch (err) {
     next(err);
   }
 });
 
 /**
- * POST /api/v1/fields/:fieldId/soil/parse
+ * POST /api/v1/fields/:fieldId/soil/lab-report
  *
  * Upload a soil lab report image/PDF for Gemini Vision parsing.
  */
-router.post("/:fieldId/soil/parse", upload.single("document"), async (req, res, next) => {
+router.post("/:fieldId/soil/lab-report", upload.single("report"), async (req, res, next) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "Document file is required" });
+      return res.status(400).json({ error: "Report file is required" });
     }
     // Pass the real MIME type so Gemini Vision receives the correct content-type
     const parsedData = await soilService.parseAndSaveLabReport(

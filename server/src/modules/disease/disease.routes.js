@@ -13,7 +13,7 @@ const router = Router();
  *   condition_name | condition_category | confidence | severity
  *   differential_diagnosis | evidence | treatment_recommendation
  */
-router.post("/:fieldId/diagnose", async (req, res) => {
+router.post("/:fieldId/diagnose", async (req, res, next) => {
   try {
     const { fieldId } = req.params;
     const { image, image2, image3, latitude, longitude, farmerObservations } = req.body;
@@ -77,7 +77,7 @@ router.post("/:fieldId/diagnose", async (req, res) => {
  * GET /api/v1/fields/:fieldId/observations
  * Returns all diagnosis observations for a field, newest first.
  */
-router.get("/:fieldId/observations", async (req, res) => {
+router.get("/:fieldId/observations", async (req, res, next) => {
   try {
     const { fieldId } = req.params;
     const limit = parseInt(req.query.limit ?? "20", 10);
@@ -91,7 +91,7 @@ router.get("/:fieldId/observations", async (req, res) => {
 /**
  * GET /api/v1/fields/:fieldId/diagnoses   (legacy alias)
  */
-router.get("/:fieldId/diagnoses", async (req, res) => {
+router.get("/:fieldId/diagnoses", async (req, res, next) => {
   try {
     const history = await observationService.getObservations(req.params.fieldId);
     res.json({ history });
@@ -104,7 +104,7 @@ router.get("/:fieldId/diagnoses", async (req, res) => {
  * PUT /api/v1/fields/:fieldId/observations/:obsId
  * Update an observation with farmer feedback (Layer 08 / Section 38)
  */
-router.put("/:fieldId/observations/:obsId", async (req, res) => {
+router.put("/:fieldId/observations/:obsId", async (req, res, next) => {
   try {
     const { fieldId, obsId } = req.params;
     const { outcome, outcome_notes } = req.body;

@@ -16,7 +16,7 @@ export class Layer10Service {
     // Check DB for a recent plan (< 24h old)
     const existing = await queryOne(
       `SELECT field_id, crop_type, practices, next_season_options,
-              carbon_credits_est::float, summary, generated_at::text
+              generated_at::text
        FROM regen_plans
        WHERE field_id = $1
          AND generated_at > NOW() - INTERVAL '24 hours'`,
@@ -29,8 +29,6 @@ export class Layer10Service {
         crop_type: existing.crop_type,
         practices: existing.practices ?? [],
         next_season_options: existing.next_season_options ?? [],
-        carbon_credits_est: existing.carbon_credits_est,
-        summary: existing.summary,
         generated_at: existing.generated_at,
         cached: true,
       };
@@ -64,22 +62,18 @@ export class Layer10Service {
     // Persist to Postgres (upsert — one plan per field)
     await execute(
       `INSERT INTO regen_plans
-         (field_id, crop_type, practices, next_season_options, carbon_credits_est, summary)
-       VALUES ($1, $2, $3, $4, $5, $6)
+         (field_id, crop_type, practices, next_season_options)
+       VALUES ($1, $2, $3, $4)
        ON CONFLICT (field_id) DO UPDATE SET
          crop_type = EXCLUDED.crop_type,
          practices = EXCLUDED.practices,
          next_season_options = EXCLUDED.next_season_options,
-         carbon_credits_est = EXCLUDED.carbon_credits_est,
-         summary = EXCLUDED.summary,
          generated_at = NOW()`,
       [
         fieldId,
         plan.crop_type,
         JSON.stringify(plan.practices),
         JSON.stringify(plan.next_season_options),
-        plan.carbon_credits_est,
-        plan.summary,
       ],
     ).catch((err) => {
       // regen_plans table may not be migrated yet — log but don't fail

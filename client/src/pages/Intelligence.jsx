@@ -55,6 +55,24 @@ export const Intelligence = () => {
 
   // Dynamic 5-day weather forecast days
   const dynamicForecastDays = useMemo(() => {
+    if (data?.weatherData?.forecasts?.length > 0) {
+      const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      return data.weatherData.forecasts.map((f, i) => {
+        const d = new Date(f.date);
+        const isToday = i === 0;
+        return {
+          day: isToday ? "Today" : weekdays[d.getDay()],
+          date: d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+          icon: f.rainfall_mm > 5 ? CloudRain : (f.rainfall_mm > 0 ? CloudSun : Sun),
+          high: `${Math.round(f.temp_max ?? 30)}°`,
+          low: `${Math.round(f.temp_min ?? 20)}°`,
+          cond: f.rainfall_mm > 5 ? "Rain" : (f.rainfall_mm > 0 ? "Showers" : "Clear"),
+          color: f.rainfall_mm > 0 ? "text-blue-500" : "text-amber-500",
+        };
+      });
+    }
+
+    // Fallback if real data is missing
     const days = [];
     const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     for (let i = 0; i < 5; i++) {
@@ -72,7 +90,7 @@ export const Intelligence = () => {
       });
     }
     return days;
-  }, []);
+  }, [data?.weatherData]);
 
   useEffect(() => {
     let isMounted = true;
@@ -664,11 +682,17 @@ export const Intelligence = () => {
               <div className="weather-telemetry-body">
                 <div className="weather-primary-temp">
                   <div className="weather-sun-icon-box">
-                    <Sun size={34} className="text-amber-500" />
+                    {data?.weatherData?.current?.rainfall_mm > 0 ? (
+                      <CloudRain size={34} className="text-blue-500" />
+                    ) : (
+                      <Sun size={34} className="text-amber-500" />
+                    )}
                   </div>
                   <div>
-                    <h3 className="weather-temp-num">32°C</h3>
-                    <span className="weather-cond-label">Sunny & Clear Sky</span>
+                    <h3 className="weather-temp-num">{Math.round(data?.weatherData?.current?.temp ?? 32)}°C</h3>
+                    <span className="weather-cond-label">
+                      {data?.weatherData?.current?.rainfall_mm > 0 ? "Rain / Showers" : "Sunny & Clear Sky"}
+                    </span>
                   </div>
                 </div>
 
@@ -678,7 +702,7 @@ export const Intelligence = () => {
                       <Droplet size={14} className="text-blue-500" />
                       <span>Humidity</span>
                     </div>
-                    <strong className="sensor-num">42%</strong>
+                    <strong className="sensor-num">{Math.round(data?.weatherData?.current?.humidity ?? 42)}%</strong>
                   </div>
 
                   <div className="weather-sensor-cell">
@@ -686,7 +710,7 @@ export const Intelligence = () => {
                       <Wind size={14} className="text-teal-600" />
                       <span>Wind Speed</span>
                     </div>
-                    <strong className="sensor-num">12 km/h NW</strong>
+                    <strong className="sensor-num">{data?.weatherData?.current?.windSpeed ?? 12} km/h NW</strong>
                   </div>
 
                   <div className="weather-sensor-cell">
@@ -702,7 +726,7 @@ export const Intelligence = () => {
                       <CloudRain size={14} className="text-indigo-500" />
                       <span>Rain Risk</span>
                     </div>
-                    <strong className="sensor-num">10% Low</strong>
+                    <strong className="sensor-num">{data?.weatherData?.current?.rainRisk ?? "10% Low"}</strong>
                   </div>
                 </div>
               </div>

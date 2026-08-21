@@ -33,6 +33,7 @@ export const cropApi = {
   getAlerts: async () => request("alerts"),
   getIntelligence: async () => request("intelligence"),
   getRecentChats: async () => request("chat/recent"),
+  getChatHistory: async () => request("chat/history"),
   sendChatMessage: async (message) => {
     return request("chat", {
       method: "POST",

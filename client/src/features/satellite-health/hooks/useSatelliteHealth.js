@@ -1,47 +1,79 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { request } from "../../../services/apiClient";
 
-export function useSatelliteHealth(fieldId) {
+function normalizeSatelliteData(source) {
+  if (!source) return null;
+
+  return {
+    status: source.status || "healthy",
+    healthScore: source.healthScore ?? source.health_score ?? null,
+    vegetationTrend: source.vegetationTrend ?? source.vegetation_trend ?? "unavailable",
+    moistureTrend: source.moistureTrend ?? source.moisture_trend ?? "unavailable",
+    anomaly: source.anomaly || null,
+    observationDate: source.observationDate ?? source.observation_date ?? null,
+    imageUrl: source.imageUrl ?? source.image_url ?? null,
+    summary: source.summary || "Satellite observations are available for this field.",
+  };
+}
+
+export function useSatelliteHealth({ fieldId, enabled = true }) {
   const [data, setData] = useState(null);
-  const [timeline, setTimeline] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(enabled));
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
+  const mountedRef = useRef(true);
+
   useEffect(() => {
-    if (!fieldId) return;
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
-    let isMounted = true;
+  const fetchSatelliteHealth = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!enabled || !fieldId) return;
 
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
+      if (mountedRef.current) {
+        if (silent) setRefreshing(true);
+        else setLoading(true);
+        setError(null);
+      }
+
       try {
-        const [latestData, timelineData] = await Promise.all([
-          request(`fields/${fieldId}/satellite/latest`),
-          request(`fields/${fieldId}/satellite/timeline`),
-        ]);
-
-        if (isMounted) {
-          setData(latestData);
-          setTimeline(timelineData.timeline || []);
+        const payload = await request(`fields/${encodeURIComponent(fieldId)}/satellite-health`);
+        
+        if (mountedRef.current) {
+          setData(normalizeSatelliteData(payload));
+          setError(null);
         }
       } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : "Unknown error");
+        if (mountedRef.current) {
+          setError({
+            message: err.message || "Satellite health data could not be loaded.",
+            code: err.status || "SATELLITE_HEALTH_FETCH_FAILED",
+          });
         }
       } finally {
-        if (isMounted) {
+        if (mountedRef.current) {
           setLoading(false);
+          setRefreshing(false);
         }
       }
-    };
+    },
+    [enabled, fieldId]
+  );
 
-    fetchData();
+  useEffect(() => {
+    fetchSatelliteHealth();
+  }, [fetchSatelliteHealth]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [fieldId]);
-
-  return { data, timeline, loading, error };
+  return {
+    data,
+    loading,
+    refreshing,
+    error,
+    refetch: () => fetchSatelliteHealth({ silent: true }),
+  };
 }
