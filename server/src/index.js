@@ -21,6 +21,7 @@ import chatRoutes from "./modules/chat/chat.routes.js";
 import askRoutes from "./modules/ask/ask.routes.js";
 import intelligenceRoutes from "./modules/intelligence/intelligence.routes.js";
 import profileRoutes from "./modules/profile/profile.routes.js";
+import settingsRoutes from "./modules/settings/settings.routes.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { checkDatabaseHealth } from "./db/connection.js";
@@ -123,6 +124,7 @@ app.use("/api/v1/chat", requireAuth, chatRoutes); // Keep legacy for backwards c
 app.use("/api/v1/ask", requireAuth, askRoutes); // New structured Ask API
 app.use("/api/v1/intelligence", requireAuth, intelligenceRoutes);
 app.use("/api/v1/profile", requireAuth, profileRoutes);
+app.use("/api/v1/settings", requireAuth, settingsRoutes);
 
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────

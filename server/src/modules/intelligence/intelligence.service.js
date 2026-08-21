@@ -2,6 +2,7 @@ import { query } from "../../db/connection.js";
 import { healthScoreService } from "../health-score/health-score.service.js";
 import { weatherRepo } from "../../db/repositories/weatherRepository.js";
 import { generateIntelligenceRecommendations } from "./intelligence.ai.js";
+import { settingsService } from "../settings/settings.service.js";
 
 const round = (value, digits = 0) => {
   if (value == null || Number.isNaN(Number(value))) {
@@ -235,9 +236,10 @@ const buildRealTrend = async (fields) => {
 
 export const intelligenceService = {
   async getFarmerIntelligence(farmerId) {
-    const [fields, alerts] = await Promise.all([
+    const [fields, alerts, settings] = await Promise.all([
       getFields(farmerId),
       getAlerts(farmerId),
+      settingsService.getSettings(farmerId),
     ]);
 
     if (!fields.length) {
@@ -303,7 +305,8 @@ export const intelligenceService = {
       },
     }));
 
-    const aiContext = {
+    // If personalizedRecs is disabled, don't pass the fields and alerts array
+    let aiContext = {
       fields: fieldData,
       activeAlerts: alerts.map((alert) => ({
         id: alert.id,
@@ -320,8 +323,38 @@ export const intelligenceService = {
       trend: trendData,
     };
 
+    if (settings && !settings.personalizedRecs) {
+      aiContext = {
+        fields: [],
+        activeAlerts: [],
+        health: null,
+        trend: [],
+        message: "Personalized recommendations disabled by farmer settings.",
+      };
+    } else if (settings) {
+      // Respect individual permissions
+      if (!settings.permissions.weather) {
+        aiContext.fields.forEach(f => f.weather = null);
+      }
+      if (!settings.permissions.health) {
+        aiContext.health = null;
+        aiContext.trend = null;
+        aiContext.fields.forEach(f => f.health = null);
+      }
+      if (!settings.permissions.crop) {
+        aiContext.fields.forEach(f => f.crop = null);
+      }
+      if (!settings.permissions.irrigation) {
+        aiContext.fields.forEach(f => f.irrigationSource = null);
+      }
+      if (!settings.permissions.history) {
+        // history pruning
+      }
+    }
+
     const topRecommendations = await generateIntelligenceRecommendations(
-      aiContext
+      aiContext,
+      settings
     );
 
     return {

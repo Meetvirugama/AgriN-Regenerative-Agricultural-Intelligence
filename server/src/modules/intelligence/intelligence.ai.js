@@ -83,7 +83,7 @@ IMPORTANT RULES:
 Return ONLY the requested structured output.
 `;
 
-export async function generateIntelligenceRecommendations(context) {
+export async function generateIntelligenceRecommendations(context, settings) {
   if (!GEMINI_API_KEY) {
     return [];
   }
@@ -100,6 +100,22 @@ Generate the most important recommendations for this farmer based ONLY on the su
 If no recommendation is justified, return [].
   `;
 
+  let finalSystemInstruction = SYSTEM_INSTRUCTION;
+  
+  if (settings) {
+    const adviceInstruction = {
+      Simple: "Use simple farmer-friendly language. Avoid technical terminology.",
+      Detailed: "Explain the recommendation with reasons, observations and practical steps.",
+      Expert: "Provide technically detailed agronomic reasoning, assumptions, uncertainty and relevant measurements.",
+    };
+    
+    finalSystemInstruction += `\n\nAdvice level: ${settings.adviceLevel || 'Simple'}\n${adviceInstruction[settings.adviceLevel || 'Simple']}`;
+    
+    if (settings.language && settings.language !== 'English') {
+      finalSystemInstruction += `\n\nRespond in ${settings.language}. Use terminology appropriate for farmers.`;
+    }
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: MODEL,
@@ -110,7 +126,7 @@ If no recommendation is justified, return [].
         },
       ],
       config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
+        systemInstruction: finalSystemInstruction,
         responseMimeType: "application/json",
         responseSchema,
       },

@@ -41,6 +41,11 @@ export const cropApi = {
     method: "PATCH",
     body: JSON.stringify(payload),
   }),
+  getSettings: async () => request("settings"),
+  updateSettings: async (payload) => request("settings", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  }),
   getIntelligence: async () => request("intelligence"),
   getRecentChats: async () => request("chat/recent"),
   getRecentChats: async () => request("chat/recent"),
