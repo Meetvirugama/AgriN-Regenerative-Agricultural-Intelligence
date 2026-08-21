@@ -15,7 +15,10 @@ export const API_BASE = (() => {
 
 export class ApiError extends Error {
   constructor(message, status, data) {
-    super(message);
+    const msgStr = typeof message === "string" 
+      ? message 
+      : (message?.message || JSON.stringify(message) || "Unknown Error");
+    super(msgStr);
     this.status = status;
     this.data = data;
     this.name = "ApiError";
