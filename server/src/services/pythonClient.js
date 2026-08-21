@@ -93,7 +93,7 @@ export class PythonClient {
   }
 
   static async evaluateWeatherRules(fieldId, forecasts, config) {
-    const res = await fetch(`${PYTHON_API_URL}/weather-rules/evaluate`, {
+    const res = await fetch(`${PYTHON_API_URL}/weather/evaluate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -131,7 +131,7 @@ export class PythonClient {
   }
 
   static async generateRegenPlan(context) {
-    const res = await fetch(`${PYTHON_API_URL}/regen/generate-plan`, {
+    const res = await fetch(`${PYTHON_API_URL}/regenerative/generate-plan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ context }),
@@ -147,7 +147,7 @@ export class PythonClient {
       filename: "soil_report.jpg",
     });
 
-    const res = await fetch(`${PYTHON_API_URL}/vision/parse-soil-report`, {
+    const res = await fetch(`${PYTHON_API_URL}/soil/parse-soil-report`, {
       method: "POST",
       body: form,
     });
@@ -190,7 +190,7 @@ export class PythonClient {
   }
 
   static async assessClimateRisk(payload) {
-    const res = await fetch(`${PYTHON_API_URL}/climate/risk`, {
+    const res = await fetch(`${PYTHON_API_URL}/climate-risk/risk`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

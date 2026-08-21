@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { satelliteService } from "./satellite.service.js";
+import { PythonClient } from "../../services/pythonClient.js";
 
 const router = Router();
 
@@ -12,8 +13,18 @@ const router = Router();
  */
 router.get("/fields/:fieldId/satellite/latest", async (req, res, next) => {
   try {
-    const tile = await satelliteService.getLatestForField(req.params.fieldId);
-    res.json(tile);
+    const fieldId = req.params.fieldId;
+    const tile = await satelliteService.getLatestForField(fieldId);
+    const timeseries = await satelliteService.getTimeseries(fieldId, 60);
+    
+    // Call Python AI to process anomalies
+    const enriched = await PythonClient.processSatelliteData(
+      fieldId,
+      tile,
+      timeseries.observations
+    );
+    
+    res.json(enriched);
   } catch (err) {
     console.error("[Satellite] latest error:", err.message);
     next(err);

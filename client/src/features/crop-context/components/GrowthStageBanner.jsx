@@ -38,12 +38,12 @@ export function GrowthStageBanner({ cropState, isLoading, onOverrideClick }) {
           <h2 className="text-2xl font-bold uppercase tracking-tight text-text flex items-center gap-2">
             Day {approxDays} — {current_stage} stage
             <TextToSpeechButton
-              textToRead={`Day ${approxDays}, ${current_stage} stage. ${confirmed_crop}. ${stage_description}`}
+              textToRead={`Day ${approxDays}, ${current_stage || "unknown"} stage. ${confirmed_crop || "unknown crop"}. ${stage_description || ""}`}
               className="w-8 h-8 p-1"
             />
           </h2>
           <p className="text-text-muted mt-2 text-sm max-w-xl">
-            {confirmed_crop.toUpperCase()} • {stage_description}
+            {confirmed_crop?.toUpperCase() || "UNKNOWN CROP"} • {stage_description}
           </p>
         </div>
         <div className="text-xs text-text-muted uppercase font-bold tracking-widest underline decoration-dotted underline-offset-4">

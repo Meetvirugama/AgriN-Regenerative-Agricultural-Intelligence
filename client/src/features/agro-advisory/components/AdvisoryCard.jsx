@@ -5,6 +5,7 @@ import { Card } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { mapSeverityToStatus } from "../../../types/status";
+import { ErrorState } from "../../../components/ui/ErrorState";
 
 export const AdvisoryCard = ({ fieldId }) => {
   const [advisory, setAdvisory] = useState(null);
@@ -34,9 +35,10 @@ export const AdvisoryCard = ({ fieldId }) => {
 
   if (error) {
     return (
-      <Card className="bg-danger/10 border-danger/30 p-6 text-center">
-        <p className="text-danger font-bold">Failed to load AI advisory.</p>
-      </Card>
+      <ErrorState 
+        title="AI Advisory Failed" 
+        message="Failed to load AI advisory." 
+      />
     );
   }
 
@@ -75,7 +77,7 @@ export const AdvisoryCard = ({ fieldId }) => {
 
   // Handle the "No action needed" state
   if (
-    advisory.action_text.toLowerCase().includes("no action needed") ||
+    advisory.action_text?.toLowerCase().includes("no action needed") ||
     advisory.severity === "Low"
   ) {
     return (
@@ -235,7 +237,7 @@ export const AdvisoryCard = ({ fieldId }) => {
       )}
 
       <div className="mt-6 pt-4 border-t border-neutral/20 text-[10px] uppercase tracking-widest text-text-muted/60">
-        Sources: {advisory.source_layers.join(" • ")}
+        Sources: {(advisory.source_layers ?? []).join(" • ")}
       </div>
 
       {status === "urgent" && !escalationSent && (

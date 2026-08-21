@@ -3,9 +3,22 @@ import React from "react";
 const STAGES = ["germination", "vegetative", "flowering", "maturity"];
 
 export function StageProgressIndicator({ currentStage }) {
-  if (!currentStage) return null;
+  if (!currentStage) return (
+    <div className="w-full py-6 text-center text-text-muted text-sm font-medium">
+      No crop stage recorded for this season.
+    </div>
+  );
 
-  const currentIndex = STAGES.indexOf(currentStage);
+  const normalizedStage = currentStage?.toLowerCase();
+  const currentIndex = STAGES.indexOf(normalizedStage);
+
+  if (currentIndex === -1) {
+    return (
+      <div className="w-full py-6 text-center text-text-muted text-sm font-medium">
+        Crop stage data is unavailable.
+      </div>
+    );
+  }
 
   return (
     <div className="w-full py-6">

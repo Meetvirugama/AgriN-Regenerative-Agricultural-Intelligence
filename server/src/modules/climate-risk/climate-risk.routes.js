@@ -19,7 +19,27 @@ router.get("/fields/:fieldId/climate-risk", async (req, res, next) => {
       lng: field.lng,
       sowing_date: field.sowing_date,
     });
-    res.json(result);
+
+    // ─── Normalize AI-service contract → frontend contract ─────────────────
+    // The Python service returns { risk_level, primary_risks, mitigation_strategies }.
+    // ClimateRiskWidget.jsx expects { severity, riskType, timeframe, protectiveAction, generatedAt }.
+    // Previously this raw snake_case payload was returned as-is, so `data.severity`
+    // was undefined on the client and mapSeverityToStatus(undefined) threw
+    // "Cannot read properties of undefined (reading 'toLowerCase')".
+    const primaryRisks = Array.isArray(result.primary_risks) ? result.primary_risks : [];
+    const mitigations = Array.isArray(result.mitigation_strategies) ? result.mitigation_strategies : [];
+
+    res.json({
+      severity: result.risk_level ?? "unknown",
+      riskType: primaryRisks[0] ?? "Climate Risk",
+      allRisks: primaryRisks,
+      timeframe: "Next 7 days",
+      protectiveAction:
+        mitigations.length > 0
+          ? mitigations.join(" ")
+          : "No specific mitigation guidance available yet.",
+      generatedAt: new Date().toISOString(),
+    });
   } catch (error) {
     console.error("[ClimateRisk] Error:", error.message);
     next(error);

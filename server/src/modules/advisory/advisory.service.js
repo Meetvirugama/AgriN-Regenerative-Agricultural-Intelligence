@@ -136,13 +136,13 @@ class AdvisoryService {
     // Use existing advisories table if available (from migration 006)
     try {
       const row = await queryOne(
-        `INSERT INTO advisories
+        `INSERT INTO advisory_records
            (field_id, trigger_type, what_text, why_text, severity,
             action_text, action_deadline, monitor_text, source_layers,
             gemini_evidence)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING id, field_id, what_text, why_text, severity,
-                   action_text, action_deadline, monitor_text,
+                   action_text, action_deadline, monitor_text, source_layers,
                    gemini_evidence, generated_at::text`,
         [
           fieldId,
@@ -171,6 +171,7 @@ class AdvisoryService {
         action_text: gemini.action,
         action_deadline: gemini.deadline,
         monitor_text: gemini.monitor,
+        source_layers: ["weather", "satellite", "soil"],
         gemini_confidence: gemini.confidence,
         confidence_reason: gemini.confidence_reason,
         gemini_evidence: gemini.evidence,

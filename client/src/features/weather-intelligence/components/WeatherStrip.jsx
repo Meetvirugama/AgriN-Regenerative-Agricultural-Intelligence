@@ -1,7 +1,7 @@
 import { Sun, CloudRain, Cloud } from "lucide-react";
 import { TextToSpeechButton } from "../../voice/components/TextToSpeechButton";
 
-export function WeatherStrip({ forecasts, flags, isLoading, onExpand }) {
+export function WeatherStrip({ forecasts = [], flags = [], isLoading, onExpand }) {
   if (isLoading) {
     return (
       <div className="bg-surface border border-neutral p-4 rounded-xl shadow-sm animate-pulse flex items-center justify-between">

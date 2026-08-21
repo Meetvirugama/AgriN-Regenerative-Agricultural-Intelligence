@@ -1,46 +1,75 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import crop, disease, advisory, climate, phenology, weather_rules, health, satellite, regen, vision, cross_border, voice
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
+from routers.health_score import router as health_score_router
+from routers.advisory import router as advisory_router
+from routers.phenology import router as phenology_router
+from routers.weather_rules import router as weather_router
+from routers.climate_risk import router as climate_router
+from routers.soil import router as soil_router
+from routers.satellite import router as satellite_router
+from routers.regenerative import router as regenerative_router
+from routers.cross_border import router as cross_border_router
+
+# Import existing unrefactored routers to ensure they don't break
+from routers import crop, disease, voice
+
 app = FastAPI(
-    title="AgriMesh AI Service",
-    description="Python/FastAPI microservice for AgriMesh AI inference using Google Gemini.",
-    version="1.0.0"
+    title="AgriMesh Intelligence API",
+    version="1.0.0",
+    description=(
+        "Field-specific agricultural intelligence "
+        "and decision-support API."
+    ),
 )
 
-# CORS - Allow requests from the Node.js backend
+# Preserve CORS middleware for the Node.js frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict to Node.js backend IP/URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Health Check
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "gemini_configured": bool(os.environ.get("GEMINI_API_KEY"))}
+@app.get("/")
+async def root():
+    return {
+        "name": "AgriMesh Intelligence API",
+        "status": "running",
+        "version": "1.0.0",
+    }
 
-# Include Routers
-app.include_router(crop.router, prefix="/api/v1/crop", tags=["Crop"])
-app.include_router(disease.router, prefix="/api/v1/disease", tags=["Disease"])
-app.include_router(advisory.router, prefix="/api/v1/advisory", tags=["Advisory"])
-app.include_router(climate.router, prefix="/api/v1/climate", tags=["Climate"])
-app.include_router(phenology.router, prefix="/api/v1/phenology", tags=["Phenology"])
-app.include_router(weather_rules.router, prefix="/api/v1/weather-rules", tags=["Weather Rules"])
-app.include_router(health.router, prefix="/api/v1/health-score", tags=["Health Score"])
-app.include_router(satellite.router, prefix="/api/v1/satellite", tags=["Satellite"])
-app.include_router(regen.router, prefix="/api/v1/regen", tags=["Regen AI"])
-app.include_router(vision.router, prefix="/api/v1/vision", tags=["Vision AI"])
-app.include_router(cross_border.router, prefix="/api/v1/cross-border", tags=["Cross-Border AI"])
-app.include_router(voice.router, prefix="/api/v1/voice", tags=["Voice AI"])
+@app.get("/health")
+async def health():
+    return {
+        "status": "healthy",
+        "gemini_configured": bool(os.environ.get("GEMINI_API_KEY"))
+    }
+
+# Inject the /api/v1 prefix so that the Node.js backend client logic remains functional.
+# Since your new routers already declare their specific prefix (e.g., prefix="/advisory"),
+# they will elegantly map to /api/v1/advisory when nested here.
+app.include_router(health_score_router, prefix="/api/v1")
+app.include_router(advisory_router, prefix="/api/v1")
+app.include_router(phenology_router, prefix="/api/v1")
+app.include_router(weather_router, prefix="/api/v1")
+app.include_router(climate_router, prefix="/api/v1")
+app.include_router(soil_router, prefix="/api/v1")
+app.include_router(satellite_router, prefix="/api/v1")
+app.include_router(regenerative_router, prefix="/api/v1")
+app.include_router(cross_border_router, prefix="/api/v1")
+
+# Legacy routes
+app.include_router(crop.router, prefix="/api/v1/crop", tags=["Layer 01 - Crop Diagnosis"])
+app.include_router(disease.router, prefix="/api/v1/disease", tags=["Layer 07 - Disease Diagnosis"])
+app.include_router(voice.router, prefix="/api/v1/voice", tags=["Layer 12 - Voice/Audio"])
 
 if __name__ == "__main__":
     import uvicorn
-    # When running directly, start on port 8001 so it doesn't conflict with Node.js on 8000
+    # Required for start-all.sh to boot properly on the expected port
     uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)

@@ -30,8 +30,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files (real secrets only — example templates are intentionally tracked)
+.env
+.env.local
+.env.*.local
+server/.env
+ai-service/.env
+client/.env
+!.env.example
 
 # vercel
 .vercel
@@ -50,7 +56,8 @@ ai-service/.venv/
 
 # Datasets & ML
 dataset/
-data/
+data/*
+!data/model_registry.json
 reports/
 *.pt
 *.pth

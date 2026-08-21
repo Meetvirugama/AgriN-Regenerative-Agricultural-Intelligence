@@ -8,7 +8,7 @@ import { authLimiter } from "../../middleware/rateLimiter.js";
 const router = Router();
 
 // Apply strict rate limiting to all auth endpoints
-router.use(authLimiter);
+
 
 // ─── Validation Schemas ───────────────────────────────────────────────────────
 
@@ -47,7 +47,7 @@ const RefreshSchema = z.object({
  */
 router.post(
   "/auth/request-otp",
-  validate({ body: RequestOtpSchema }),
+  authLimiter, validate({ body: RequestOtpSchema }),
   async (req, res, next) => {
     try {
       await AuthService.requestOtp(req.body.phone_number);
@@ -74,7 +74,7 @@ router.post(
  */
 router.post(
   "/auth/verify-otp",
-  validate({ body: VerifyOtpSchema }),
+  authLimiter, validate({ body: VerifyOtpSchema }),
   async (req, res, next) => {
     try {
       const tokens = await AuthService.verifyOtpAndLogin(
@@ -108,7 +108,7 @@ router.post(
  */
 router.post(
   "/auth/login",
-  validate({ body: LoginSchema }),
+  authLimiter, validate({ body: LoginSchema }),
   async (req, res, next) => {
     try {
       const tokens = await AuthService.loginWithPassword(
@@ -137,7 +137,7 @@ router.post(
  */
 router.post(
   "/auth/login/google",
-  validate({ body: z.object({ access_token: z.string() }) }),
+  authLimiter, validate({ body: z.object({ access_token: z.string() }) }),
   async (req, res, next) => {
     try {
       const tokens = await AuthService.loginWithGoogle(
@@ -166,7 +166,7 @@ router.post(
  */
 router.post(
   "/auth/refresh",
-  validate({ body: RefreshSchema }),
+  authLimiter, validate({ body: RefreshSchema }),
   async (req, res, next) => {
     try {
       const tokens = await AuthService.refreshAccessToken(

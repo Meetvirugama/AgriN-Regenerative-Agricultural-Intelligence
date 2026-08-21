@@ -155,7 +155,7 @@ STRICT RULES:
 10. Use simple language a farmer can understand.
 
 Respond ONLY with valid JSON in EXACTLY this format (no markdown code blocks, no other text):
-{
+{{
   "condition_name": "Specific condition name",
   "condition_category": "disease | pest | nutrient_deficiency | water_stress | heat_stress | healthy | unknown",
   "fused_confidence": 0.0-1.0,
@@ -169,12 +169,12 @@ Respond ONLY with valid JSON in EXACTLY this format (no markdown code blocks, no
   "action_timing": "When should they act",
   "monitor": "What signs to watch for",
   "differentials": [
-    { "condition": "name", "probability": 0.0-1.0 }
+    {{ "condition": "name", "probability": 0.0-1.0 }}
   ],
   "evidence": [
-    { "source": "image | weather | satellite | soil | crop_stage | field_history", "finding": "finding text" }
+    {{ "source": "image | weather | satellite | soil | crop_stage | field_history", "finding": "finding text" }}
   ]
-}"""
+}}"""
 
 
 def diagnose(

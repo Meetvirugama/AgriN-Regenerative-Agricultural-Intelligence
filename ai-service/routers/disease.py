@@ -45,7 +45,7 @@ async def diagnose_disease(
         if not crop_registry.is_supported(crop_key):
             supported = crop_registry.list_supported_crops()
             return FullDiagnosisResponse(
-                image_quality="unknown",
+                image_quality="poor",
                 condition_name="Unsupported Crop",
                 condition_category="unknown",
                 confidence=0.0,
@@ -59,7 +59,7 @@ async def diagnose_disease(
                 escalation_triggered=False,
                 differential_diagnosis=[],
                 evidence=[{
-                    "source": "system",
+                    "source": "crop_stage",
                     "finding": f"crop_type '{crop_key}' has no active model in CropModelRegistry.",
                     "supports_primary": False,
                 }],

@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@source "../index.html";
-@source "../src";
 @theme {
   --color-primary: #16a34a; /* Tailwind green-600 */
   --color-primary-content: #ffffff;
@@ -12,6 +10,7 @@
   --color-text-main: #111827; /* Tailwind gray-900 */
   --color-text-muted: #6b7280; /* Tailwind gray-500 */
   --color-border: #e5e7eb; /* Tailwind gray-200 */
+  --color-neutral: #9ca3af; /* Tailwind gray-400 */
   
   --color-info: #3b82f6;
   --color-success: #22c55e;
@@ -34,11 +33,6 @@
   --danger: #ef4444;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
 
 
 

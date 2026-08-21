@@ -117,7 +117,7 @@ export class Layer2Service {
       confirmed_variety: field.crop_variety,
       current_stage: phenology.current_stage,
       stage_description: phenology.stage_description,
-      stage_confidence: phenology.gdd_method === "real_temperature" ? "high" : "medium",
+      stage_confidence: phenology.gdd_method === "real_temperature" ? "high" : "moderate",
       stage_conflict: existingState?.stage_conflict ?? false,
       accumulated_gdd: phenology.accumulated_gdd,
       last_updated_from: "calendar_estimate",

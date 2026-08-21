@@ -11,7 +11,7 @@ export const GlobalInsightsWidget = ({ fieldId }) => {
     const fetchInsights = async () => {
       try {
         const data = await crossBorderApi.getInsights(fieldId);
-        setInsights(data);
+        setInsights(data.insights || []);
         setError(null);
       } catch (err) {
         console.error("Failed to fetch cross-border insights", err);

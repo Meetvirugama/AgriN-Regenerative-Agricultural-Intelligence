@@ -9,8 +9,14 @@ import { cropStateRepo } from "../../db/repositories/farmerRepository.js";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 const VISION_MODEL = "gemini-3.6-flash";
 
-/** Python FastAPI AI service URL (Layer 07 inference) */
-const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL ?? "http://localhost:8001";
+/**
+ * Python FastAPI AI service base URL (Layer 07 inference).
+ * NOTE: PYTHON_SERVICE_URL already includes the /api/v1 prefix
+ * (see server/.env.example and services/pythonClient.js) — do not
+ * append /api/v1 again when building request URLs below.
+ */
+const PYTHON_SERVICE_URL =
+  process.env.PYTHON_SERVICE_URL ?? "http://localhost:8001/api/v1";
 
 /**
  * ObservationService — Layer 07: Crop Disease & Pest/Stress Diagnosis
@@ -148,7 +154,7 @@ export class ObservationService {
         form.append("farmer_observations_json", JSON.stringify(opts.farmerObservations));
       }
 
-      const response = await fetch(`${PYTHON_SERVICE_URL}/api/v1/disease/diagnose`, {
+      const response = await fetch(`${PYTHON_SERVICE_URL}/disease/diagnose`, {
         method: "POST",
         body: form,
         headers: form.getHeaders(),

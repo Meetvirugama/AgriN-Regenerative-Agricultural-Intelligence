@@ -1,0 +1,31 @@
+version: "3.9"
+
+# Local PostgreSQL + PostGIS instance for AgriMesh.
+# Migrations (server/src/db/migrations/011_postgis_geometry.sql) require the
+# PostGIS extension, so we use the postgis/postgis image rather than plain
+# postgres.
+#
+# Usage:
+#   docker compose up -d
+#   cd server && npm run db:migrate && npm run db:seed
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: agrimesh-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: agrimesh
+      POSTGRES_PASSWORD: agrimesh
+      POSTGRES_DB: agrimesh
+    ports:
+      - "5432:5432"
+    volumes:
+      - agrimesh_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agrimesh -d agrimesh"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  agrimesh_pgdata:

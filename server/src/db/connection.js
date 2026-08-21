@@ -15,7 +15,19 @@ if (!process.env.DATABASE_URL) {
  *
  * Configuration is read from DATABASE_URL in the environment.
  * Connection pooling ensures efficient reuse across requests.
+ *
+ * SSL: enabled automatically for hosted providers (Supabase, Render, etc.)
+ * that require it, based on the DATABASE_URL host. Local/Docker Postgres
+ * (localhost, 127.0.0.1, the `db` docker-compose service) skips SSL.
+ * Override with PGSSL=true|false if you need to force one way or the other.
  */
+const dbUrl = new URL(process.env.DATABASE_URL);
+const isLocalHost = ["localhost", "127.0.0.1", "db"].includes(dbUrl.hostname);
+const sslEnabled =
+  process.env.PGSSL !== undefined
+    ? process.env.PGSSL === "true"
+    : !isLocalHost;
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   // Keep 2 idle connections, allow up to 10 total
@@ -25,6 +37,10 @@ export const pool = new Pool({
   idleTimeoutMillis: 30_000,
   // Fail fast if pool is exhausted after 5 seconds
   connectionTimeoutMillis: 5_000,
+  // Hosted Postgres providers (Supabase, Render, etc.) require SSL.
+  // rejectUnauthorized: false because these providers use certs not in
+  // Node's default trust store; the connection itself is still encrypted.
+  ssl: sslEnabled ? { rejectUnauthorized: false } : undefined,
 });
 
 pool.on("error", (err) => {

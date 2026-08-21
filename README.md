@@ -25,21 +25,55 @@ AgriMesh uses a clean separation of concerns across three microservices:
 
 ## Getting Started
 
-To spin up the entire stack locally:
+### 0. Configure environment variables
+
+Each service reads its config from a local `.env` file. Copy the provided examples and fill in your keys:
 
 ```bash
-# 1. Start the Database & AI Engine
+cp server/.env.example server/.env
+cp ai-service/.env.example ai-service/.env
+cp client/.env.example client/.env
+```
+
+At minimum you'll want a `GEMINI_API_KEY` (both `server/.env` and `ai-service/.env`) and a `JWT_SECRET` in `server/.env`.
+
+### 1. Start the database (PostgreSQL + PostGIS)
+
+```bash
+docker compose up -d db
+cd server
+npm install
+npm run db:migrate   # applies all migrations, including the PostGIS extension
+npm run db:seed      # optional: adds a stub farmer + demo fields
+```
+
+If you don't use Docker, point `DATABASE_URL` in `server/.env` at your own PostgreSQL instance (PostGIS extension required).
+
+### 2. Start all three services
+
+The easiest way is the bundled script, which brings up the database, waits for it to be healthy, runs migrations, and then starts all three services together:
+
+```bash
+./start-all.sh
+```
+
+Or start each service manually in separate terminals:
+
+```bash
+# AI Compute Engine (Python/FastAPI) — port 8001
 cd ai-service
 pip install -r requirements.txt
 fastapi dev main.py --port 8001
 
-# 2. Start the Backend API
-cd ../server
+# Backend Gateway (Node/Express) — port 8000
+cd server
 npm install
 npm run dev
 
-# 3. Start the Frontend App
-cd ../client
+# Frontend (React/Vite) — port 5173
+cd client
 npm install
 npm run dev
 ```
+
+Once running: frontend on `http://localhost:5173`, API gateway on `http://localhost:8000`, AI service on `http://localhost:8001`. The gateway talks to the AI service via `PYTHON_SERVICE_URL` (`server/.env`) and to Postgres via `DATABASE_URL`; the frontend talks to the gateway via `VITE_API_URL` (`client/.env`).

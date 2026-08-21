@@ -17,8 +17,8 @@ services:
           property: connectionString
       - key: NODE_ENV
         value: production
-      - key: AI_SERVICE_URL
-        value: https://agrimesh-ai-service.onrender.com # Wait for Render to generate this URL or use internal URL
+      - key: PYTHON_SERVICE_URL
+        value: https://agrimesh-ai-service.onrender.com/api/v1 # Update once Render generates the ai-service URL (or use its internal URL)
       - key: PORT
         value: 8000
       - key: ALLOWED_ORIGINS

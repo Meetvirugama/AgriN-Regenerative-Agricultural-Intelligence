@@ -14,12 +14,17 @@ export const FieldHealthHero = ({ score, loading }) => {
   if (!score) return null;
 
   // Synthesis text will come from Layer 09 later, for now we fall back to a basic aggregation
+  const category =
+    score.category ||
+    score.crop_health?.severity ||
+    "green";
+
   let synthesisText = score.synthesis_text;
   if (!synthesisText) {
-    if (score.category === "critical" || score.category === "poor") {
+    if (category === "critical" || category === "red") {
       synthesisText =
         "Action required: Field is showing signs of stress.";
-    } else if (score.category === "moderate") {
+    } else if (category === "poor" || category === "moderate" || category === "amber") {
       synthesisText =
         "Monitor closely: Several risk factors require your attention.";
     } else {
@@ -34,12 +39,12 @@ export const FieldHealthHero = ({ score, loading }) => {
   let textColorClass = "text-success";
   let Icon = CheckCircle;
 
-  if (score.category === "critical") {
+  if (category === "critical" || category === "red") {
     bgColorClass = "bg-danger/10";
     borderColorClass = "border-danger/30";
     textColorClass = "text-danger";
     Icon = AlertCircle;
-  } else if (score.category === "poor" || score.category === "moderate") {
+  } else if (category === "poor" || category === "moderate" || category === "amber") {
     bgColorClass = "bg-warning/10";
     borderColorClass = "border-warning/30";
     textColorClass = "text-warning";

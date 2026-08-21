@@ -20,10 +20,10 @@ export function WeatherAlertBanner({ flags }) {
 
   // Sort by severity (high > medium > low)
   const severityScore = { high: 3, medium: 2, low: 1 };
-  activeFlags.sort(
+  const sortedFlags = [...activeFlags].sort(
     (a, b) => severityScore[b.severity] - severityScore[a.severity],
   );
-  const topFlag = activeFlags[0];
+  const topFlag = sortedFlags[0];
 
   const handleDismiss = () => {
     setDismissedIds((prev) => {

@@ -87,31 +87,71 @@ def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, s
             }
     return {"text": getattr(response, 'text', '')}
 
+import httpx
+import itertools
+
+groq_keys_str = os.environ.get("GROQ_API_KEYS", "")
+groq_keys = [k.strip() for k in groq_keys_str.split(",") if k.strip()]
+groq_key_cycle = itertools.cycle(groq_keys) if groq_keys else None
+
 def generate_text(prompt: str, schema_class=None) -> dict:
     """
-    Generates text from a prompt using Gemini.
+    Generates text from a prompt using Groq (to avoid Gemini rate limits).
+    Uses a round-robin rotation of provided API keys.
     """
-    if not client:
-        raise ValueError("GEMINI_API_KEY is not configured.")
+    if not groq_keys:
+        raise ValueError("GROQ_API_KEYS is not configured in .env.")
 
-    model = 'gemini-3.6-flash'
+    current_key = next(groq_key_cycle)
     
-    config_args = {"temperature": 0.4}
+    # We use qwen/qwen3.6-27b for JSON generation
+    model = "qwen/qwen3.6-27b"
+    
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.4,
+        "max_tokens": 4096
+    }
+    
     if schema_class:
-        config_args["response_mime_type"] = "application/json"
-        config_args["response_schema"] = schema_class
+        # Groq supports JSON mode
+        payload["response_format"] = {"type": "json_object"}
+        schema_str = json.dumps(schema_class.model_json_schema())
+        payload["messages"].append({
+            "role": "user", 
+            "content": f"You must respond in valid JSON format matching this schema: {schema_str}"
+        })
 
-    config = types.GenerateContentConfig(**config_args)
+    headers = {
+        "Authorization": f"Bearer {current_key}",
+        "Content-Type": "application/json"
+    }
     
-    response = client.models.generate_content(
-        model=model,
-        contents=prompt,
-        config=config,
-    )
-    
-    if schema_class:
-        return json.loads(response.text)
-    return {"text": response.text}
+    try:
+        response = httpx.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            json=payload,
+            headers=headers,
+            timeout=30.0
+        )
+        response.raise_for_status()
+        result_json = response.json()
+        
+        content = result_json["choices"][0]["message"]["content"]
+        
+        if schema_class:
+            return json.loads(content)
+        return {"text": content}
+        
+    except Exception as e:
+        print(f"[Groq] Error generating text: {e}")
+        # Try to print the raw response if available for debugging
+        if hasattr(e, 'response') and e.response:
+            print(f"[Groq] Raw response: {e.response.text}")
+        raise ValueError(f"Groq API call failed: {e}")
 
 
 # =============================================================================
