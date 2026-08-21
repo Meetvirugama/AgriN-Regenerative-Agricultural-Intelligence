@@ -1,0 +1,7 @@
+Unused dependencies
+* @types/form-data
+* @types/jsonwebtoken
+* @types/node-cron
+* @types/node-fetch
+* @types/pg
+* uuid

@@ -169,7 +169,7 @@ export const FarmerShell = () => {
                 <div id="alerts-header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
               ) : location.pathname === '/ask' ? (
                 <div id="ask-header-portal" className="intelligence-header-portal-slot hidden md:flex"></div>
-              ) : (
+              ) : location.pathname === '/' ? (
                 <div className="dashboard-header-search">
                   <Search size={16} />
                   <input 
@@ -185,6 +185,8 @@ export const FarmerShell = () => {
                     }}
                   />
                 </div>
+              ) : (
+                <div style={{ flex: 1 }} />
               )}
 
               <div className="dashboard-header-actions">

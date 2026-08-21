@@ -1,0 +1,4 @@
+Unused dependencies
+* @turf/area
+* @turf/helpers
+* tailwindcss

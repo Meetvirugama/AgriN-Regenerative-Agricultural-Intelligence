@@ -7,10 +7,12 @@
   animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   display: flex;
   flex-direction: column;
+  /* Fill the dashboard-content area — fixed viewport, no page scroll */
+  height: 100%;
   min-height: 0;
   width: 100%;
   min-width: 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .wizard-content-wrapper {
@@ -20,7 +22,10 @@
   margin-right: auto;
   display: flex;
   flex-direction: column;
-  padding-bottom: 3rem;
+  /* Fill remaining height after header */
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ── Header ────────────────────────────────────────────────────── */
@@ -29,9 +34,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   flex-shrink: 0;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
+  gap: 1rem;
+}
+
+/* Compact step pill replacing the full stepper */
+.wizard-step-pill {
+  position: absolute;
+  right: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
 }
 
 .wizard-back-btn {
@@ -56,69 +75,66 @@
   color: var(--text-main);
 }
 
-/* ── Stepper ───────────────────────────────────────────────────── */
-.wizard-stepper {
+/* ── Stepper (kept for compat, now hidden) ─────────────────────── */
+.wizard-stepper { display: none; }
+
+
+/* ── Step 1 full-width fixed layout ────────────────────────────── */
+.wizard-step1-layout {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 2rem;
-  width: 100%;
-  max-width: 42rem;
-  margin-left: auto;
-  margin-right: auto;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.wizard-step-line {
-  flex: 1 1 0%;
-  height: 1px;
-  max-width: 80px;
+/* Map fills all remaining space in step 1 */
+.wizard-map-fill {
+  flex: 1 !important;
+  min-height: 0 !important;
+  height: auto !important;
 }
-.wizard-step-line.active  { background-color: var(--primary); }
-.wizard-step-line.inactive { background-color: var(--border); }
 
-.wizard-step-indicator {
+/* Compact location strip shown below search bar */
+.wizard-location-strip {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-.wizard-step-indicator.active  { color: var(--primary); }
-.wizard-step-indicator.inactive { color: var(--text-muted); }
-
-.wizard-step-circle {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.875rem;
-  font-weight: 700;
-  border: 2px solid;
+  padding: 0.45rem 0.75rem;
+  background-color: rgba(22, 163, 74, 0.06);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  border-radius: 0.5rem;
   flex-shrink: 0;
-  transition: all 150ms;
-}
-.wizard-step-circle.current {
-  background-color: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
-}
-.wizard-step-circle.completed {
-  background-color: var(--surface);
-  border-color: var(--primary);
-  color: var(--primary);
-}
-.wizard-step-circle.pending {
-  border-color: var(--border);
-  background-color: var(--surface);
-  color: var(--text-muted);
+  min-width: 0;
 }
 
-.wizard-step-label { font-size: 0.875rem; }
-.wizard-step-label.current { font-weight: 700; color: var(--text-main); }
-.wizard-step-label.active  { font-weight: 600; color: var(--text-main); }
-.wizard-step-label.pending { font-weight: 500; }
+.wizard-location-strip-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-main);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wizard-location-strip-coords {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Actions pinned at bottom */
+.wizard-actions-bottom {
+  flex-shrink: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
 
 /* ── Step Content Layouts ──────────────────────────────────────── */
 /* Default: single column mobile-first */

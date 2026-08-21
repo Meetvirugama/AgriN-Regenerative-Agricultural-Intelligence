@@ -395,16 +395,12 @@
 /* Special pages that manage their own internal layout/scroll */
 @media (min-width: 769px) {
   .dashboard-content:has(.intelligence-app-viewport),
-  .dashboard-content:has(.ask-minimal-viewport) {
+  .dashboard-content:has(.ask-minimal-viewport),
+  .dashboard-content:has(.wizard-container) {
     overflow: hidden !important;
     padding: clamp(12px, 1.5vh, 16px) clamp(16px, 2.5vw, 36px) clamp(12px, 1.5vh, 20px) clamp(16px, 2.5vw, 36px);
     display: flex;
     flex-direction: column;
-  }
-  /* Wizard page: natural scroll */
-  .dashboard-content:has(.wizard-container) {
-    overflow-y: auto !important;
-    padding: 16px 32px 40px 32px;
   }
 }
 
