@@ -5,8 +5,8 @@ export const HealthDimensionCard = ({ title, dimension, icon }) => {
   const [expanded, setExpanded] = useState(false);
 
   let statusColor = "bg-success";
-  if (dimension.severity === "red") statusColor = "bg-danger";
-  if (dimension.severity === "amber") statusColor = "bg-warning";
+  if (dimension?.severity === "red") statusColor = "bg-danger";
+  if (dimension?.severity === "amber") statusColor = "bg-warning";
 
   return (
     <div className="bg-background border border-border flex flex-col">
@@ -20,7 +20,10 @@ export const HealthDimensionCard = ({ title, dimension, icon }) => {
             <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted">
               {title}
             </h3>
-            <p className="font-semibold">{dimension.value}</p>
+            <p className="font-semibold">{dimension?.value ?? dimension?.score ?? "N/A"}</p>
+            {dimension?.label && (
+              <p className="text-xs text-text-muted">{dimension.label}</p>
+            )}
           </div>
         </div>
 
@@ -37,12 +40,12 @@ export const HealthDimensionCard = ({ title, dimension, icon }) => {
       {expanded && (
         <div className="p-4 pt-0 border-t border-border/50 bg-surface text-sm animate-fade-in">
           <ul className="space-y-2 mt-4 list-disc list-inside">
-            {dimension.basis.map((reason, idx) => (
+            {dimension?.basis?.map((reason, idx) => (
               <li key={idx} className="text-text-main">
                 {reason}
               </li>
             ))}
-            {dimension.basis.length === 0 && (
+            {(!dimension?.basis || dimension.basis.length === 0) && (
               <li className="text-text-muted">
                 No specific details available.
               </li>

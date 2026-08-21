@@ -6,10 +6,11 @@ import traceback
 router = APIRouter()
 
 class ClimateRiskRequest(BaseModel):
-    region: str
-    weather_history: str
-    weather_forecast: str
+    field_id: str
     crop_type: str
+    lat: float
+    lng: float
+    sowing_date: str
 
 class ClimateRiskResponse(BaseModel):
     risk_level: str
@@ -19,14 +20,12 @@ class ClimateRiskResponse(BaseModel):
 @router.post("/risk", response_model=ClimateRiskResponse)
 async def assess_climate_risk(request: ClimateRiskRequest):
     """
-    Assesses climate risk for a specific region and crop based on weather data.
+    Assesses climate risk for a specific region and crop based on location data.
     """
     try:
         prompt = f"""
-        You are a climate risk analyst for agriculture. Assess the risk for {request.crop_type} in {request.region}.
-        
-        Recent Weather: {request.weather_history}
-        Forecast: {request.weather_forecast}
+        You are a climate risk analyst for agriculture. Assess the risk for {request.crop_type} at coordinates ({request.lat}, {request.lng}).
+        The crop was sown on {request.sowing_date}.
         
         Provide:
         1. A risk_level (low/medium/high/critical).

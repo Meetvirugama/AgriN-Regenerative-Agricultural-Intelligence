@@ -10,7 +10,7 @@ if (!process.env.GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 // Use unified GEMINI_MODEL env var (same as advisory, chat, disease modules)
-const MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+const MODEL = "gemini-3.6-flash";
 
 /**
  * GET /api/v1/intelligence

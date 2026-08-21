@@ -6,7 +6,7 @@ if (!process.env.GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 // Use env var so all Gemini callers can be standardized via a single config; defaults to gemini-1.5-flash
-const MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+const MODEL = "gemini-3.6-flash";
 
 /**
  * Build the evidence-first advisory prompt.

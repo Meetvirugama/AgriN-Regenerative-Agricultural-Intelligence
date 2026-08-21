@@ -5,7 +5,7 @@ import { layer1Service } from "../field/field.service.js";
 
 const router = Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
-const CHAT_MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+const CHAT_MODEL = "gemini-3.6-flash";
 
 /** System persona for the AgriMesh chat assistant */
 const SYSTEM_PROMPT = `You are AgriMesh, a knowledgeable and friendly agricultural assistant for Indian farmers.

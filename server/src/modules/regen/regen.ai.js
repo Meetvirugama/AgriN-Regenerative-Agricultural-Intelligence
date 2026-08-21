@@ -2,7 +2,7 @@ import { PythonClient } from "../../services/pythonClient.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
-const REGEN_MODEL = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+const REGEN_MODEL = "gemini-3.6-flash";
 
 export class RegenAI {
   /**

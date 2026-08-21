@@ -71,6 +71,7 @@ async function runMigrations() {
       }
     }
 
+    console.log(
       `[Migrate] Done. Ran: ${ran}, Skipped (already applied): ${skipped}`,
     );
   } finally {

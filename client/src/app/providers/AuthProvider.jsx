@@ -14,7 +14,7 @@ const AuthContext = createContext({
   isAuthenticated: false,
   requestOtp: async () => {},
   verifyOtp: async () => {},
-  loginWithPassword: async () => {},
+  loginWithGoogle: async () => {},
   logout: async () => {},
 });
 
@@ -91,17 +91,22 @@ export const AuthProvider = ({ children }) => {
     setFarmer(tokens.farmer);
   }, []);
 
-  // ─── Email/Password Login ─────────────────────────────────────────────────
-  const loginWithPassword = useCallback(async (email, password) => {
-    const tokens = await authApi.login(email, password);
+  // ─── Google Login (Mocked Backend) ─────────────────────────────────────────
+  const loginWithGoogle = useCallback(async (tokenResponse) => {
+    // Here we'd normally send the Google token to the backend,
+    // but since we're removing the backend login for now, we just mock the session.
     const session = {
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      farmer: tokens.farmer,
+      accessToken: tokenResponse.access_token || "mock-google-token",
+      refreshToken: "mock-refresh",
+      farmer: {
+        id: "google-farmer",
+        name: "Google User",
+        email: "google@example.com",
+      },
     };
     saveSession(session);
-    setAccessToken(tokens.accessToken);
-    setFarmer(tokens.farmer);
+    setAccessToken(session.accessToken);
+    setFarmer(session.farmer);
   }, []);
 
   // ─── Logout ───────────────────────────────────────────────────────────────
@@ -128,7 +133,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!farmer,
         requestOtp,
         verifyOtp,
-        loginWithPassword,
+        loginWithGoogle,
         logout,
       }}
     >
