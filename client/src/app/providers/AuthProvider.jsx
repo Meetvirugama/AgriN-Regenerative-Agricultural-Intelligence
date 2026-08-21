@@ -91,22 +91,24 @@ export const AuthProvider = ({ children }) => {
     setFarmer(tokens.farmer);
   }, []);
 
-  // ─── Google Login (Mocked Backend) ─────────────────────────────────────────
+  // ─── Google Login ─────────────────────────────────────────
   const loginWithGoogle = useCallback(async (tokenResponse) => {
-    // Here we'd normally send the Google token to the backend,
-    // but since we're removing the backend login for now, we just mock the session.
-    const session = {
-      accessToken: tokenResponse.access_token || "mock-google-token",
-      refreshToken: "mock-refresh",
-      farmer: {
-        id: "google-farmer",
-        name: "Google User",
-        email: "google@example.com",
-      },
-    };
-    saveSession(session);
-    setAccessToken(session.accessToken);
-    setFarmer(session.farmer);
+    try {
+      const tokens = await authApi.loginWithGoogle(tokenResponse.access_token);
+      
+      const session = {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        farmer: tokens.farmer,
+      };
+      
+      saveSession(session);
+      setAccessToken(session.accessToken);
+      setFarmer(session.farmer);
+    } catch (err) {
+      console.error("Failed to login with Google via backend", err);
+      throw err;
+    }
   }, []);
 
   // ─── Logout ───────────────────────────────────────────────────────────────

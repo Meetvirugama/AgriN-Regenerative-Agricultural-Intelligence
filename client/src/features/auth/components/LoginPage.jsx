@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Leaf, Loader2 } from "lucide-react";
 import { useAuth } from "../../../app/providers/AuthProvider";
-import { useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import "./LoginPage.css";
 
-export const LoginPage = ({ onSuccess }) => {
+const LoginContent = ({ onSuccess }) => {
   const { loginWithGoogle } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -63,5 +63,13 @@ export const LoginPage = ({ onSuccess }) => {
         {error && <p className="error-text" style={{ marginTop: '1rem', textAlign: 'center' }}>{error}</p>}
       </div>
     </div>
+  );
+};
+
+export const LoginPage = ({ onSuccess }) => {
+  return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID || "missing-client-id"}>
+      <LoginContent onSuccess={onSuccess} />
+    </GoogleOAuthProvider>
   );
 };

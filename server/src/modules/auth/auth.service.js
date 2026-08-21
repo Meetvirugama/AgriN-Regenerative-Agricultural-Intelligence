@@ -107,6 +107,49 @@ export class AuthService {
     return tokens;
   }
 
+
+  // ─── Google OAuth ────────────────────────────────────────────────────────
+
+  static async loginWithGoogle(accessToken, meta = {}) {
+    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (!response.ok) {
+      throw new Error("Invalid Google access token");
+    }
+    const userInfo = await response.json();
+    
+    // We use the Google subject ID as the farmer ID (UUID format is required by DB, so we might need a workaround or generate one)
+    // Wait, the DB farmer table uses UUID. userInfo.sub is an integer string!
+    // Let's generate a deterministic UUID from the Google sub!
+    const hash = crypto.createHash('md5').update(userInfo.sub).digest('hex');
+    const deterministicUuid = [
+      hash.substring(0, 8),
+      hash.substring(8, 12),
+      '4' + hash.substring(13, 16),
+      '8' + hash.substring(17, 20),
+      hash.substring(20, 32)
+    ].join('-');
+
+    const farmer = await farmerRepo.upsertFarmer({
+      id: deterministicUuid,
+      phone_number: userInfo.email, // using email as phone_number since it's required and unique
+      name: userInfo.name || "Google User",
+      preferred_language: "en",
+    });
+
+    const tokens = await AuthService.issueTokens(farmer, meta);
+    
+    await authRepo.logEvent("otp_verified", {
+      farmerId: farmer.id,
+      email: userInfo.email,
+      loginMethod: "google",
+      ...meta,
+    });
+    
+    return tokens;
+  }
+
   // ─── JWT ─────────────────────────────────────────────────────────────────
 
   static signAccessToken(farmer) {

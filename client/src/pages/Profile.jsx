@@ -25,10 +25,11 @@ import {
   Camera
 } from "lucide-react";
 import { Link } from "react-router-dom";
-
+import { useAuth } from "../app/providers/AuthProvider";
 import "./Profile.css";
 
 export const Profile = () => {
+  const { farmer } = useAuth();
   return (
     <div className="profile-container">
       
@@ -58,14 +59,14 @@ export const Profile = () => {
               </div>
               
               <div className="profile-name-group">
-                <h2 className="profile-name">Ramesh Kumar</h2>
+                <h2 className="profile-name">{farmer?.name || "Farmer"}</h2>
                 <span className="profile-badge">Farmer</span>
               </div>
               
               <div className="profile-contact-list">
                 <div className="profile-contact-item">
                   <Mail size={16} className="shrink-0" />
-                  <span className="truncate">ramesh.kumar@example.com</span>
+                  <span className="truncate">{farmer?.email || "farmer@example.com"}</span>
                 </div>
                 <div className="profile-contact-item">
                   <Phone size={16} className="shrink-0" />

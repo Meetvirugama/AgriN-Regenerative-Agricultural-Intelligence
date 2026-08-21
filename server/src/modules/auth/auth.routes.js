@@ -131,6 +131,34 @@ router.post(
 );
 
 /**
+ * POST /api/auth/login/google
+ *
+ * Exchanges a Google Access Token for a local backend JWT session.
+ */
+router.post(
+  "/auth/login/google",
+  validate({ body: z.object({ access_token: z.string() }) }),
+  async (req, res, next) => {
+    try {
+      const tokens = await AuthService.loginWithGoogle(
+        req.body.access_token,
+        {
+          userAgent: req.headers["user-agent"],
+          ipAddress: req.ip,
+        }
+      );
+      res.json(tokens);
+    } catch (err) {
+      if (err.message?.includes("Invalid Google access token")) {
+        res.status(401).json({ error: { message: err.message, status: 401 } });
+      } else {
+        next(err);
+      }
+    }
+  }
+);
+
+/**
  * POST /api/auth/refresh
  *
  * Exchange a valid refresh token for a new access + refresh token pair.

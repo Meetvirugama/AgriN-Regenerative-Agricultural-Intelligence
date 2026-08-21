@@ -74,7 +74,7 @@ const FooterNavItem = ({ to, icon: Icon, label, onClick }) => {
 export const FarmerShell = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, farmer } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [alerts, setAlerts] = useState([]);
@@ -217,7 +217,7 @@ export const FarmerShell = () => {
                           <UserIcon size={14} isHovered={isProfileHovered} />
                         </div>
                         <span className="dashboard-header-action">
-                          Ramesh <DownChevron size={14} isHovered={isProfileHovered} />
+                          {farmer?.name?.split(' ')[0] || "Farmer"} <DownChevron size={14} isHovered={isProfileHovered} />
                         </span>
                       </div>
 

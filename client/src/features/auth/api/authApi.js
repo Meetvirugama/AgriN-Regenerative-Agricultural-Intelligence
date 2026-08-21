@@ -22,6 +22,12 @@ export const authApi = {
       body: JSON.stringify({ phone_number: phoneNumber }),
     }),
 
+  loginWithGoogle: (accessToken) =>
+    apiFetch("/auth/login/google", {
+      method: "POST",
+      body: JSON.stringify({ access_token: accessToken }),
+    }),
+
   login: (email, password) =>
     apiFetch("/auth/login", {
       method: "POST",

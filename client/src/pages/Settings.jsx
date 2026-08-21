@@ -15,9 +15,11 @@ import {
   Info
 } from "lucide-react";
 
+import { useAuth } from "../app/providers/AuthProvider";
 import "./Settings.css";
 
 export const Settings = () => {
+  const { farmer } = useAuth();
   return (
     <div className="settings-container">
       
@@ -63,12 +65,12 @@ export const Settings = () => {
             {/* Form Group */}
             <div className="settings-form-row">
               <label className="settings-label">Full Name</label>
-              <input type="text" defaultValue="Ramesh Kumar" className="settings-input" />
+              <input type="text" defaultValue={farmer?.name || ""} placeholder="Full Name" className="settings-input" />
             </div>
 
             <div className="settings-form-row">
               <label className="settings-label">Email Address</label>
-              <input type="email" defaultValue="ramesh.kumar@example.com" className="settings-input" />
+              <input type="email" defaultValue={farmer?.email || ""} placeholder="Email Address" className="settings-input" />
             </div>
 
             <div className="settings-form-row">

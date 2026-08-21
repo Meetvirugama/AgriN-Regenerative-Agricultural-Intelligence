@@ -7,7 +7,7 @@ import App from "./App.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID || "missing-client-id.apps.googleusercontent.com"}>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_EE_CLIENT_ID || "missing-client-id.apps.googleusercontent.com"}>
       <EarthEngineProvider>
         <App />
       </EarthEngineProvider>

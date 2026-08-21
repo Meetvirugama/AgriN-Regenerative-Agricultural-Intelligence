@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { cropApi } from "../features/crop-context/api/cropApi";
+import { useAuth } from "../app/providers/AuthProvider";
 
 // Animated Hover Components
 import Cloud2Icon from "../components/hover-ui/cloud-2-icon";
@@ -43,6 +44,7 @@ const HomeAlertItem = ({ alert }) => {
 
 export const Home = () => {
   const navigate = useNavigate();
+  const { farmer } = useAuth();
   const [fields, setFields] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +86,7 @@ export const Home = () => {
   return (
     <div className="home-container">
       <section className="home-header">
-        <h1>Good morning, Ramesh</h1>
+        <h1>Good morning, {farmer?.name?.split(' ')[0] || "Farmer"}</h1>
         <p>Here's what's happening in your fields today.</p>
       </section>
 
