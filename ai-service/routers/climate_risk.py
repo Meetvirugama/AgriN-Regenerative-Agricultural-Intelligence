@@ -40,21 +40,21 @@ HISTORICAL CONTEXT
 ------------------
 {request.historical_context or "Not provided"}
 
-Return practical agricultural advice.
+Return practical agricultural advice based on the supplied weather forecast.
 
 severity must be one of:
 healthy, info, attention, urgent
 
 riskType should be a short risk name such as:
-Heatwave, Drought, Frost, Excess Rainfall, Humidity
+Heatwave, Drought, Frost, Excess Rainfall, High Humidity, Favorable
 
 Return:
 - severity
 - riskType
-- timeframe
+- timeframe (e.g. Next 3 days)
 - protectiveAction
-- primaryRisks
-- mitigationStrategies
+- primaryRisks (list of strings)
+- generatedAt (leave empty or use current time)
 """
 
         result = generate_text(

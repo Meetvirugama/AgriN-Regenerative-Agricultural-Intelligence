@@ -406,8 +406,7 @@ class ClimateRiskRequest(BaseModel):
 
     lat: float
     lng: float
-
-    sowing_date: str
+    sowing_date: Optional[str] = None
 
     weather_summary: Optional[Dict[str, Any]] = None
     historical_context: Optional[Dict[str, Any]] = None
