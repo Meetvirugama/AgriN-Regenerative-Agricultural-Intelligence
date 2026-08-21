@@ -55,9 +55,10 @@ export const Intelligence = () => {
 
   // Dynamic 5-day weather forecast days
   const dynamicForecastDays = useMemo(() => {
-    if (data?.weatherData?.forecasts?.length > 0) {
+    const selectedWeather = Array.isArray(data?.weatherData) ? data.weatherData.find(w => w.available) : null;
+    if (selectedWeather?.forecasts?.length > 0) {
       const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      return data.weatherData.forecasts.map((f, i) => {
+      return selectedWeather.forecasts.map((f, i) => {
         const d = new Date(f.date);
         const isToday = i === 0;
         return {
@@ -665,7 +666,11 @@ export const Intelligence = () => {
         {/* ===================================================================
             TAB 3: WEATHER & MICROCLIMATE
            =================================================================== */}
-        {activeTab === "weather" && (
+        {activeTab === "weather" && (() => {
+          const selectedWeather = Array.isArray(data?.weatherData) ? data.weatherData.find(w => w.available) : null;
+          const current = selectedWeather?.current;
+          
+          return (
           <div className="intelligence-view-grid weather-view animate-fade-in">
             {/* Current Weather Telemetry */}
             <div className="intelligence-compact-card weather-current-card">
@@ -682,16 +687,16 @@ export const Intelligence = () => {
               <div className="weather-telemetry-body">
                 <div className="weather-primary-temp">
                   <div className="weather-sun-icon-box">
-                    {data?.weatherData?.current?.rainfall_mm > 0 ? (
+                    {current?.rainfallMm > 0 ? (
                       <CloudRain size={34} className="text-blue-500" />
                     ) : (
                       <Sun size={34} className="text-amber-500" />
                     )}
                   </div>
                   <div>
-                    <h3 className="weather-temp-num">{Math.round(data?.weatherData?.current?.temp ?? 32)}°C</h3>
+                    <h3 className="weather-temp-num">{Math.round(current?.tempMax ?? 32)}°C</h3>
                     <span className="weather-cond-label">
-                      {data?.weatherData?.current?.rainfall_mm > 0 ? "Rain / Showers" : "Sunny & Clear Sky"}
+                      {current?.rainfallMm > 0 ? "Rain / Showers" : "Sunny & Clear Sky"}
                     </span>
                   </div>
                 </div>
@@ -702,7 +707,7 @@ export const Intelligence = () => {
                       <Droplet size={14} className="text-blue-500" />
                       <span>Humidity</span>
                     </div>
-                    <strong className="sensor-num">{Math.round(data?.weatherData?.current?.humidity ?? 42)}%</strong>
+                    <strong className="sensor-num">{Math.round(current?.humidity ?? 42)}%</strong>
                   </div>
 
                   <div className="weather-sensor-cell">
@@ -710,7 +715,7 @@ export const Intelligence = () => {
                       <Wind size={14} className="text-teal-600" />
                       <span>Wind Speed</span>
                     </div>
-                    <strong className="sensor-num">{data?.weatherData?.current?.windSpeed ?? 12} km/h NW</strong>
+                    <strong className="sensor-num">{current?.windSpeed ?? 12} km/h</strong>
                   </div>
 
                   <div className="weather-sensor-cell">
@@ -726,7 +731,7 @@ export const Intelligence = () => {
                       <CloudRain size={14} className="text-indigo-500" />
                       <span>Rain Risk</span>
                     </div>
-                    <strong className="sensor-num">{data?.weatherData?.current?.rainRisk ?? "10% Low"}</strong>
+                    <strong className="sensor-num">{current?.rainRisk ?? "10% Low"}</strong>
                   </div>
                 </div>
               </div>
@@ -769,7 +774,8 @@ export const Intelligence = () => {
               </div>
             </div>
           </div>
-        )}
+          );
+        })}
       </main>
     </div>
   );

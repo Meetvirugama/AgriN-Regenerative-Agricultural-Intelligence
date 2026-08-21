@@ -3,6 +3,7 @@ import { cropStateRepo } from "../../db/repositories/farmerRepository.js";
 import { weatherRepo } from "../../db/repositories/weatherRepository.js";
 import { soilService } from "../soil/soil.service.js";
 import { layer1Service } from "../field/field.service.js";
+import { query } from "../../db/connection.js";
 
 /**
  * HealthScoreService — Layer 06
@@ -184,7 +185,7 @@ export class HealthScoreService {
       : score >= 30 ? "poor"
       : "critical";
 
-    return {
+    const result = {
       fieldId,
       computedAt: new Date().toISOString(),
       score,          // 0–100
@@ -197,6 +198,25 @@ export class HealthScoreService {
       },
       evidence,       // Full trail — surfaces in UI and Gemini advisory
     };
+
+    // Store observation in the history table to build a real trend
+    try {
+      await query(
+        `INSERT INTO field_health_history (
+          field_id, score, dimensions, source, observed_at
+         ) VALUES ($1, $2, $3, $4, NOW())`,
+        [
+          fieldId,
+          score,
+          JSON.stringify(result.components),
+          "health_score"
+        ]
+      );
+    } catch (dbErr) {
+      console.warn(`[HealthScoreService] Failed to save history for field ${fieldId}:`, dbErr.message);
+    }
+
+    return result;
   }
 
   _estimateStage(days, cropType) {
