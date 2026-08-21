@@ -23,13 +23,33 @@ def utc_now_iso():
     )
 
 
+def _get(d, *keys, default=None):
+    """
+    Look up the first present key from `keys` in dict `d`.
+
+    The Node gateway (satellite.service.js `_formatTile`) sends tiles using
+    the DB's snake_case column aliases (observation_date, ndvi_mean,
+    ndmi_mean, ...), not the camelCase names used internally by the raw
+    provider objects (captureDate, ndviMean, moistureProxy, ...). This
+    router previously only looked up the camelCase names, so `.get(...)`
+    always missed and silently fell back to `None`/`0` for every tile —
+    trend and anomaly detection ran, but always against zeroed-out data,
+    with no error raised. Checking both naming conventions here fixes that
+    without requiring the two services to agree on a single casing.
+    """
+    for key in keys:
+        if key in d and d[key] is not None:
+            return d[key]
+    return default
+
+
 def get_previous_tile(history, current_date):
     if not history:
         return None
 
     sorted_history = sorted(
-        [h for h in history if h.get("captureDate") != current_date],
-        key=lambda item: item.get("captureDate", ""),
+        [h for h in history if _get(h, "observation_date", "captureDate") != current_date],
+        key=lambda item: _get(item, "observation_date", "captureDate", default=""),
         reverse=True,
     )
 
@@ -48,9 +68,11 @@ async def process_satellite_data(
 
         current = request.current_tile
 
+        current_date = _get(current, "observation_date", "captureDate")
+
         previous = get_previous_tile(
             request.history,
-            current.get("captureDate")
+            current_date
         )
 
         if previous is None:
@@ -62,19 +84,19 @@ async def process_satellite_data(
             )
 
         current_ndvi = float(
-            current.get("ndviMean", 0)
+            _get(current, "ndvi_mean", "ndviMean", default=0)
         )
 
         previous_ndvi = float(
-            previous.get("ndviMean", 0)
+            _get(previous, "ndvi_mean", "ndviMean", default=0)
         )
 
         current_moisture = float(
-            current.get("moistureProxy", 0)
+            _get(current, "ndmi_mean", "moisture_proxy", "moistureProxy", default=0)
         )
 
         previous_moisture = float(
-            previous.get("moistureProxy", 0)
+            _get(previous, "ndmi_mean", "moisture_proxy", "moistureProxy", default=0)
         )
 
         ndvi_diff = (
@@ -120,7 +142,7 @@ async def process_satellite_data(
 
         trend = {
             "fieldId": request.field_id,
-            "date": current.get("captureDate"),
+            "date": current_date,
             "ndviTrendDirection": ndvi_direction,
             "moistureTrend": moisture_direction,
             "ndviValue": current_ndvi,
@@ -135,25 +157,27 @@ async def process_satellite_data(
 
         anomalies = []
 
-        current_regions = current.get(
-            "ndviBySubregion",
-            [],
+        current_regions = _get(
+            current,
+            "ndvi_by_subregion", "ndviBySubregion",
+            default=[],
         )
 
-        previous_regions = previous.get(
-            "ndviBySubregion",
-            [],
+        previous_regions = _get(
+            previous,
+            "ndvi_by_subregion", "ndviBySubregion",
+            default=[],
         )
 
         previous_map = {
-            region.get("subregionId"): region
+            _get(region, "subregion_id", "subregionId"): region
             for region in previous_regions
         }
 
         for region in current_regions:
 
-            subregion_id = region.get(
-                "subregionId"
+            subregion_id = _get(
+                region, "subregion_id", "subregionId"
             )
 
             previous_region = previous_map.get(
@@ -164,11 +188,11 @@ async def process_satellite_data(
                 continue
 
             previous_ndvi = float(
-                previous_region.get("ndvi", 0)
+                _get(previous_region, "ndvi", default=0)
             )
 
             current_ndvi = float(
-                region.get("ndvi", 0)
+                _get(region, "ndvi", default=0)
             )
 
             if previous_ndvi <= 0:
@@ -192,7 +216,7 @@ async def process_satellite_data(
                     f"anomaly-"
                     f"{request.field_id}-"
                     f"{subregion_id}-"
-                    f"{current.get('captureDate')}"
+                    f"{current_date}"
                 ),
 
                 "fieldId": request.field_id,
@@ -204,7 +228,7 @@ async def process_satellite_data(
                     region.get("label"),
 
                 "detectedDate":
-                    current.get("captureDate"),
+                    current_date,
 
                 "anomalyType":
                     "vegetation_decline",

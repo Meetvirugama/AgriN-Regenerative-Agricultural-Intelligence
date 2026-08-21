@@ -29,9 +29,15 @@ async def generate_regen_plan(
             {},
         )
 
+        # Node's regen.service.js builds context as { crop_type, soil, history }.
+        # This handler was reading "crop_history" and "current_crop", which
+        # Node never sends — so the cover-crop recommendation and the
+        # next-season-option suggestion were always skipped, regardless of
+        # the field's actual crop history. Accept both the current Node key
+        # names and the originally-intended ones so either caller works.
         crop_history = context.get(
             "crop_history",
-            [],
+            context.get("history", []),
         )
 
         practices = []
@@ -82,7 +88,8 @@ async def generate_regen_plan(
         options = []
 
         current_crop = context.get(
-            "current_crop"
+            "current_crop",
+            context.get("crop_type"),
         )
 
         if current_crop:
