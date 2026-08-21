@@ -18,27 +18,26 @@ import {
   Loader2,
   ImagePlus
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { cropApi } from "../features/crop-context/api/cropApi";
 
 import "./Diagnosis.css";
 
 export const Diagnosis = () => {
-  const [result, setResult] = useState(null);
-  const [activeTab, setActiveTab] = useState('upload'); // 'upload', 'result', 'previous'
+  const location = useLocation();
+  const [result, setResult] = useState(location.state?.result || null);
+  const [activeTab, setActiveTab] = useState(location.state?.result ? 'result' : 'upload');
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [history, setHistory] = useState([
-    {
-      disease: "Leaf Rust (Puccinia triticina)",
-      confidence: 85,
-      crop: "Wheat",
-      date: "12 May 2025, 02:45 PM",
-      id: "DIAG-2025-0512-0245",
-      imageUrl: "https://images.unsplash.com/photo-1587334274328-64186a80aeee?w=800&q=80"
+  
+  React.useEffect(() => {
+    if (location.state?.result) {
+      setResult(location.state.result);
+      setActiveTab('result');
     }
-  ]);
+  }, [location.state]);
+  const [history, setHistory] = useState([]);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 

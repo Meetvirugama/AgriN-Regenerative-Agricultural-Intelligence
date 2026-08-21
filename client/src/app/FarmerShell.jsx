@@ -23,7 +23,6 @@ export const FarmerShell = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   React.useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -96,64 +95,17 @@ export const FarmerShell = () => {
         </aside>
 
         <main className="dashboard-main">
-          {location.pathname !== '/profile' && (
-            <header className="dashboard-header">
-              {/* Mobile Menu Toggle - Always visible on mobile */}
-              <button 
-                className="md:hidden p-2 -ml-4 mr-2 text-text-main hover:bg-secondary rounded-lg flex-shrink-0"
-                onClick={() => setIsMobileMenuOpen(true)}
-              >
-                <Menu size={24} />
-              </button>
+          <header className="dashboard-header">
+            {/* Mobile Menu Toggle - Always visible on mobile */}
+            <button 
+              className="md:hidden p-2 -ml-4 mr-2 text-text-main hover:bg-secondary rounded-lg flex-shrink-0"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
 
-              {location.pathname === '/alerts' ? (
-                <div id="alerts-header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
-              ) : (
-              <>
-              <div className="dashboard-header-search">
-                <Search size={16} />
-                <input 
-                  type="text" 
-                  placeholder="Search fields, crops, recommendations..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && searchQuery.trim()) {
-                      navigate(`/fields?search=${encodeURIComponent(searchQuery)}`);
-                      setSearchQuery("");
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="dashboard-header-actions">
-                <button className="dashboard-header-action alerts" onClick={() => navigate('/alerts')}>
-                  <div className="dashboard-bell-wrapper">
-                    <Bell size={18} />
-                    <span className="dashboard-bell-badge">3</span>
-                  </div>
-                  <span>Alerts</span>
-                </button>
-                
-                <button className="dashboard-header-action language" onClick={() => alert('Language settings coming soon!')}>
-                  <Globe size={16} />
-                  <span>English</span>
-                  <ChevronDown size={14} />
-                </button>
-                
-                <div className="dashboard-header-profile" onClick={() => navigate('/profile')}>
-                  <div className="dashboard-header-avatar">
-                    <User size={14} />
-                  </div>
-                  <span className="dashboard-header-action">
-                    Ramesh <ChevronDown size={14} />
-                  </span>
-                </div>
-              </div>
-              </>
-              )}
-            </header>
-          )}
+            <div id="header-portal" style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
+          </header>
 
           <div className="dashboard-content">
             <Outlet />

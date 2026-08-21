@@ -93,7 +93,7 @@
 .diagnosis-header-tab {
   background: none;
   border: none;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
   padding: 0.5rem 0;
   cursor: pointer;
@@ -616,13 +616,17 @@
 
 /* HISTORY LIST STYLES */
 .diagnosis-history-container {
-  padding: 1rem 0;
+  padding: 1.5rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  margin-top: 1rem;
 }
 
 .diagnosis-history-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   color: var(--text-main);
 }
 
@@ -630,6 +634,9 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
 }
 
 .diagnosis-history-card {
