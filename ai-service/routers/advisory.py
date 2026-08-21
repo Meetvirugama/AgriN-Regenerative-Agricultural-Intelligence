@@ -38,9 +38,9 @@ FIELD
 Crop: {request.crop_type}
 Growth stage: {request.crop_stage}
 
-HEALTH SCORE
-------------
-{request.health_score_summary}
+SATELLITE DATA
+--------------
+{request.satellite_summary}
 
 WEATHER
 -------
@@ -53,10 +53,6 @@ SOIL
 FIELD CONTEXT
 -------------
 {field_context}
-
-FARMER OBSERVATION
-------------------
-{request.farmer_observation or "No direct farmer observation provided."}
 
 LANGUAGE
 --------
@@ -71,14 +67,13 @@ REASONING RULES
 4. Give the most useful practical action (action_text).
 5. Give a concrete timeframe (action_deadline).
 6. State what the farmer should monitor next (monitor_text).
-7. Optionally include a historical parallel if relevant.
-8. Include source_layers (e.g. Weather, Soil, Satellite).
-9. Do not invent measurements, weather values, or soil values.
-10. If evidence is insufficient, explicitly say so.
-11. Prefer conservative recommendations when uncertainty is high.
-12. Respond naturally in the requested farmer language.
+7. Include source_layers (e.g. Weather, Soil, Satellite).
+8. Do not invent measurements, weather values, or soil values.
+9. If evidence is insufficient, explicitly say so.
+10. Prefer conservative recommendations when uncertainty is high.
+11. Respond naturally in the requested farmer language.
 
-Return the required structured response.
+Return the required structured JSON response matching the schema.
 """
 
         result = generate_text(

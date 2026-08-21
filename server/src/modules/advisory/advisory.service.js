@@ -2,7 +2,7 @@ import { layer1Service } from "../field/field.service.js";
 import { layer3Service } from "../weather/weather.service.js";
 import { satelliteService } from "../satellite/satellite.service.js";
 import { soilService } from "../soil/soil.service.js";
-import { generateAdvisoryWithGemini } from "./gemini.client.js";
+import { PythonClient } from "../../services/pythonClient.js";
 import { query, queryOne } from "../../db/connection.js";
 
 /**
@@ -83,7 +83,7 @@ class AdvisoryService {
       console.warn(`[Advisory] Soil unavailable for field ${fieldId}: ${err.message}`);
     }
 
-    // ─── 5. Assemble and call Gemini ─────────────────────────────────────────
+    // ─── 5. Assemble and call Python AI Service ──────────────────────────────
     const evidence = {
       crop: cropEvidence,
       weather: weatherEvidence,
@@ -91,7 +91,15 @@ class AdvisoryService {
       soil: soilEvidence,
     };
 
-    const geminiAdvisory = await generateAdvisoryWithGemini(evidence);
+    const geminiAdvisory = await PythonClient.generateAdvisory(
+      fieldId,
+      field.crop_type,
+      stage,
+      satelliteEvidence ? JSON.stringify(satelliteEvidence) : "Unavailable",
+      weatherEvidence ? JSON.stringify(weatherEvidence) : "Unavailable",
+      soilEvidence ? JSON.stringify(soilEvidence) : "Unavailable",
+      "en",
+    );
 
     // ─── 6. Persist advisory ─────────────────────────────────────────────────
     const advisory = await this._saveAdvisory(fieldId, geminiAdvisory, evidence);
@@ -147,12 +155,12 @@ class AdvisoryService {
         [
           fieldId,
           "ai_generated",
-          gemini.what,
-          gemini.why,
+          gemini.what_text || gemini.what_is_happening || gemini.what,
+          gemini.why_text || gemini.why,
           gemini.severity,
-          gemini.action,
-          gemini.deadline,
-          gemini.monitor,
+          gemini.action_text || gemini.recommended_action || gemini.action,
+          gemini.action_deadline || gemini.when || gemini.deadline,
+          gemini.monitor_text || gemini.monitor,
           JSON.stringify(["weather", "satellite", "soil"]),
           JSON.stringify({ gemini_confidence: gemini.confidence, evidence: gemini.evidence }),
         ],
@@ -165,12 +173,12 @@ class AdvisoryService {
       return {
         id: `adv-${Date.now()}`,
         field_id: fieldId,
-        what_text: gemini.what,
-        why_text: gemini.why,
+        what_text: gemini.what_text || gemini.what_is_happening || gemini.what,
+        why_text: gemini.why_text || gemini.why,
         severity: gemini.severity,
-        action_text: gemini.action,
-        action_deadline: gemini.deadline,
-        monitor_text: gemini.monitor,
+        action_text: gemini.action_text || gemini.recommended_action || gemini.action,
+        action_deadline: gemini.action_deadline || gemini.when || gemini.deadline,
+        monitor_text: gemini.monitor_text || gemini.monitor,
         source_layers: ["weather", "satellite", "soil"],
         gemini_confidence: gemini.confidence,
         confidence_reason: gemini.confidence_reason,

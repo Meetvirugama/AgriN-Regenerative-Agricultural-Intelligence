@@ -288,7 +288,7 @@ class AdvisoryRequest(BaseModel):
     crop_type: str
     crop_stage: str
 
-    health_score_summary: Any
+    satellite_summary: Any
     weather_summary: Any
     soil_summary: Any
 
@@ -299,7 +299,7 @@ class AdvisoryRequest(BaseModel):
 
 
 class AdvisoryResponse(BaseModel):
-    id: str
+    id: Optional[str] = None
     severity: str
 
     action_text: str
