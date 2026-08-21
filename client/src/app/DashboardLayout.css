@@ -396,7 +396,8 @@
 @media (min-width: 769px) {
   .dashboard-content:has(.intelligence-app-viewport),
   .dashboard-content:has(.ask-minimal-viewport),
-  .dashboard-content:has(.wizard-container) {
+  .dashboard-content:has(.wizard-container),
+  .dashboard-content:has(.add-field-page) {
     overflow: hidden !important;
     padding: clamp(12px, 1.5vh, 16px) clamp(16px, 2.5vw, 36px) clamp(12px, 1.5vh, 20px) clamp(16px, 2.5vw, 36px);
     display: flex;

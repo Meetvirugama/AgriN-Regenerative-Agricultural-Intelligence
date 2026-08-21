@@ -3,6 +3,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
+  Navigate,
   useNavigate,
 } from "react-router-dom";
 import { FarmerShell } from "./app/FarmerShell";
@@ -16,7 +17,9 @@ import { Alerts } from "./pages/Alerts";
 import { Diagnosis } from "./pages/Diagnosis";
 import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/Settings";
-import { AddFieldWizard } from "./features/field-management/components/AddFieldWizard";
+import { AddFieldStep1Location } from "./features/field-management/components/AddFieldStep1Location";
+import { AddFieldStep2Boundary } from "./features/field-management/components/AddFieldStep2Boundary";
+import { AddFieldStep3Details } from "./features/field-management/components/AddFieldStep3Details";
 import { Onboarding } from "./pages/Onboarding";
 import { ExtensionDashboard } from "./features/escalation-dashboard";
 import { AuthProvider } from "./app/providers/AuthProvider";
@@ -69,7 +72,11 @@ function AppRoutes() {
           <Route path="settings" element={<Settings />} />
           <Route path="fields">
             <Route index element={<MyFields />} />
-            <Route path="add" element={<AddFieldWizard />} />
+            {/* Add Field — 3 separate pages, connected by URL params */}
+            <Route path="add" element={<Navigate to="/fields/add/location" replace />} />
+            <Route path="add/location" element={<AddFieldStep1Location />} />
+            <Route path="add/boundary" element={<AddFieldStep2Boundary />} />
+            <Route path="add/details" element={<AddFieldStep3Details />} />
             <Route path=":fieldId" element={<Field />} />
           </Route>
         </Route>

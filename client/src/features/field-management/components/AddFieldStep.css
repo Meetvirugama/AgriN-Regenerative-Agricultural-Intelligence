@@ -1,0 +1,395 @@
+/* ================================================================
+   AddFieldStep.css — Shared styles for all 3 Add Field steps
+   ================================================================ */
+
+/* ── Page shell ───────────────────────────────────────────────── */
+.add-field-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  min-width: 0;
+  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Top bar: back + title + step pill ───────────────────────── */
+.add-field-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 0 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.add-field-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.add-field-back-btn:hover {
+  background-color: var(--secondary);
+  color: var(--text-main);
+}
+
+.add-field-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  flex: 1;
+  text-align: center;
+  margin: 0;
+}
+
+.add-field-step-pill {
+  position: absolute;
+  right: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* ── Progress bar ─────────────────────────────────────────────── */
+.add-field-progress {
+  height: 3px;
+  background-color: var(--border);
+  border-radius: 9999px;
+  margin-top: 0.6rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.add-field-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+  border-radius: 9999px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Body — grows to fill ─────────────────────────────────────── */
+.add-field-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: 0.75rem;
+}
+
+/* ── Action bar — pinned at bottom ───────────────────────────── */
+.add-field-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.add-field-btn-outline {
+  padding: 0.6rem 1.5rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  font-weight: 600;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 150ms;
+  font-family: inherit;
+}
+.add-field-btn-outline:hover { background-color: var(--secondary); }
+.add-field-btn-outline:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.add-field-btn-solid {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.75rem;
+  background-color: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 150ms, box-shadow 150ms;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+  font-family: inherit;
+}
+.add-field-btn-solid:hover { background-color: #15803d; }
+.add-field-btn-solid:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Map wrapper ──────────────────────────────────────────────── */
+.add-field-map-wrap {
+  flex: 1;
+  min-height: 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+/* ── Search bar ───────────────────────────────────────────────── */
+.add-field-search-bar {
+  display: flex;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.add-field-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.add-field-search-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.add-field-search-input {
+  width: 100%;
+  padding: 0.65rem 1rem 0.65rem 2.5rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: all 150ms;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.add-field-search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+}
+
+.add-field-gps-btn {
+  width: 2.75rem;
+  height: 2.75rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background-color 150ms;
+  flex-shrink: 0;
+}
+.add-field-gps-btn:hover { background-color: var(--secondary); }
+
+/* ── Location strip ───────────────────────────────────────────── */
+.add-field-location-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.875rem;
+  background-color: rgba(22, 163, 74, 0.06);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  border-radius: 0.625rem;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.add-field-location-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-main);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.add-field-location-coords {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── Drawing toolbar (Step 2) ─────────────────────────────────── */
+.add-field-draw-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.add-field-draw-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-main);
+}
+.add-field-draw-btn:hover { background-color: var(--secondary); }
+.add-field-draw-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.add-field-draw-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.add-field-draw-btn.primary:hover { background: #15803d; }
+.add-field-draw-btn.success { background: #22c55e; color: #fff; border-color: #22c55e; }
+.add-field-draw-btn.success:hover { background: #16a34a; }
+.add-field-draw-btn.danger { color: var(--danger); border-color: rgba(239,68,68,0.3); }
+.add-field-draw-btn.danger:hover { background: rgba(239,68,68,0.07); }
+
+.add-field-draw-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.875rem;
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Map stat overlay (Step 2) */
+.add-field-map-stat {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  padding: 0.6rem 0.875rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+.add-field-map-stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.add-field-map-stat-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+/* ── Form (Step 3) ───────────────────────────────────────────── */
+.add-field-form-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+.add-field-form-scroll::-webkit-scrollbar { width: 5px; }
+.add-field-form-scroll::-webkit-scrollbar-track { background: transparent; }
+.add-field-form-scroll::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+
+.add-field-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.add-field-form-grid .full { grid-column: 1 / -1; }
+
+.add-field-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.add-field-form-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.add-field-form-required { color: var(--danger); }
+.add-field-form-optional { color: var(--text-muted); font-weight: 500; font-size: 0.72rem; margin-left: 0.2rem; }
+
+.add-field-form-input,
+.add-field-form-select,
+.add-field-form-textarea {
+  width: 100%;
+  padding: 0.65rem 0.875rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: all 150ms;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.add-field-form-input:focus,
+.add-field-form-select:focus,
+.add-field-form-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+}
+.add-field-form-input:disabled {
+  background-color: var(--secondary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+.add-field-form-select { appearance: none; cursor: pointer; }
+.add-field-form-textarea { resize: vertical; min-height: 80px; }
+
+.add-field-icon-input-wrap { position: relative; }
+.add-field-icon-input-wrap .add-field-form-input,
+.add-field-icon-input-wrap .add-field-form-select { padding-left: 2.5rem; }
+.add-field-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-muted);
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .add-field-form-grid { grid-template-columns: 1fr; }
+  .add-field-form-grid .full { grid-column: 1 / -1; }
+  .add-field-title { font-size: 0.9rem; }
+  .add-field-location-coords { display: none; }
+}
