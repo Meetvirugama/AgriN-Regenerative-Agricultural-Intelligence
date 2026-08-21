@@ -20,6 +20,7 @@ import alertsRoutes from "./modules/alerts/alerts.routes.js";
 import chatRoutes from "./modules/chat/chat.routes.js";
 import askRoutes from "./modules/ask/ask.routes.js";
 import intelligenceRoutes from "./modules/intelligence/intelligence.routes.js";
+import profileRoutes from "./modules/profile/profile.routes.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { checkDatabaseHealth } from "./db/connection.js";
@@ -121,8 +122,7 @@ app.use("/api/v1/alerts", requireAuth, alertsRoutes);
 app.use("/api/v1/chat", requireAuth, chatRoutes); // Keep legacy for backwards compatibility
 app.use("/api/v1/ask", requireAuth, askRoutes); // New structured Ask API
 app.use("/api/v1/intelligence", requireAuth, intelligenceRoutes);
-
-
+app.use("/api/v1/profile", requireAuth, profileRoutes);
 
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────

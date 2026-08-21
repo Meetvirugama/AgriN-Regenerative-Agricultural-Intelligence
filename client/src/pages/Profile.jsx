@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { 
@@ -23,16 +23,80 @@ import {
   ArrowRight,
   X,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  Loader2
 } from "lucide-react";
+import { cropApi } from "../features/crop-context/api/cropApi";
 import "./Profile.css";
 
 export const Profile = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [portalTarget, setPortalTarget] = useState(null);
+  
+  // Real state
+  const [profileData, setProfileData] = useState(null);
+  const [profileStats, setProfileStats] = useState({
+    fields: 0,
+    acres: 0,
+    crops: 0,
+    aiInsights: 0,
+  });
+  const [farmingHistory, setFarmingHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [editFormData, setEditFormData] = useState({});
   const [profileImage, setProfileImage] = useState(null);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProfile = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const data = await cropApi.getProfile();
+
+        if (!mounted) return;
+
+        setProfileData(data.profile);
+        setProfileStats(data.stats);
+        setFarmingHistory(data.history || []);
+      } catch (error) {
+        console.error("Failed to load profile:", error);
+        if (mounted) {
+          setError("Unable to load your profile.");
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setPortalTarget(document.getElementById('header-portal'));
+    
+    if (isEditModalOpen || isHistoryModalOpen) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [isEditModalOpen, isHistoryModalOpen]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -47,37 +111,32 @@ export const Profile = () => {
     }
   };
 
-  const [profileData, setProfileData] = useState({
-    name: "Ramesh Kumar",
-    phone: "+91 98765 43210",
-    email: "ramesh.kumar@example.com",
-    location: "Madhopur, Uttar Pradesh"
-  });
-  
-  const [editFormData, setEditFormData] = useState(profileData);
-  
   const handleOpenEditModal = () => {
-    setEditFormData(profileData);
+    setEditFormData(profileData || {});
     setIsEditModalOpen(true);
   };
   
-  const handleSaveProfile = () => {
-    setProfileData(editFormData);
-    setIsEditModalOpen(false);
-  };
-
-  React.useEffect(() => {
-    setPortalTarget(document.getElementById('header-portal'));
-    
-    if (isEditModalOpen || isHistoryModalOpen) {
-      document.body.classList.add('modal-open');
-    } else {
-      document.body.classList.remove('modal-open');
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true);
+  
+      const response = await cropApi.updateProfile({
+        name: editFormData.name,
+        phone: editFormData.phone,
+        email: editFormData.email,
+        location: editFormData.location,
+        preferredLanguage: editFormData.preferredLanguage
+      });
+  
+      setProfileData(response.profile);
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      alert("Unable to save profile. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
-    return () => {
-      document.body.classList.remove('modal-open');
-    };
-  }, [isEditModalOpen, isHistoryModalOpen]);
+  };
 
   return (
     <div className="profile-container">
@@ -101,22 +160,32 @@ export const Profile = () => {
           <div className="dashboard-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <button className="dashboard-header-action language" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.875rem', fontWeight: 500 }}>
               <Globe size={16} className="text-text-muted" />
-              <span className="hidden md:inline">English</span>
-              <span className="md:hidden">En</span>
+              <span className="hidden md:inline">{profileData?.preferredLanguage || 'English'}</span>
+              <span className="md:hidden">{profileData?.preferredLanguage?.substring(0,2) || 'En'}</span>
               <ChevronDown size={14} className="text-text-muted" />
             </button>
             
             <div className="dashboard-header-profile" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-              <div className="dashboard-header-avatar" style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)' }}>
-                <User size={14} />
+              <div className="dashboard-header-avatar" style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', overflow: 'hidden' }}>
+                {profileData?.profileImageUrl ? (
+                  <img src={profileData.profileImageUrl} alt="Avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                ) : (
+                  <User size={14} />
+                )}
               </div>
               <span className="profile-name hidden md:flex" style={{ alignItems: 'center', gap: '0.25rem', color: 'var(--text-main)', fontSize: '0.875rem', fontWeight: 500 }}>
-                {profileData.name.split(' ')[0]} <ChevronDown size={14} className="text-text-muted" />
+                {profileData?.name ? profileData.name.split(' ')[0] : 'User'} <ChevronDown size={14} className="text-text-muted" />
               </span>
             </div>
           </div>
         </>,
         portalTarget
+      )}
+
+      {error && (
+        <div style={{ padding: '1rem', background: '#fee2e2', color: '#b91c1c', borderRadius: '8px', marginBottom: '1rem' }}>
+          {error}
+        </div>
       )}
 
       <div className="profile-grid-2x2">
@@ -127,10 +196,9 @@ export const Profile = () => {
           <div className="identity-layout">
             <div className="identity-avatar-col">
               <div className="avatar-wrapper">
-                {/* Placeholder for actual image. Using a colorful gradient/icon for now */}
                 <div className="avatar-placeholder" style={{ overflow: 'hidden' }}>
-                  {profileImage ? (
-                    <img src={profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {profileData?.profileImageUrl || profileImage ? (
+                    <img src={profileData?.profileImageUrl || profileImage} alt={profileData?.name || "Profile"} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <User size={80} strokeWidth={1.5} color="#4B5563" />
                   )}
@@ -142,43 +210,55 @@ export const Profile = () => {
             </div>
             
             <div className="identity-details-col">
-              <div className="identity-name-row">
-                <h2 className="identity-name">{profileData.name}</h2>
-                <span className="badge-farmer">Farmer</span>
-              </div>
-              
-              <div className="identity-contact-list">
-                <div className="contact-item">
-                  <MapPin size={16} className="contact-icon text-success" />
-                  <span>{profileData.location}</span>
+              {isLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
+                  <Loader2 size={16} className="animate-spin" /> Loading profile...
                 </div>
-                <div className="contact-item">
-                  <Phone size={16} className="contact-icon text-success" />
-                  <span>{profileData.phone}</span>
-                </div>
-                <div className="contact-item">
-                  <Mail size={16} className="contact-icon text-success" />
-                  <span>{profileData.email}</span>
-                </div>
-              </div>
-              
-              <div className="identity-pills-row">
-                <div className="identity-pill">
-                  <Globe size={16} className="pill-icon text-success" />
-                  <span>English</span>
-                </div>
-                <div className="identity-pill">
-                  <Sprout size={16} className="pill-icon text-success" />
-                  <div className="pill-text-stack">
-                    <span className="pill-val">8+ years</span>
-                    <span className="pill-lbl">Farming Experience</span>
+              ) : profileData && (
+                <>
+                  <div className="identity-name-row">
+                    <h2 className="identity-name">{profileData.name}</h2>
+                    <span className="badge-farmer">Farmer</span>
                   </div>
-                </div>
-                <button className="identity-pill edit-profile-pill" onClick={handleOpenEditModal}>
-                  <Edit3 size={14} className="pill-icon" />
-                  <span>Edit Profile</span>
-                </button>
-              </div>
+                  
+                  <div className="identity-contact-list">
+                    <div className="contact-item">
+                      <MapPin size={16} className="contact-icon text-success" />
+                      <span>{profileData.location || "Location not set"}</span>
+                    </div>
+                    <div className="contact-item">
+                      <Phone size={16} className="contact-icon text-success" />
+                      <span>{profileData.phone || "Phone not set"}</span>
+                    </div>
+                    <div className="contact-item">
+                      <Mail size={16} className="contact-icon text-success" />
+                      <span>{profileData.email || "Email not set"}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="identity-pills-row">
+                    <div className="identity-pill">
+                      <Globe size={16} className="pill-icon text-success" />
+                      <span>{profileData.preferredLanguage || "English"}</span>
+                    </div>
+                    <div className="identity-pill">
+                      <Sprout size={16} className="pill-icon text-success" />
+                      <div className="pill-text-stack">
+                        <span className="pill-val">
+                          {profileData.farmingExperienceYears != null
+                            ? `${profileData.farmingExperienceYears}+ years`
+                            : "Not specified"}
+                        </span>
+                        <span className="pill-lbl">Farming Experience</span>
+                      </div>
+                    </div>
+                    <button className="identity-pill edit-profile-pill" onClick={handleOpenEditModal}>
+                      <Edit3 size={14} className="pill-icon" />
+                      <span>Edit Profile</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -192,7 +272,9 @@ export const Profile = () => {
               <div className="stat-icon-row">
                 <Map size={18} className="stat-icon text-success" />
               </div>
-              <div className="stat-val">3</div>
+              <div className="stat-val">
+                {isLoading ? "-" : profileStats.fields}
+              </div>
               <div className="stat-lbl">Fields</div>
             </div>
             
@@ -200,7 +282,9 @@ export const Profile = () => {
               <div className="stat-icon-row">
                 <Maximize size={18} className="stat-icon text-success" />
               </div>
-              <div className="stat-val">12.45</div>
+              <div className="stat-val">
+                {isLoading ? "-" : profileStats.acres.toFixed(2)}
+              </div>
               <div className="stat-lbl">Acres</div>
             </div>
             
@@ -208,7 +292,9 @@ export const Profile = () => {
               <div className="stat-icon-row">
                 <Leaf size={18} className="stat-icon text-success" />
               </div>
-              <div className="stat-val">3</div>
+              <div className="stat-val">
+                {isLoading ? "-" : profileStats.crops}
+              </div>
               <div className="stat-lbl">Crops</div>
             </div>
             
@@ -216,13 +302,14 @@ export const Profile = () => {
               <div className="stat-icon-row">
                 <Sparkles size={18} className="stat-icon text-success" />
               </div>
-              <div className="stat-val">6</div>
+              <div className="stat-val">
+                {isLoading ? "-" : profileStats.aiInsights}
+              </div>
               <div className="stat-lbl">AI Insights</div>
             </div>
           </div>
 
         </div>
-
 
       </div>
 
@@ -236,9 +323,39 @@ export const Profile = () => {
         </div>
         
         <div className="history-list history-grid">
-          <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)', padding: '2rem 0', fontSize: '0.875rem' }}>
-            No farming history yet. Your crop records will appear here.
-          </div>
+          {isLoading ? (
+            <div className="history-loading" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem 0' }}>
+              <Loader2 size={24} className="animate-spin" style={{ margin: '0 auto', color: 'var(--text-muted)' }} />
+              <p style={{ marginTop: '8px', color: 'var(--text-muted)', fontSize: '14px' }}>Loading farming history...</p>
+            </div>
+          ) : farmingHistory.length === 0 ? (
+            <div className="history-empty" style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--text-muted)', padding: '2rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Sprout size={28} style={{ marginBottom: '8px', color: '#9CA3AF' }} />
+              <p style={{ fontWeight: 500, color: 'var(--text-main)', margin: 0 }}>No farming history yet.</p>
+              <span style={{ fontSize: '0.875rem' }}>Your crop records will appear here.</span>
+            </div>
+          ) : (
+            farmingHistory.slice(0, 4).map((record) => (
+              <div key={record.id} className="history-item" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: 'var(--text-main)' }}>{record.cropType}</h4>
+                  {record.cropVariety && (
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{record.cropVariety}</span>
+                  )}
+                </div>
+                <div>
+                  <span style={{ fontSize: '12px', color: 'var(--text-main)' }}>
+                    {record.areaAcres ? `${Number(record.areaAcres).toFixed(2)} acres` : "Area unavailable"}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '999px', backgroundColor: '#ECFDF5', color: '#059669', fontWeight: 500 }}>
+                    {record.status || "Active"}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -255,41 +372,47 @@ export const Profile = () => {
             
             <div className="profile-img-edit">
               <div className="avatar-placeholder" style={{ overflow: 'hidden' }}>
-                {profileImage ? (
-                  <img src={profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {profileData?.profileImageUrl || profileImage ? (
+                  <img src={profileData?.profileImageUrl || profileImage} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <User size={32} strokeWidth={1.5} color="#4B5563" />
                 )}
               </div>
               <div>
                 <button className="change-photo-btn" onClick={triggerFileInput}>Change Photo</button>
-                <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>JPG, GIF or PNG. Max size of 800K</div>
+                <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>Upload endpoint pending implementation</div>
               </div>
             </div>
 
             <div className="form-group">
               <label>Full Name</label>
-              <input type="text" value={editFormData.name} onChange={(e) => setEditFormData({...editFormData, name: e.target.value})} />
+              <input type="text" value={editFormData.name || ''} onChange={(e) => setEditFormData({...editFormData, name: e.target.value})} />
             </div>
             
             <div className="form-group">
               <label>Phone Number</label>
-              <input type="text" value={editFormData.phone} onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})} />
+              <input type="text" value={editFormData.phone || ''} onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})} />
             </div>
 
             <div className="form-group">
               <label>Email Address</label>
-              <input type="email" value={editFormData.email} onChange={(e) => setEditFormData({...editFormData, email: e.target.value})} />
+              <input type="email" value={editFormData.email || ''} onChange={(e) => setEditFormData({...editFormData, email: e.target.value})} />
             </div>
 
             <div className="form-group">
               <label>Location</label>
-              <input type="text" value={editFormData.location} onChange={(e) => setEditFormData({...editFormData, location: e.target.value})} />
+              <input type="text" value={editFormData.location || ''} onChange={(e) => setEditFormData({...editFormData, location: e.target.value})} />
             </div>
 
             <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
-              <button className="btn-save" onClick={handleSaveProfile}>Save Changes</button>
+              <button className="btn-cancel" onClick={() => setIsEditModalOpen(false)} disabled={isSaving}>Cancel</button>
+              <button className="btn-save" onClick={handleSaveProfile} disabled={isSaving}>
+                {isSaving ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Loader2 size={14} className="animate-spin" /> Saving...
+                  </span>
+                ) : "Save Changes"}
+              </button>
             </div>
           </div>
         </div>,
@@ -308,9 +431,38 @@ export const Profile = () => {
             </div>
             
             <div className="history-list" style={{ overflowY: 'auto', flex: 1, paddingRight: '8px' }}>
-              <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem 0', fontSize: '0.875rem' }}>
-                No farming history yet. Your crop records will appear here.
-              </div>
+              {farmingHistory.length === 0 ? (
+                <div className="history-empty" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem 0', fontSize: '0.875rem' }}>
+                  No farming records found.
+                </div>
+              ) : (
+                farmingHistory.map((record) => (
+                  <div key={record.id} className="history-modal-item" style={{ padding: '16px', borderBottom: '1px solid #E5E7EB', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ display: 'block', color: 'var(--text-main)', fontSize: '14px' }}>
+                        {record.cropType}
+                      </strong>
+                      {record.cropVariety && (
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {record.cropVariety}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                      Sowing:{" "}
+                      {record.sowingDate
+                        ? new Date(record.sowingDate).toLocaleDateString()
+                        : "—"}
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                      Harvest:{" "}
+                      {record.harvestDate
+                        ? new Date(record.harvestDate).toLocaleDateString()
+                        : "—"}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>,

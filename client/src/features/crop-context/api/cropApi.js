@@ -30,7 +30,17 @@ export const cropApi = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-  getAlerts: async () => request("alerts"),
+  getAlerts: async () => {
+    const data = await request("alerts");
+    return data?.alerts || data || [];
+  },
+  markAlertRead: async (alertId) => request(`alerts/${alertId}/read`, { method: "PATCH" }),
+  markAllAlertsRead: async () => request("alerts/read-all", { method: "PATCH" }),
+  getProfile: async () => request("profile"),
+  updateProfile: async (payload) => request("profile", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  }),
   getIntelligence: async () => request("intelligence"),
   getRecentChats: async () => request("chat/recent"),
   getRecentChats: async () => request("chat/recent"),
