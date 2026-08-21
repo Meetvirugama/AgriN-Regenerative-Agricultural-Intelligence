@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Literal, Dict, Any
 import os
 import zipfile
@@ -399,13 +399,33 @@ class WeatherEventFlag(BaseModel):
 # CLIMATE RISK — LAYER 08
 # ============================================================
 
+ClimateSeverity = Literal[
+    "low",
+    "medium",
+    "high",
+    "critical",
+    "unknown",
+]
+
 class ClimateRiskRequest(BaseModel):
-    field_id: str
-    crop_type: str
-    crop_stage: str
+    """
+    Request received from the Node.js gateway.
+
+    Weather is intentionally part of the request because Climate Risk
+    cannot produce a field-specific risk assessment without forecast
+    context.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    field_id: str = Field(min_length=1)
+    crop_type: str = Field(min_length=1)
+    crop_stage: str = Field(min_length=1)
 
     lat: float
     lng: float
+
+    # A field may legitimately have no sowing date.
     sowing_date: Optional[str] = None
 
     weather_summary: Optional[Dict[str, Any]] = None
@@ -413,13 +433,20 @@ class ClimateRiskRequest(BaseModel):
 
 
 class ClimateRiskResponse(BaseModel):
-    severity: str
-    riskType: str
-    timeframe: str
-    protectiveAction: str
-    generatedAt: str
-    primaryRisks: List[str]
-    mitigationStrategies: List[str]
+    """
+    Canonical Climate Risk response.
+
+    This is the ONLY response contract consumed by Node.js and React.
+    Do not introduce snake_case aliases here.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    severity: ClimateSeverity
+    riskType: str = Field(min_length=1)
+    timeframe: str = Field(min_length=1)
+    protectiveAction: str = Field(min_length=1)
+    primaryRisks: List[str] = Field(default_factory=list)
 
 
 # ============================================================

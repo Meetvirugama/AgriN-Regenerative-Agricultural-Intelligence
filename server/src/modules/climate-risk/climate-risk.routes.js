@@ -1,73 +1,282 @@
 import { Router } from "express";
-import { PythonClient } from "../../services/pythonClient.js";
+
 import { layer1Service } from "../field/field.service.js";
-import { layer2Service } from "../crop/crop.service.js";
 import { layer3Service } from "../weather/weather.service.js";
+import { PythonClient } from "../../services/pythonClient.js";
 
 const router = Router();
 
-// Endpoint for climate risk prediction — delegates to Python AI service
-router.get("/fields/:fieldId/climate-risk", async (req, res, next) => {
-  try {
-    const { fieldId } = req.params;
-    const field = await layer1Service.getField(fieldId);
-    if (!field) {
-      return res.status(404).json({ error: { message: "Field not found" } });
-    }
-    // ClimateRiskRequest (ai-service/models/schemas.py) requires `crop_stage`.
-    // It was never being sent here, so FastAPI rejected every request with
-    // 422 "Field required" (loc: body -> crop_stage), surfacing to the user
-    // as "Unable to load climate risk". Fetch the field's current phenology
-    // stage the same way crop.routes.js does, and fall back gracefully
-    // (instead of failing the whole widget) if that lookup itself errors —
-    // e.g. no crop calendar yet configured for this crop/region.
-    let cropStage = "unknown";
-    try {
-      const cropState = await layer2Service.getFieldCropState(fieldId);
-      cropStage = cropState?.current_stage ?? "unknown";
-    } catch (stageError) {
-      console.warn(
-        `[ClimateRisk] Could not resolve crop stage for field ${fieldId}, defaulting to "unknown":`,
-        stageError.message,
-      );
+/**
+ * Safely convert any date-like value to the API contract.
+ *
+ * FastAPI accepts:
+ *
+ *     sowing_date: Optional[str]
+ *
+ * Therefore:
+ *
+ * null / undefined / invalid -> ""
+ */
+function safeSowingDate(value) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
+      return "";
     }
 
-    let weatherSummary = null;
+    return value.toISOString().slice(0, 10);
+  }
+
+  const stringValue = String(value).trim();
+
+  if (!stringValue) {
+    return "";
+  }
+
+  // Already YYYY-MM-DD.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(stringValue)) {
+    return stringValue;
+  }
+
+  const parsed = new Date(stringValue);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  return parsed.toISOString().slice(0, 10);
+}
+
+
+/**
+ * Safely read coordinates from the field.
+ *
+ * Adjust only the candidate property names if your DB schema differs.
+ */
+function getFieldCoordinates(field) {
+  const lat = Number(
+    field.latitude ??
+      field.lat ??
+      field.location?.latitude ??
+      field.location?.lat
+  );
+
+  const lng = Number(
+    field.longitude ??
+      field.lng ??
+      field.lon ??
+      field.location?.longitude ??
+      field.location?.lng ??
+      field.location?.lon
+  );
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return null;
+  }
+
+  return { lat, lng };
+}
+
+
+/**
+ * Extract crop context without allowing undefined values to leak into
+ * the Python service.
+ */
+function getCropContext(field) {
+  return {
+    cropType:
+      field.crop_type ??
+      field.cropType ??
+      field.crop?.type ??
+      field.crop?.crop_type ??
+      "Unknown crop",
+
+    cropStage:
+      field.growth_stage ??
+      field.growthStage ??
+      field.crop_stage ??
+      field.cropStage ??
+      field.crop?.growth_stage ??
+      field.crop?.growthStage ??
+      "Unknown stage",
+
+    sowingDate: safeSowingDate(
+      field.sowing_date ??
+        field.sowingDate ??
+        field.crop?.sowing_date ??
+        field.crop?.sowingDate
+    ),
+  };
+}
+
+
+/**
+ * Normalize weather data into a serializable object.
+ *
+ * We intentionally DO NOT invent weather values.
+ */
+function normalizeWeatherSummary(weather) {
+  if (!weather || typeof weather !== "object") {
+    return {};
+  }
+
+  return {
+    ...weather,
+  };
+}
+
+
+/**
+ * POST /:fieldId
+ *
+ * Mounted by the parent module as:
+ *
+ * /fields/:fieldId/climate-risk
+ *
+ * If your parent router already includes the fieldId parameter,
+ * use req.params.fieldId accordingly.
+ */
+router.get("/fields/:fieldId/climate-risk", async (req, res) => {
+  const { fieldId } = req.params;
+
+  if (!fieldId) {
+    return res.status(400).json({
+      message: "Field ID is required",
+    });
+  }
+
+  try {
+    // ---------------------------------------------------------------
+    // 1. GET FIELD
+    // ---------------------------------------------------------------
+
+    const field = await layer1Service.getField(fieldId);
+
+    if (!field) {
+      return res.status(404).json({
+        message: "Field not found",
+      });
+    }
+
+    // ---------------------------------------------------------------
+    // 2. GET COORDINATES
+    // ---------------------------------------------------------------
+
+    const coordinates = getFieldCoordinates(field);
+
+    if (!coordinates) {
+      return res.status(422).json({
+        message:
+          "This field does not have valid coordinates required for weather analysis",
+      });
+    }
+
+    // ---------------------------------------------------------------
+    // 3. GET CROP / STAGE / SOWING DATE
+    // ---------------------------------------------------------------
+
+    const crop = getCropContext(field);
+
+    // ---------------------------------------------------------------
+    // 4. GET REAL WEATHER FROM LAYER 03
+    // ---------------------------------------------------------------
+
+    let weatherSummary = {};
+
     try {
-      const { forecasts } = await layer3Service.getLocalizedForecast(fieldId);
-      const next72h = forecasts.slice(0, 3);
-      weatherSummary = {
+      const weatherResponse =
+        await layer3Service.getLocalizedForecast(fieldId);
+        
+      const next72h = weatherResponse?.forecasts?.slice(0, 3) || [];
+      const summary = {
         temp_max_72h: Math.max(...next72h.map((f) => f.temp_max ?? 0)),
         rainfall_72h_mm: next72h.reduce((s, f) => s + (f.rainfall_mm ?? 0), 0),
         forecast_days: next72h.length,
       };
-    } catch (err) {
-      console.warn(`[ClimateRisk] Weather unavailable for field ${fieldId}: ${err.message}`);
+
+      weatherSummary = normalizeWeatherSummary(summary);
+    } catch (weatherError) {
+      console.warn(
+        `[ClimateRisk] Weather forecast unavailable for field ${fieldId}:`,
+        weatherError.message
+      );
+
+      // Do not crash the entire route because weather provider failed.
+      // The AI receives an explicit empty weather context and can return
+      // severity="unknown".
+      weatherSummary = {};
     }
 
-    let sowingDateStr = null;
-    if (field.sowing_date) {
-      try {
-        sowingDateStr = new Date(field.sowing_date).toISOString();
-      } catch (e) {
-        sowingDateStr = String(field.sowing_date);
-      }
-    }
+    // ---------------------------------------------------------------
+    // 5. OPTIONAL HISTORICAL CONTEXT
+    // ---------------------------------------------------------------
 
-    const result = await PythonClient.assessClimateRisk({
-      field_id: fieldId,
-      crop_type: field.crop_type,
-      crop_stage: cropStage,
-      lat: field.lat,
-      lng: field.lng,
-      sowing_date: sowingDateStr,
+    const historicalContext =
+      field.climate_history ??
+      field.climateHistory ??
+      field.weather_history ??
+      field.weatherHistory ??
+      {};
+
+    // ---------------------------------------------------------------
+    // 6. BUILD PYTHON REQUEST
+    // ---------------------------------------------------------------
+
+    const aiPayload = {
+      field_id: String(fieldId),
+
+      crop_type: String(crop.cropType || "Unknown crop"),
+
+      crop_stage: String(crop.cropStage || "Unknown stage"),
+
+      lat: coordinates.lat,
+      lng: coordinates.lng,
+
+      // Never send null.
+      sowing_date: crop.sowingDate || "",
+
       weather_summary: weatherSummary,
-    });
 
-    res.json(result);
+      historical_context:
+        historicalContext &&
+        typeof historicalContext === "object"
+          ? historicalContext
+          : {},
+    };
+
+    // ---------------------------------------------------------------
+    // 7. CALL PYTHON AI SERVICE
+    // ---------------------------------------------------------------
+
+    const aiResponse = await PythonClient.assessClimateRisk(aiPayload);
+
+    // ---------------------------------------------------------------
+    // 8. RETURN PYTHON RESPONSE DIRECTLY
+    // ---------------------------------------------------------------
+
+    // DO NOT do:
+    //
+    // risk_level -> severity
+    // primary_risks -> primaryRisks
+    //
+    // Python is now the source of truth and already returns the
+    // frontend contract.
+
+    return res.status(200).json(aiResponse);
   } catch (error) {
-    console.error("[ClimateRisk] Error:", error.message);
-    next(error);
+    console.error(
+      `[ClimateRisk] Failed for field ${fieldId}:`,
+      error
+    );
+
+    // Do not expose stack traces or internal service details.
+    return res.status(502).json({
+      message: "Unable to generate climate risk right now",
+      code: "CLIMATE_RISK_UNAVAILABLE",
+    });
   }
 });
 
