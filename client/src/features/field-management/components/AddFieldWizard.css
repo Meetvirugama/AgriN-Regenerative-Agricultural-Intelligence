@@ -7,7 +7,9 @@
   animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 136px);
+  min-height: 0;
+  width: 100%;
+  min-width: 0;
   overflow: visible;
 }
 

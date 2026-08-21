@@ -6,6 +6,8 @@
   flex-direction: column;
   gap: 1.5rem;
   padding-bottom: 3rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .settings-title {
@@ -27,6 +29,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
 }
 @media (min-width: 1280px) {
   .settings-layout { flex-direction: row; }
@@ -38,6 +41,7 @@
   flex-direction: column;
   gap: 0.25rem;
   flex-shrink: 0;
+  min-width: 0;
 }
 @media (min-width: 1280px) {
   .settings-nav-sidebar { width: 16rem; }
@@ -82,6 +86,8 @@
   padding: 2rem;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .settings-section-title {
@@ -98,7 +104,8 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  max-width: 42rem;
+  max-width: min(42rem, 100%);
+  min-width: 0;
 }
 
 .settings-form-row {
@@ -308,6 +315,7 @@
   flex-direction: column;
   gap: 1.5rem;
   flex-shrink: 0;
+  min-width: 0;
 }
 @media (min-width: 1280px) {
   .settings-right-sidebar { width: 20rem; }

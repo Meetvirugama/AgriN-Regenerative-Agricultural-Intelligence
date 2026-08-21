@@ -1,41 +1,48 @@
+/* Home.css — Fixed-viewport dashboard home page */
+
+/* =========================================================
+   MAIN CONTAINER
+   Uses flex column; the header row is fixed, the
+   scrollable section takes remaining height.
+   ========================================================= */
 .home-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 72px - 64px);
+  /* Fill the dashboard-content area without overflowing it */
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
-  gap: 24px;
+  gap: 20px;
 }
 
+/* The scrollable body below the "top row" */
 .home-scrollable-section {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding-right: 8px;
+  gap: 20px;
+  padding-right: 4px;
 }
 
 .home-scrollable-section::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
-
 .home-scrollable-section::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .home-scrollable-section::-webkit-scrollbar-thumb {
   background-color: #D1D5DB;
   border-radius: 3px;
 }
 
-@media (max-width: 768px) {
-  .home-container {
-    height: calc(100vh - 72px - 40px);
-  }
-}
-
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
 .home-header h1 {
-  font-size: 24px;
+  font-size: clamp(18px, 2.5vw, 24px);
   font-weight: 700;
   color: #111827;
   margin-bottom: 4px;
@@ -47,26 +54,35 @@
   color: #6B7280;
 }
 
+/* =========================================================
+   ROW 1 — Fields + Recommendation (2-col → 1-col)
+   ========================================================= */
 .home-grid-row-1 {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 24px;
+  gap: 20px;
+  min-width: 0;
 }
 
+/* =========================================================
+   SECTION CHROME
+   ========================================================= */
 .home-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  min-width: 0;
 }
 
 .home-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
 
 .home-section-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #111827;
 }
@@ -76,51 +92,60 @@
   font-weight: 600;
   color: #16A34A;
   text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-
 .home-section-link:hover {
   text-decoration: underline;
 }
 
+/* =========================================================
+   FIELDS GRID (3-col → 2-col → 1-col)
+   ========================================================= */
 .home-fields-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 14px;
+  min-width: 0;
 }
 
+/* =========================================================
+   FIELD CARD
+   ========================================================= */
 .home-card {
   background-color: #ffffff;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-  padding: 20px;
+  padding: 18px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 200px;
+  min-height: 180px;
+  min-width: 0;
 }
 
 .home-card-top-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .home-card-info-row {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .home-card-image {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid #F3F4F6;
   flex-shrink: 0;
 }
-
 .home-card-image img {
   width: 100%;
   height: 100%;
@@ -129,12 +154,14 @@
 
 .home-card-text-container {
   flex: 1;
+  min-width: 0;
 }
 
 .home-card-title-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 4px;
 }
 
 .home-card-title {
@@ -142,6 +169,9 @@
   font-size: 14px;
   color: #111827;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .home-card-more-btn {
@@ -151,33 +181,36 @@
   cursor: pointer;
   padding: 0;
   margin-top: -2px;
+  flex-shrink: 0;
 }
 
 .home-card-subtitle {
   font-size: 12px;
   color: #6B7280;
-  margin-top: 4px;
+  margin-top: 3px;
   text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .home-card-badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
   width: max-content;
 }
-
-.home-card-badge.good { background-color: rgba(34, 197, 94, 0.1); color: #16A34A; }
+.home-card-badge.good     { background-color: rgba(34, 197, 94, 0.1); color: #16A34A; }
 .home-card-badge.moderate { background-color: #FEF3C7; color: #D97706; }
-.home-card-badge.poor { background-color: #FEE2E2; color: #DC2626; }
+.home-card-badge.poor     { background-color: #FEE2E2; color: #DC2626; }
 
 .home-card-button {
   width: 100%;
-  margin-top: 20px;
-  padding: 10px;
+  margin-top: 14px;
+  padding: 9px;
   border: 1px solid #16A34A;
   color: #16A34A;
   background: #ffffff;
@@ -187,76 +220,79 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .home-card-button:hover {
   background-color: rgba(22, 163, 74, 0.05);
 }
 
+/* ADD FIELD CARD */
 .home-add-field {
   background-color: transparent;
   border: 1px dashed #D1D5DB;
   border-radius: 12px;
-  padding: 20px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  min-height: 200px;
+  min-height: 180px;
   transition: all 0.2s ease;
 }
-
 .home-add-field:hover {
   border-color: #16A34A;
   background-color: rgba(22, 163, 74, 0.02);
 }
 
+/* =========================================================
+   RECOMMENDATION CARD
+   ========================================================= */
 .home-recommendation-card {
   background-color: #ffffff;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  min-height: 200px;
+  min-height: 180px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-width: 0;
 }
 
 .home-recommendation-content {
   display: flex;
-  gap: 16px;
+  gap: 14px;
+  min-width: 0;
 }
+.home-recommendation-icon { color: #9CA3AF; flex-shrink: 0; }
 
-.home-recommendation-icon {
-  color: #9CA3AF;
+.home-recommendation-text {
+  flex: 1;
+  min-width: 0;
 }
-
 .home-recommendation-text h3 {
   font-size: 14px;
   font-weight: 600;
   color: #111827;
   line-height: 1.4;
 }
-
 .home-recommendation-text p {
   font-size: 14px;
   color: #374151;
   font-weight: 400;
   margin-top: 4px;
 }
-
 .home-recommendation-text .subtext {
   font-size: 13px;
   color: #6B7280;
   font-weight: 400;
-  margin-top: 16px;
+  margin-top: 14px;
 }
 
 .home-recommendation-button {
   width: 100%;
-  margin-top: 16px;
-  padding: 10px;
+  margin-top: 14px;
+  padding: 9px;
   border: 1px solid #E5E7EB;
   color: #111827;
   background: #ffffff;
@@ -266,15 +302,16 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
+.home-recommendation-button:hover { background-color: #F9FAFB; }
 
-.home-recommendation-button:hover {
-  background-color: #F9FAFB;
-}
-
+/* =========================================================
+   ROW 2 — Recent Alerts
+   ========================================================= */
 .home-grid-row-2 {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 20px;
+  min-width: 0;
 }
 
 .home-alerts-list {
@@ -284,54 +321,68 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .home-alert-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid #E5E7EB;
+  gap: 12px;
+  min-width: 0;
 }
+.home-alert-item:last-child { border-bottom: none; }
 
 .home-alert-content {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .home-alert-icon {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-
 .home-alert-icon.warning { background-color: #FEF3C7; color: #D97706; }
-.home-alert-icon.danger { background-color: #FEE2E2; color: #DC2626; }
-.home-alert-icon.info { background-color: #DCFCE7; color: #16A34A; }
+.home-alert-icon.danger  { background-color: #FEE2E2; color: #DC2626; }
+.home-alert-icon.info    { background-color: #DCFCE7; color: #16A34A; }
 
+.home-alert-text {
+  flex: 1;
+  min-width: 0;
+}
 .home-alert-text h4 {
   font-size: 13px;
   font-weight: 600;
   color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
 .home-alert-text p {
   font-size: 12px;
   color: #6B7280;
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .home-alert-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-shrink: 0;
 }
-
 .home-alert-meta span:last-child {
   font-size: 12px;
   color: #6B7280;
@@ -347,55 +398,61 @@
   color: #16A34A;
   font-size: 13px;
   font-weight: 600;
-  padding: 16px;
+  padding: 14px;
   cursor: pointer;
   text-align: center;
+  width: 100%;
 }
 
-
+/* =========================================================
+   ROW 3 — Stat Cards (4-col → 2-col → 1-col)
+   ========================================================= */
 .home-grid-row-3 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 14px;
+  min-width: 0;
 }
 
 .home-stat-card {
   background-color: #ffffff;
   border: 1px solid #E5E7EB;
   border-radius: 12px;
-  padding: 16px;
+  padding: 14px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: 12px;
+  min-width: 0;
 }
 
 .home-stat-icon {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-
 .home-stat-icon.success { background-color: #DCFCE7; color: #16A34A; }
-.home-stat-icon.info { background-color: #DBEAFE; color: #3B82F6; }
+.home-stat-icon.info    { background-color: #DBEAFE; color: #3B82F6; }
 .home-stat-icon.warning { background-color: #FEF3C7; color: #D97706; }
-.home-stat-icon.purple { background-color: #F3E8FF; color: #9333EA; }
+.home-stat-icon.purple  { background-color: #F3E8FF; color: #9333EA; }
 
+.home-stat-text { min-width: 0; flex: 1; }
 .home-stat-text p {
   font-size: 13px;
   font-weight: 600;
   color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
 .home-stat-text .subtext {
   font-size: 11px;
   color: #9CA3AF;
 }
-
 .home-stat-text h3 {
   font-size: 20px;
   font-weight: 700;
@@ -403,8 +460,11 @@
   margin-top: 4px;
 }
 
+/* =========================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================= */
 @media (max-width: 1024px) {
-  .home-grid-row-1, .home-grid-row-2 {
+  .home-grid-row-1 {
     grid-template-columns: 1fr;
   }
   .home-fields-grid {
@@ -415,7 +475,33 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .home-container {
+    gap: 14px;
+  }
+  .home-grid-row-1 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .home-fields-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .home-grid-row-3 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .home-card,
+  .home-add-field {
+    min-height: 150px;
+    padding: 14px;
+  }
+  .home-alert-meta span:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
   .home-fields-grid {
     grid-template-columns: 1fr;
   }

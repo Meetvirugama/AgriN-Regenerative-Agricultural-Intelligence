@@ -40,14 +40,28 @@
   padding: 0;
 }
 
+
+/* Height chain: html → body → #root → .dashboard-shell → all fill 100vh */
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background-color: var(--background);
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
 }
+
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
 
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;

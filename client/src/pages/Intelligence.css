@@ -5,12 +5,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  height: calc(100vh - 72px - 64px);
-  max-height: calc(100vh - 72px - 64px);
+  /* Use full available height from parent dashboard-content */
+  height: 100%;
+  max-height: 100%;
   min-height: 0;
   max-width: 1440px;
   margin: 0 auto;
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -232,6 +234,7 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .intelligence-kpi-card {
@@ -374,6 +377,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 .intelligence-view-grid {
@@ -381,11 +385,13 @@
   gap: 0.75rem;
   height: 100%;
   min-height: 0;
+  min-width: 0;
   box-sizing: border-box;
 }
 
+/* Fixed-pixel columns only above 1024px — collapse to 1fr below */
 .intelligence-view-grid.health-view {
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: min(320px, 38%) 1fr;
 }
 
 .intelligence-view-grid.recommendations-view {
@@ -393,7 +399,12 @@
 }
 
 .intelligence-view-grid.weather-view {
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: min(340px, 40%) 1fr;
+}
+
+/* Ensure all direct grid children don't blow out */
+.intelligence-view-grid > * {
+  min-width: 0;
 }
 
 /* COMPACT CARD SHELL */
@@ -406,6 +417,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -1280,14 +1292,16 @@
 /* TABLET & MOBILE (< 900px) */
 @media (max-width: 900px) {
   .intelligence-app-viewport {
+    /* On mobile the container is inside a scrollable area */
     height: auto !important;
     max-height: none !important;
     min-height: auto !important;
-    overflow-y: visible !important;
+    overflow: visible !important;
     gap: clamp(0.6rem, 2vw, 0.85rem);
     padding-bottom: clamp(1.5rem, 5vw, 2.5rem);
     width: 100%;
     max-width: 100%;
+    min-width: 0;
   }
 
   .intelligence-top-header {

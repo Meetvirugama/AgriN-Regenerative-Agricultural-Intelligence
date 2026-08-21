@@ -5,7 +5,9 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  height: calc(100vh - 136px);
+  /* Fill parent height without overflowing it */
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -13,6 +15,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .alerts-title {
@@ -108,6 +114,8 @@
   gap: 1.5rem;
   flex: 1;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 @media (min-width: 1280px) {
@@ -126,6 +134,7 @@
   gap: 1rem;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 .alerts-stats-grid {
@@ -261,6 +270,7 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 .alerts-tabs {
@@ -497,9 +507,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   border-top: 1px solid rgba(229, 231, 235, 0.6);
   background-color: rgba(243, 244, 246, 0.1);
+  flex-shrink: 0;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .alerts-pagination-info {
@@ -601,7 +614,9 @@
   gap: 1.5rem;
   flex-shrink: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 0.5rem;
+  min-width: 0;
 }
 .alerts-sidebar::-webkit-scrollbar {
   width: 4px;
