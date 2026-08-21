@@ -5,8 +5,13 @@
  * base URL resolution, JSON parsing, and error handling.
  */
 
-export const API_BASE =
-  import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+export const API_BASE = (() => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    return envUrl.endsWith('/v1') ? envUrl : `${envUrl}/v1`;
+  }
+  return "http://localhost:8000/api/v1";
+})();
 
 export class ApiError extends Error {
   constructor(message, status, data) {
