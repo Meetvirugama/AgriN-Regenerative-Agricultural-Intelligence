@@ -41,11 +41,6 @@
 }
 
 
-/* Height chain: html → body → #root → .dashboard-shell → all fill 100vh */
-html {
-  height: 100%;
-  overflow: hidden;
-}
 
 body {
   font-family: 'Inter', sans-serif;
@@ -53,13 +48,11 @@ body {
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
 #root {
   height: 100%;
-  overflow: hidden;
 }
 
 
