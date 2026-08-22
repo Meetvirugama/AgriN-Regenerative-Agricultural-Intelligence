@@ -73,19 +73,18 @@ router.get("/", async (req, res, next) => {
         WHERE f.farmer_id = $1
         `,
         [farmerId]
-      ).catch(() => ({
-        rows: [{ count: 0 }],
-      }))
+      ).catch(() => [{ count: 0 }])
     ]);
 
-    if (!farmerResult.rows.length) {
+    if (!farmerResult?.length) {
       return res.status(404).json({
         message: "Farmer profile not found.",
       });
     }
 
-    const farmer = farmerResult.rows[0];
-    const stats = statsResult.rows[0];
+    const farmer = farmerResult[0];
+    const stats = statsResult?.[0] || {};
+    const aiInsights = aiInsightsResult?.[0] || {};
 
     return res.json({
       profile: {
@@ -104,10 +103,10 @@ router.get("/", async (req, res, next) => {
         fields: Number(stats.field_count) || 0,
         acres: Number(stats.total_acres) || 0,
         crops: Number(stats.crop_count) || 0,
-        aiInsights: Number(aiInsightsResult.rows[0]?.count) || 0,
+        aiInsights: Number(aiInsights.count) || 0,
       },
 
-      history: historyResult.rows.map((row) => ({
+      history: (historyResult || []).map((row) => ({
         id: row.id,
         fieldId: row.field_id,
         cropType: row.crop_type,
@@ -184,13 +183,13 @@ router.patch("/", async (req, res, next) => {
       ]
     );
 
-    if (!result.rows.length) {
+    if (!result?.length) {
       return res.status(404).json({
         message: "Profile not found.",
       });
     }
 
-    const farmer = result.rows[0];
+    const farmer = result[0];
 
     res.json({
       profile: {

@@ -16,7 +16,7 @@ export const ProtectedRoute = ({
   children,
   redirectIfAuthenticated = false,
 }) => {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, farmer } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -28,6 +28,11 @@ export const ProtectedRoute = ({
   }
 
   if (redirectIfAuthenticated && isAuthenticated) {
+    const isNew = Boolean(farmer?.is_new_user || sessionStorage.getItem("agri_is_new_user") === "true");
+    if (isNew) {
+      sessionStorage.removeItem("agri_is_new_user");
+      return <Navigate to="/onboarding" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 

@@ -136,18 +136,21 @@ export class AuthService {
     if (!existingFarmer) {
       existingFarmer = await farmerRepo.findFarmerById(deterministicUuid);
     }
+    const isNewUser = !existingFarmer || (!existingFarmer.location && !existingFarmer.farming_experience_years);
     const farmerId = existingFarmer?.id || deterministicUuid;
 
     const farmer = await farmerRepo.upsertFarmer({
       id: farmerId,
       email: userInfo.email,
       phone_number: existingFarmer?.phone_number || null,
-      name: userInfo.name || existingFarmer?.name || "Google User",
-      profile_image_url: userInfo.picture || existingFarmer?.profile_image_url || null,
+      name: existingFarmer?.name || userInfo.name || "Google User",
+      profile_image_url: existingFarmer?.profile_image_url || userInfo.picture || null,
       preferred_language: existingFarmer?.preferred_language || "en",
     });
 
     const tokens = await AuthService.issueTokens(farmer, meta);
+    tokens.is_new_user = isNewUser;
+    tokens.farmer.is_new_user = isNewUser;
     
     await authRepo.logEvent("otp_verified", {
       farmerId: farmer.id,

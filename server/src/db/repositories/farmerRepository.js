@@ -9,7 +9,7 @@ import { query, queryOne, execute } from "../connection.js";
 export class FarmerRepository {
   async findFarmerById(id) {
     const row = await queryOne(
-      `SELECT id, phone_number, name, preferred_language, created_at::text
+      `SELECT id, phone_number, name, preferred_language, email, location, profile_image_url, farming_experience_years, created_at::text
        FROM farmers WHERE id = $1`,
       [id],
     );
@@ -17,19 +17,21 @@ export class FarmerRepository {
   }
 
   async findFarmerByPhone(phone) {
-    return queryOne(
-      `SELECT id, phone_number, name, preferred_language, created_at::text
+    const row = await queryOne(
+      `SELECT id, phone_number, name, preferred_language, email, location, profile_image_url, farming_experience_years, created_at::text
        FROM farmers WHERE phone_number = $1`,
       [phone],
     );
+    return row;
   }
 
   async findFarmerByEmail(email) {
-    return queryOne(
-      `SELECT id, phone_number, name, preferred_language, email, password_hash, created_at::text
+    const row = await queryOne(
+      `SELECT id, phone_number, name, preferred_language, email, location, profile_image_url, farming_experience_years, password_hash, created_at::text
        FROM farmers WHERE email = $1`,
       [email],
     );
+    return row;
   }
 
   async upsertFarmer(farmer) {
