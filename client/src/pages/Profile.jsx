@@ -151,32 +151,9 @@ export const Profile = () => {
       
       {/* HEADER PORTAL */}
       {portalTarget && createPortal(
-        <>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <h1 className="profile-title" style={{ fontSize: '1.5rem', lineHeight: '2rem', fontWeight: 700, margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>My Profile</h1>
-          </div>
-          <div className="dashboard-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <button className="dashboard-header-action language" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.875rem', fontWeight: 500 }}>
-              <Globe size={16} className="text-text-muted" />
-              <span className="hidden md:inline">{profileData?.preferredLanguage || 'English'}</span>
-              <span className="md:hidden">{profileData?.preferredLanguage?.substring(0,2) || 'En'}</span>
-              <ChevronDown size={14} className="text-text-muted" />
-            </button>
-            
-            <div className="dashboard-header-profile" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-              <div className="dashboard-header-avatar" style={{ width: '2rem', height: '2rem', borderRadius: '50%', backgroundColor: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)', overflow: 'hidden' }}>
-                {profileData?.profileImageUrl ? (
-                  <img src={profileData.profileImageUrl} alt="Avatar" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                ) : (
-                  <User size={14} />
-                )}
-              </div>
-              <span className="profile-name hidden md:flex" style={{ alignItems: 'center', gap: '0.25rem', color: 'var(--text-main)', fontSize: '0.875rem', fontWeight: 500 }}>
-                {profileData?.name ? profileData.name.split(' ')[0] : 'User'} <ChevronDown size={14} className="text-text-muted" />
-              </span>
-            </div>
-          </div>
-        </>,
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <h1 className="profile-title" style={{ fontSize: '1.5rem', lineHeight: '2rem', fontWeight: 700, margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>My Profile</h1>
+        </div>,
         portalTarget
       )}
 

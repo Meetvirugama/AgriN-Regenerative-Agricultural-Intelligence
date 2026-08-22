@@ -614,7 +614,6 @@
     font-weight: 600;
     padding: 6px 4px;
     transition: color 150ms;
-    min-width: 0;
   }
 
   .mobile-bottom-nav-item.active {
