@@ -1025,31 +1025,7 @@ export const Alerts = () => {
             </div>
           </div>
 
-          <div className="alerts-footer-banner">
-            <div className="alerts-footer-text">
-              <InfoCircleIcon
-                size={18}
-              />
 
-              <p className="alerts-footer-desc">
-                Alerts are generated from
-                available field observations,
-                weather, crop and AI analysis.
-                Verify important conditions
-                in the field.
-              </p>
-            </div>
-
-            <div className="alerts-footer-link-container">
-              Need help? Contact{" "}
-              <Link
-                to="/ask"
-                className="alerts-footer-link"
-              >
-                Ask AgriMesh
-              </Link>
-            </div>
-          </div>
         </div>
 
         <div className="alerts-sidebar">
