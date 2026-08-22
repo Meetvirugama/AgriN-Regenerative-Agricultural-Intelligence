@@ -25,6 +25,8 @@ async def diagnose_disease(
     soil_json: Optional[str] = Form(default=None),
     # Farmer observations Q&A from pre-diagnosis questions (Feature 24)
     farmer_observations_json: Optional[str] = Form(default=None),
+    # Selected language code
+    language: Optional[str] = Form(default=None),
 ):
     """
     Layer 07 — Crop Health Diagnosis Engine.
@@ -125,6 +127,7 @@ async def diagnose_disease(
             satellite=satellite,
             soil=soil,
             farmer_observations=farmer_observations,
+            language=language,
             extra_images=extra_images if extra_images else None,
         )
 

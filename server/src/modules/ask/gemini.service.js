@@ -87,8 +87,11 @@ export const geminiService = {
       4. Soil information
       5. Satellite observations
       6. Field history
+      6. Field history
       7. The farmer's question
 
+      ${context.language ? `\nIMPORTANT: Your entire response must be strictly translated into the language specified by the BCP-47 language tag: ${context.language}.` : ""}
+      
       Do not invent field measurements.
       Do not claim that a disease is confirmed from insufficient evidence.
       Do not fabricate pesticide names, dosages, application rates, waiting periods, legal restrictions, or product recommendations.

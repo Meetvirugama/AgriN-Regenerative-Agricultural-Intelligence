@@ -459,7 +459,7 @@ export const Diagnosis = () => {
 
         </div>
         );
-      })}
+      })()}
 
       {/* ── PREVIOUS DIAGNOSIS TAB ── */}
       {activeTab === 'previous' && (

@@ -63,6 +63,7 @@ router.post("/:fieldId/diagnose", async (req, res, next) => {
         imageBuffer3,
         mimeType3,
         farmerObservations: farmerObservations ?? null,
+        language: req.language,
       },
     );
 

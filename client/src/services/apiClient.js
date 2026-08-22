@@ -58,6 +58,16 @@ export async function request(path, options = {}) {
     }
   }
 
+  // Inject current selected language
+  if (!headers.has("Accept-Language")) {
+    try {
+      const lang = localStorage.getItem("agri_lang");
+      if (lang) {
+        headers.set("Accept-Language", lang);
+      }
+    } catch {}
+  }
+
   const config = {
     ...options,
     headers,

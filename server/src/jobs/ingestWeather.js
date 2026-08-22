@@ -12,7 +12,7 @@ import { pool } from "../db/connection.js";
  * slowness for large farmer bases while still rate-limiting API calls.
  */
 
-const CONCURRENCY = 5;
+const CONCURRENCY = 1;
 
 /**
  * Process an array of items with a bounded concurrency cap.
@@ -61,6 +61,8 @@ export async function runDailyWeatherIngestion() {
         console.log(
           `[Job:Weather] Field "${row.name}" (${row.id}): ${forecasts.length} forecasts, ${flags.length} flags`,
         );
+        // Wait 2 seconds to avoid rate limits
+        await new Promise(r => setTimeout(r, 2000));
       } catch (err) {
         errorCount++;
         console.error(`[Job:Weather] Error for field ${row.id}:`, err.message);

@@ -16,7 +16,7 @@
  */
 
 const SOILGRIDS_BASE = "https://rest.isric.org/soilgrids/v2.0/properties/query";
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 20_000;
 
 // Simple in-memory rate limiter: 5 calls per 60 seconds
 const _callTimes = [];

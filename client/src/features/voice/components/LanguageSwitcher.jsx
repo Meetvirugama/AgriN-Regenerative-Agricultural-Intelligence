@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Check } from "lucide-react";
 import { voiceApi } from "../api/voiceApi";
 import GlobeIcon from "../../../components/hover-ui/globe-icon";
@@ -11,19 +12,22 @@ const LANGUAGES = [
 ];
 
 export const LanguageSwitcher = () => {
-  const [selectedLang, setSelectedLang] = useState("en-US");
+  const { i18n } = useTranslation();
+  const [selectedLang, setSelectedLang] = useState(i18n.language || "en-US");
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("agri_lang");
     if (saved) {
       setSelectedLang(saved);
+      i18n.changeLanguage(saved);
     }
-  }, []);
+  }, [i18n]);
 
   const handleSelect = async (code) => {
     setSelectedLang(code);
     localStorage.setItem("agri_lang", code);
+    i18n.changeLanguage(code);
     await voiceApi.setLanguage(code);
   };
 

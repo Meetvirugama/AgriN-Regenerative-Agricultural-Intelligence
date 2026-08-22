@@ -156,7 +156,7 @@ class CropVisionPredictor:
             print(f"[Vision] Failed to load model for '{crop}': {e}")
             return None
 
-    def predict(self, image_bytes: bytes, crop_type: str = "unknown") -> dict:
+    def predict(self, image_bytes: bytes, crop_type: str = "unknown", language: str = None) -> dict:
         """
         Run inference for the given crop.
 
@@ -174,7 +174,7 @@ class CropVisionPredictor:
 
         if bundle is None:
             print(f"[Vision] No local model for '{crop_key}'. Using Gemini Vision fallback.")
-            return self._fallback_gemini_vision(image_bytes, crop_type)
+            return self._fallback_gemini_vision(image_bytes, crop_type, language)
 
         try:
             image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
@@ -205,7 +205,7 @@ class CropVisionPredictor:
             print(f"[Vision] Inference error for '{crop_key}': {e}")
             raise
 
-    def _fallback_gemini_vision(self, image_bytes: bytes, crop_type: str) -> dict:
+    def _fallback_gemini_vision(self, image_bytes: bytes, crop_type: str, language: str = None) -> dict:
         """Use Gemini Vision as fallback when no local model exists."""
         from services.gemini_client import analyze_image_with_prompt
         from models.schemas import KNOWN_CONDITIONS
@@ -232,7 +232,8 @@ class CropVisionPredictor:
             f"Valid classes for this crop: {classes_str}.\n"
             f"If you are unsure, output 'Unknown' and a low confidence score.\n\n"
             f"Return the primary condition, a confidence score (0.0 to 1.0), "
-            f"and the top 3 differential conditions with their probabilities."
+            f"and the top 3 differential conditions with their probabilities.\n"
+            f"{f'IMPORTANT: Respond strictly in the language specified by the code: {language}.' if language else ''}"
         )
 
         try:

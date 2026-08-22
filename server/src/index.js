@@ -66,6 +66,12 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+// ─── Language Interceptor ──────────────────────────────────────────────────
+app.use((req, res, next) => {
+  req.language = req.headers["accept-language"] || "en-US";
+  next();
+});
+
 // ─── Auth Routes (own rate limiter, before general one) ──────────────────────
 
 app.use("/api", authRoutes);

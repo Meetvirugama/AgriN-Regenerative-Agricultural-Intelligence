@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { EarthEngineProvider } from './features/auth/EarthEngineProvider';
 import "./index.css";
+import "./i18n";
 import App from "./App.jsx";
 
 createRoot(document.getElementById("root")).render(

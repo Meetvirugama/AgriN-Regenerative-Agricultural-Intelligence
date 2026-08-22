@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Stethoscope, Search, Menu, X,
@@ -31,7 +32,7 @@ const NAV_ITEMS = [
   { label: "Crop Diagnosis", path: "/diagnosis", icon: Stethoscope },
 ];
 
-const SidebarNavItem = ({ item, isActive, activeAlertsCount, onClick }) => {
+const SidebarNavItem = ({ item, isActive, activeAlertsCount, onClick, t }) => {
   const [isHovered, setIsHovered] = useState(false);
   const Icon = item.icon;
   return (
@@ -44,7 +45,7 @@ const SidebarNavItem = ({ item, isActive, activeAlertsCount, onClick }) => {
     >
       <div className="dashboard-nav-item-content">
         <Icon size={18} strokeWidth={2} isHovered={isHovered} />
-        {item.label}
+        {t(`nav.${item.label}`)}
       </div>
       {item.label === "Alerts" && activeAlertsCount > 0 && (
         <span className="dashboard-nav-badge">
@@ -55,24 +56,29 @@ const SidebarNavItem = ({ item, isActive, activeAlertsCount, onClick }) => {
   );
 };
 
-const FooterNavItem = ({ to, icon: Icon, label, onClick }) => {
+const FooterNavItem = ({ to, icon: Icon, label, onClick, t }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const location = useLocation();
+  const isActive = location.pathname === to;
+
   return (
     <Link
       to={to}
-      className="dashboard-nav-item"
+      className={`dashboard-nav-item dashboard-footer-item ${isActive ? "active" : ""}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
     >
       <div className="dashboard-nav-item-content">
-        <Icon size={18} strokeWidth={2} isHovered={isHovered} /> {label}
+        <Icon size={18} strokeWidth={2} isHovered={isHovered} />
+        {t(`nav.${label}`)}
       </div>
     </Link>
   );
 };
 
 export const FarmerShell = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { logout, farmer } = useAuth();
@@ -139,6 +145,7 @@ export const FarmerShell = () => {
                   isActive={isActive} 
                   activeAlertsCount={activeAlertsCount} 
                   onClick={() => setIsMobileMenuOpen(false)}
+                  t={t}
                 />
               );
             })}
@@ -146,8 +153,8 @@ export const FarmerShell = () => {
 
           <div className="dashboard-sidebar-footer">
             <div className="dashboard-sidebar-divider"></div>
-            <FooterNavItem to="/profile" icon={UserIcon} label="Profile" onClick={() => setIsMobileMenuOpen(false)} />
-            <FooterNavItem to="/settings" icon={GearIcon} label="Settings" onClick={() => setIsMobileMenuOpen(false)} />
+            <FooterNavItem to="/profile" icon={UserIcon} label="Profile" onClick={() => setIsMobileMenuOpen(false)} t={t} />
+            <FooterNavItem to="/settings" icon={GearIcon} label="Settings" onClick={() => setIsMobileMenuOpen(false)} t={t} />
           </div>
         </aside>
 
@@ -166,7 +173,7 @@ export const FarmerShell = () => {
                   <Search size={16} />
                   <input 
                     type="text" 
-                    placeholder="Search fields, crops, recommendations..." 
+                    placeholder={t("search.placeholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
@@ -216,14 +223,14 @@ export const FarmerShell = () => {
 
                       <div className="profile-dropdown">
                         <button onClick={() => navigate('/profile')} className="profile-dropdown-option">
-                          View Profile
+                          {t("nav.View Profile")}
                         </button>
                         <button onClick={() => navigate('/settings')} className="profile-dropdown-option">
-                          Settings
+                          {t("nav.Settings")}
                         </button>
                         <div className="profile-dropdown-divider"></div>
                         <button onClick={logout} className="profile-dropdown-option signout">
-                          Sign Out
+                          {t("nav.Sign Out")}
                         </button>
                       </div>
                     </div>
@@ -244,15 +251,15 @@ export const FarmerShell = () => {
             ].map(({ to, icon: Icon, label }) => {
               const isActive = location.pathname === to ||
                 (to !== "/" && location.pathname.startsWith(to));
+
               return (
                 <Link
-                  key={to}
+                  key={label}
                   to={to}
                   className={`mobile-bottom-nav-item ${isActive ? "active" : ""}`}
-                  aria-label={label}
                 >
-                  <Icon size={22} strokeWidth={isActive ? 2.5 : 1.75} />
-                  <span>{label}</span>
+                  <Icon size={22} strokeWidth={2.5} />
+                  <span>{t(`nav.${label}`)}</span>
                 </Link>
               );
             })}

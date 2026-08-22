@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "Home": "હોમ",
+    "My Fields": "મારા ખેતરો",
+    "Intelligence": "કૃષિ જ્ઞાન",
+    "Ask AgriMesh": "AgriMesh ને પૂછો",
+    "Alerts": "ચેતવણીઓ",
+    "Crop Diagnosis": "પાક નિદાન",
+    "Profile": "પ્રોફાઇલ",
+    "Settings": "સેટિંગ્સ",
+    "Fields": "ખેતરો",
+    "AI": "એઆઈ (AI)",
+    "Ask": "પૂછો",
+    "Scan": "સ્કેન",
+    "View Profile": "પ્રોફાઇલ જુઓ",
+    "Sign Out": "લૉગ આઉટ"
+  },
+  "search": {
+    "placeholder": "ખેતરો, પાક, ભલામણો શોધો..."
+  }
+}

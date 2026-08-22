@@ -35,6 +35,7 @@ def _build_reasoning_prompt(
     satellite=None,
     soil=None,
     farmer_observations=None,
+    language=None,
 ) -> str:
     """Build the context-enriched reasoning prompt for Gemini."""
     known_classes = _get_known_classes(crop_type)
@@ -174,7 +175,11 @@ Respond ONLY with valid JSON in EXACTLY this format (no markdown code blocks, no
   "evidence": [
     {{ "source": "image | weather | satellite | soil | crop_stage | field_history", "finding": "finding text" }}
   ]
-}}"""
+}}
+{f'''
+IMPORTANT: Your entire response MUST be strictly translated into the language specified by the BCP-47 language tag: {language}.
+''' if language else ''}
+"""
 
 
 def diagnose(
@@ -189,6 +194,7 @@ def diagnose(
     soil=None,
     farmer_observations=None,
     extra_images=None,
+    language=None,
 ):
     """
     Full Layer 07 diagnosis:
@@ -197,7 +203,7 @@ def diagnose(
     
     # 1. Run local PyTorch Vision Inference (or Gemini fallback)
     try:
-        vision_results = vision_predictor.predict(image_bytes, crop_type=crop_type)
+        vision_results = vision_predictor.predict(image_bytes, crop_type=crop_type, language=language)
     except Exception as e:
         print(f"[Diagnosis] Vision model failed or not trained yet. Falling back to pure Gemini vision: {e}")
         vision_results = {
@@ -217,6 +223,7 @@ def diagnose(
         satellite=satellite,
         soil=soil,
         farmer_observations=farmer_observations,
+        language=language,
     )
 
     # 3. Call Gemini for Context Fusion and Reasoning

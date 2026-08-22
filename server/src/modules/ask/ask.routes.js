@@ -52,6 +52,7 @@ router.post("/message", requireAuth, async (req, res, next) => {
       farmerId: req.farmer.sub,
       message: message.trim(),
       clientMessageId,
+      language: req.language,
     });
 
     res.json(result);

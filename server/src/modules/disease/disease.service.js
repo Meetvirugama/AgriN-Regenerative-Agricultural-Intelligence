@@ -143,6 +143,10 @@ export class ObservationService {
         form.append("farmer_observations_json", JSON.stringify(opts.farmerObservations));
       }
 
+      if (opts.language) {
+        form.append("language", opts.language);
+      }
+
       const response = await fetch(`${PYTHON_SERVICE_URL}/disease/diagnose`, {
         method: "POST",
         body: form,

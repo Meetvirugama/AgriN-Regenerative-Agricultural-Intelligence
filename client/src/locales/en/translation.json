@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "Home": "Home",
+    "My Fields": "My Fields",
+    "Intelligence": "Intelligence",
+    "Ask AgriMesh": "Ask AgriMesh",
+    "Alerts": "Alerts",
+    "Crop Diagnosis": "Crop Diagnosis",
+    "Profile": "Profile",
+    "Settings": "Settings",
+    "Fields": "Fields",
+    "AI": "AI",
+    "Ask": "Ask",
+    "Scan": "Scan",
+    "View Profile": "View Profile",
+    "Sign Out": "Sign Out"
+  },
+  "search": {
+    "placeholder": "Search fields, crops, recommendations..."
+  }
+}

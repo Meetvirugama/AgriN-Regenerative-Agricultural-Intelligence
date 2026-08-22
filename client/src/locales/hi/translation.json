@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "Home": "होम",
+    "My Fields": "मेरे खेत",
+    "Intelligence": "कृषि ज्ञान",
+    "Ask AgriMesh": "AgriMesh से पूछें",
+    "Alerts": "अलर्ट",
+    "Crop Diagnosis": "फसल निदान",
+    "Profile": "प्रोफ़ाइल",
+    "Settings": "सेटिंग्स",
+    "Fields": "खेत",
+    "AI": "एआई (AI)",
+    "Ask": "पूछें",
+    "Scan": "स्कैन",
+    "View Profile": "प्रोफ़ाइल देखें",
+    "Sign Out": "लॉग आउट"
+  },
+  "search": {
+    "placeholder": "खेत, फसल, सिफारिशें खोजें..."
+  }
+}

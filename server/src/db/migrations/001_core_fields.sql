@@ -95,5 +95,11 @@ INSERT INTO crop_calendars (id, crop_type, region, stages) VALUES
     {"stage":"vegetative","gdd_threshold":250,"typical_days":[11,60]},
     {"stage":"flowering","gdd_threshold":900,"typical_days":[61,100]},
     {"stage":"maturity","gdd_threshold":1800,"typical_days":[101,160]}
+  ]'),
+  ('cotton_gujarat', 'cotton', 'gujarat', '[
+    {"stage":"germination","gdd_threshold":0,"typical_days":[0,8]},
+    {"stage":"vegetative","gdd_threshold":270,"typical_days":[9,55]},
+    {"stage":"flowering","gdd_threshold":950,"typical_days":[56,110]},
+    {"stage":"maturity","gdd_threshold":1900,"typical_days":[111,170]}
   ]')
 ON CONFLICT (id) DO NOTHING;

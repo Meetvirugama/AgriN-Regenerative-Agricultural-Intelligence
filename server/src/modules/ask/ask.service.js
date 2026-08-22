@@ -75,7 +75,7 @@ export const askService = {
     };
   },
 
-  async answer({ farmerId, message, clientMessageId }) {
+  async answer({ farmerId, message, clientMessageId, language }) {
     if (clientMessageId) {
       const existing = await findExistingMessage(farmerId, clientMessageId);
       if (existing && existing.role === 'assistant') {
@@ -84,6 +84,9 @@ export const askService = {
     }
 
     const context = await this.getContext({ farmerId });
+    if (language) {
+      context.language = language;
+    }
     const userMessage = await saveUserMessage({
       farmerId,
       fieldId: context.field.id,
