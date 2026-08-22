@@ -23,6 +23,7 @@
 }
 
 :root {
+  color-scheme: light;
   /* Core brand palette */
   --primary: #10b981;
   --secondary: #f3f4f6;
