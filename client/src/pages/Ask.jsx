@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Leaf,
   Bug,
@@ -471,7 +473,15 @@ export const Ask = () => {
                       msg.role === "user" ? "user-bubble" : "ai-bubble"
                     }`}
                   >
-                    <p className="ask-bubble-text">{msg.content}</p>
+                    {msg.role === "user" ? (
+                      <p className="ask-bubble-text">{msg.content}</p>
+                    ) : (
+                      <div className="ask-markdown-content">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                   {msg.role === "ai" && (
                     <>

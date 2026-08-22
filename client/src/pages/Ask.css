@@ -543,3 +543,55 @@
 .ask-dock-hint strong {
   color: var(--text-muted, #6b7280);
 }
+
+/* ── Markdown Content ─────────────────────────────────────── */
+.ask-markdown-content {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: inherit;
+}
+
+.ask-markdown-content p {
+  margin-bottom: 0.75rem;
+}
+.ask-markdown-content p:last-child {
+  margin-bottom: 0;
+}
+.ask-markdown-content ul, 
+.ask-markdown-content ol {
+  margin: 0.5rem 0 0.75rem 1.5rem;
+  padding: 0;
+}
+.ask-markdown-content li {
+  margin-bottom: 0.25rem;
+}
+.ask-markdown-content strong {
+  font-weight: 700;
+}
+.ask-markdown-content h1,
+.ask-markdown-content h2,
+.ask-markdown-content h3,
+.ask-markdown-content h4 {
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.ask-markdown-content h1 { font-size: 1.25rem; }
+.ask-markdown-content h2 { font-size: 1.125rem; }
+.ask-markdown-content h3 { font-size: 1rem; }
+.ask-markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.875rem;
+}
+.ask-markdown-content th,
+.ask-markdown-content td {
+  border: 1px solid rgba(209, 213, 219, 0.4);
+  padding: 0.5rem;
+  text-align: left;
+}
+.ask-markdown-content th {
+  background: rgba(243, 244, 246, 0.5);
+  font-weight: 700;
+}
