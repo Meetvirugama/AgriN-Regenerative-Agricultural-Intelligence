@@ -160,6 +160,8 @@ export const MyFields = () => {
   const [viewMode, setViewMode] = useState("grid");
   const [fields, setFields] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filterMode, setFilterMode] = useState("all");
+  const [sortMode, setSortMode] = useState("recent");
 
   const decorateField = (field) => {
     const ageDays = calculateAgeDays(field.sowing_date);
@@ -199,6 +201,28 @@ export const MyFields = () => {
     setFields((prev) => prev.filter((f) => f.id !== deletedId));
   };
 
+  const uniqueCrops = React.useMemo(() => {
+    const crops = new Set(fields.map((f) => f.crop_type).filter(Boolean));
+    return Array.from(crops).sort();
+  }, [fields]);
+
+  const displayedFields = React.useMemo(() => {
+    let result = [...fields];
+    if (filterMode !== "all") {
+      result = result.filter((f) => f.crop_type === filterMode);
+    }
+    if (sortMode === "recent") {
+      result.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    } else if (sortMode === "oldest") {
+      result.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+    } else if (sortMode === "name") {
+      result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    } else if (sortMode === "area") {
+      result.sort((a, b) => parseFloat(b.area_hectares || 0) - parseFloat(a.area_hectares || 0));
+    }
+    return result;
+  }, [fields, filterMode, sortMode]);
+
   return (
     <div className="myfields-container">
 
@@ -219,12 +243,35 @@ export const MyFields = () => {
       {fields.length > 0 && (
         <div className="myfields-controls">
           <div className="myfields-filters">
-            <button className="myfields-filter-btn">
-              All Fields <ChevronDown size={16} className="myfields-filter-icon" />
-            </button>
-            <button className="myfields-filter-btn">
-              Sort by: Recent <ChevronDown size={16} className="myfields-filter-icon" />
-            </button>
+            <div className="myfields-select-wrapper">
+              <select
+                className="myfields-filter-select"
+                value={filterMode}
+                onChange={(e) => setFilterMode(e.target.value)}
+              >
+                <option value="all">All Crops</option>
+                {uniqueCrops.map((crop) => (
+                  <option key={crop} value={crop}>
+                    {crop.charAt(0).toUpperCase() + crop.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={16} className="myfields-filter-icon" />
+            </div>
+            
+            <div className="myfields-select-wrapper">
+              <select
+                className="myfields-filter-select"
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value)}
+              >
+                <option value="recent">Sort by: Recent</option>
+                <option value="oldest">Sort by: Oldest</option>
+                <option value="name">Sort by: Name (A-Z)</option>
+                <option value="area">Sort by: Area</option>
+              </select>
+              <ChevronDown size={16} className="myfields-filter-icon" />
+            </div>
           </div>
           <div className="myfields-controls-right">
             <div className="myfields-view-toggle">
@@ -251,11 +298,11 @@ export const MyFields = () => {
         <div className="myfields-loader-container">
           <Loader2 className="myfields-spinner" />
         </div>
-      ) : fields.length === 0 ? (
+      ) : displayedFields.length === 0 ? (
         <EmptyState onAdd={() => navigate("/fields/add")} />
       ) : (
         <div className="myfields-grid" data-view={viewMode}>
-          {fields.map((field) => (
+          {displayedFields.map((field) => (
             <div key={field.id} className="myfields-card">
               <div className="myfields-card-header">
                 <div className="myfields-card-image-wrapper">

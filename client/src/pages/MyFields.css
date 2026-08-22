@@ -149,29 +149,43 @@
   }
 }
 
-.myfields-filter-btn {
+.myfields-select-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
   background-color: var(--surface, #fff);
   border: 1px solid rgba(229, 231, 235, 0.8);
   border-radius: 0.75rem;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  font-weight: 700;
-  color: var(--text-main, #374151);
   transition: all 0.2s ease;
-  flex-shrink: 0;
-  cursor: pointer;
   box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  flex-shrink: 0;
 }
-.myfields-filter-btn:hover { 
+
+.myfields-select-wrapper:hover {
   background-color: rgba(249, 250, 251, 0.8); 
   border-color: rgba(209, 213, 219, 0.8);
 }
 
+.myfields-filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0.5rem 2.25rem 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main, #374151);
+  cursor: pointer;
+  width: 100%;
+  font-family: inherit;
+  outline: none;
+}
+
 .myfields-filter-icon {
+  position: absolute;
+  right: 0.75rem;
+  pointer-events: none;
   color: var(--text-muted, #9ca3af);
 }
 
