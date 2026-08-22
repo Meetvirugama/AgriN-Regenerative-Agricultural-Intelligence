@@ -3,21 +3,21 @@ import { layer3Service } from "../weather/weather.service.js";
 import { satelliteService } from "../satellite/satellite.service.js";
 import { soilService } from "../soil/soil.service.js";
 import { PythonClient } from "../../services/pythonClient.js";
-import { query, queryOne } from "../../db/connection.js";
+import { generateJson } from "../../services/groqClient.js";
+import { queryOne } from "../../db/connection.js";
 
 /**
  * AdvisoryService
  *
  * Orchestrates the real data pipeline:
- *   Field → Weather → Satellite → Soil → Evidence → Gemini → Advisory
+ *   Field → Weather → Satellite → Soil → Evidence → Groq → Advisory
+ *
+ * Primary path: calls the Python AI service (PythonClient).
+ * Fallback path: calls Groq directly from Node.js when Python service is down.
  *
  * This service NEVER fabricates missing data.
- * Each data source is fetched, badged, and passed to Gemini as-is.
  */
 class AdvisoryService {
-  /**
-   * Assemble all real field evidence and generate a Gemini advisory.
-   */
   async generateAdvisory(fieldId) {
     const field = await layer1Service.getField(fieldId);
     if (!field) throw new Error(`Field ${fieldId} not found`);
@@ -67,9 +67,7 @@ class AdvisoryService {
         disclaimer: tile.disclaimer,
         trend: timeseries.trend,
         cloud_obstructed: tile.cloud_obstructed,
-        days_since_clear: tile.cloud_obstructed
-          ? this._daysSince(tile.observation_date)
-          : 0,
+        days_since_clear: tile.cloud_obstructed ? this._daysSince(tile.observation_date) : 0,
       };
     } catch (err) {
       console.warn(`[Advisory] Satellite unavailable for field ${fieldId}: ${err.message}`);
@@ -83,25 +81,37 @@ class AdvisoryService {
       console.warn(`[Advisory] Soil unavailable for field ${fieldId}: ${err.message}`);
     }
 
-    // ─── 5. Assemble and call Python AI Service ──────────────────────────────
-    const evidence = {
-      crop: cropEvidence,
-      weather: weatherEvidence,
-      satellite: satelliteEvidence,
-      soil: soilEvidence,
-    };
+    const satelliteSummary = satelliteEvidence ? JSON.stringify(satelliteEvidence) : "Unavailable";
+    const weatherSummary = weatherEvidence ? JSON.stringify(weatherEvidence) : "Unavailable";
+    const soilSummary = soilEvidence ? JSON.stringify(soilEvidence) : "Unavailable";
 
-    const geminiAdvisory = await PythonClient.generateAdvisory(
-      fieldId,
-      field.crop_type,
-      stage,
-      satelliteEvidence ? JSON.stringify(satelliteEvidence) : "Unavailable",
-      weatherEvidence ? JSON.stringify(weatherEvidence) : "Unavailable",
-      soilEvidence ? JSON.stringify(soilEvidence) : "Unavailable",
-      "en",
-    );
+    // ─── 5. Try Python AI service, fall back to direct Groq ─────────────────
+    let geminiAdvisory;
+    try {
+      geminiAdvisory = await PythonClient.generateAdvisory(
+        fieldId,
+        field.crop_type,
+        stage,
+        satelliteSummary,
+        weatherSummary,
+        soilSummary,
+        "en",
+      );
+      console.log(`[Advisory] Generated via Python AI service for field ${fieldId}`);
+    } catch (pythonErr) {
+      console.warn(`[Advisory] Python service unavailable (${pythonErr.message}). Using Groq fallback.`);
+      geminiAdvisory = await this._generateViaGroq(
+        field.crop_type,
+        stage,
+        satelliteSummary,
+        weatherSummary,
+        soilSummary,
+      );
+      console.log(`[Advisory] Generated via Groq fallback for field ${fieldId}`);
+    }
 
     // ─── 6. Persist advisory ─────────────────────────────────────────────────
+    const evidence = { crop: cropEvidence, weather: weatherEvidence, satellite: satelliteEvidence, soil: soilEvidence };
     const advisory = await this._saveAdvisory(fieldId, geminiAdvisory, evidence);
 
     return {
@@ -118,9 +128,60 @@ class AdvisoryService {
   }
 
   /**
-   * Estimate crop growth stage from days-since-sowing and crop type.
-   * This is a deterministic calculation — NOT AI.
+   * Generate advisory directly using Groq API (fallback when Python service is down).
    */
+  async _generateViaGroq(cropType, cropStage, satelliteSummary, weatherSummary, soilSummary) {
+    const prompt = `You are AgriMesh's agricultural decision-support engine.
+
+Your job is NOT to provide generic agricultural information.
+You must reason ONLY from the supplied field context and clearly indicate uncertainty when evidence is insufficient.
+
+FIELD
+-----
+Crop: ${cropType}
+Growth stage: ${cropStage}
+
+SATELLITE DATA
+--------------
+${satelliteSummary}
+
+WEATHER
+-------
+${weatherSummary}
+
+SOIL
+----
+${soilSummary}
+
+REASONING RULES
+---------------
+1. Identify what is happening (what_text).
+2. Explain why using supplied evidence (why_text).
+3. State severity/urgency as one of: Low, Medium, High, Urgent.
+4. Give the most useful practical action (action_text).
+5. Give a concrete timeframe (action_deadline).
+6. State what the farmer should monitor next (monitor_text).
+7. Include source_layers (array like ["Weather", "Soil", "Satellite"]).
+8. Do not invent measurements, weather values, or soil values.
+9. If evidence is insufficient, explicitly say so.
+10. Prefer conservative recommendations when uncertainty is high.
+
+Respond ONLY with valid JSON matching this structure exactly:
+{
+  "what_text": "string",
+  "why_text": "string",
+  "severity": "Low|Medium|High|Urgent",
+  "action_text": "string",
+  "action_deadline": "string",
+  "monitor_text": "string",
+  "source_layers": ["Weather", "Soil", "Satellite"],
+  "confidence": 0.75,
+  "confidence_reason": "string"
+}`;
+
+    return generateJson(prompt, { temperature: 0.3, maxTokens: 1024 });
+  }
+
   _estimateCropStage(days, cropType) {
     const calendars = {
       wheat:  { germination: [0,7], vegetative: [8,60], flowering: [61,90], maturity: [91,140] },
@@ -140,8 +201,7 @@ class AdvisoryService {
     return Math.floor((Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  async _saveAdvisory(fieldId, gemini, evidence) {
-    // Use existing advisories table if available (from migration 006)
+  async _saveAdvisory(fieldId, gemini, _evidence) {
     try {
       const row = await queryOne(
         `INSERT INTO advisory_records
@@ -157,18 +217,18 @@ class AdvisoryService {
           "ai_generated",
           gemini.what_text || gemini.what_is_happening || gemini.what,
           gemini.why_text || gemini.why,
-          gemini.severity ? gemini.severity.charAt(0).toUpperCase() + gemini.severity.slice(1).toLowerCase() : 'Medium',
+          gemini.severity
+            ? gemini.severity.charAt(0).toUpperCase() + gemini.severity.slice(1).toLowerCase()
+            : "Medium",
           gemini.action_text || gemini.recommended_action || gemini.action,
           gemini.action_deadline || gemini.when || gemini.deadline,
           gemini.monitor_text || gemini.monitor,
-          ["weather", "satellite", "soil"],
+          gemini.source_layers ?? ["Weather", "Satellite", "Soil"],
           JSON.stringify({ gemini_confidence: gemini.confidence, evidence: gemini.evidence }),
         ],
       );
       return { ...row, persisted: true };
     } catch (err) {
-      // advisories table may have slightly different schema — return in-memory shape
-      // but flag it explicitly so the client knows the ID is not in the DB
       console.warn("[Advisory] Could not persist to DB:", err.message);
       return {
         id: `adv-${Date.now()}`,
@@ -179,13 +239,12 @@ class AdvisoryService {
         action_text: gemini.action_text || gemini.recommended_action || gemini.action,
         action_deadline: gemini.action_deadline || gemini.when || gemini.deadline,
         monitor_text: gemini.monitor_text || gemini.monitor,
-        source_layers: ["weather", "satellite", "soil"],
+        source_layers: gemini.source_layers ?? ["Weather", "Satellite", "Soil"],
         gemini_confidence: gemini.confidence,
         confidence_reason: gemini.confidence_reason,
         gemini_evidence: gemini.evidence,
         generated_at: new Date().toISOString(),
         persisted: false,
-        warning: "Advisory could not be saved to database. This ID is temporary and cannot be referenced in follow-up responses.",
       };
     }
   }
