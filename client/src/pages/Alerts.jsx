@@ -32,24 +32,28 @@ const ALERT_TABS = [
   { key: "resolved", label: "Resolved" },
 ];
 
-const normalizeAlert = (alert) => ({
-  id: alert.id,
-  title: alert.title || "Field Alert",
-  description: alert.description || "",
-  field: alert.field || alert.fieldName || "Unknown Field",
-  fieldId: alert.fieldId || alert.field_id || null,
-  priority: alert.priority
-    ? alert.priority.charAt(0).toUpperCase() + alert.priority.slice(1).toLowerCase()
-    : "Low",
-  type: alert.type || "general",
-  resolved: Boolean(alert.resolved),
-  read: Boolean(alert.read),
-  time: alert.time || alert.createdAt || alert.created_at,
-  createdAt:
-    alert.createdAt ||
-    alert.created_at ||
-    null,
-});
+const normalizeAlert = (alert) => {
+  if (!alert) return null;
+  
+  let prioStr = "Low";
+  if (typeof alert.priority === "string" && alert.priority.trim() !== "") {
+    prioStr = alert.priority;
+  }
+  
+  return {
+    id: alert.id || `alert-${Math.random().toString(36).substr(2, 9)}`,
+    title: alert.title || "Field Alert",
+    description: alert.description || "",
+    field: alert.field || alert.fieldName || "Unknown Field",
+    fieldId: alert.fieldId || alert.field_id || null,
+    priority: prioStr.charAt(0).toUpperCase() + prioStr.slice(1).toLowerCase(),
+    type: alert.type || "general",
+    resolved: Boolean(alert.resolved),
+    read: Boolean(alert.read),
+    time: alert.time || alert.createdAt || alert.created_at || new Date().toISOString(),
+    createdAt: alert.createdAt || alert.created_at || new Date().toISOString(),
+  };
+};
 
 const formatAlertTime = (timestamp) => {
   if (!timestamp) return "Unknown time";
@@ -150,11 +154,9 @@ const AlertsListItem = ({
   navigate,
   onMarkRead,
 }) => {
-  const [isHovered, setIsHovered] =
-    useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
-  const priority =
-    alert.priority.toLowerCase();
+  const priority = (alert.priority || "Low").toLowerCase();
 
   return (
     <div
@@ -328,10 +330,9 @@ export const Alerts = () => {
         const data =
           await cropApi.getAlerts();
 
-        const normalized =
-          Array.isArray(data)
-            ? data.map(normalizeAlert)
-            : [];
+        const normalized = Array.isArray(data)
+          ? data.map(normalizeAlert).filter(Boolean)
+          : [];
 
         setAlerts(normalized);
       } catch (err) {
