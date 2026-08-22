@@ -22,7 +22,7 @@ services:
       - key: PORT
         value: 8000
       - key: ALLOWED_ORIGINS
-        value: https://your-vercel-app-url.vercel.app # Update this with your actual Vercel URL
+        value: https://agri-n-regenerative-agricultural-in.vercel.app
         
   - type: web
     name: agrimesh-ai-service
