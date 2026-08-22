@@ -91,20 +91,30 @@ export const AuthProvider = ({ children }) => {
     setFarmer(tokens.farmer);
   }, []);
 
-  // ─── Google Login ─────────────────────────────────────────
   const loginWithGoogle = useCallback(async (tokenResponse) => {
     try {
       const tokens = await authApi.loginWithGoogle(tokenResponse.access_token);
       
+      const isNewUser = Boolean(tokens.is_new_user || tokens.farmer?.is_new_user);
+      if (isNewUser) {
+        sessionStorage.setItem("agri_is_new_user", "true");
+      }
+
+      const farmerObj = {
+        ...tokens.farmer,
+        is_new_user: isNewUser,
+      };
+
       const session = {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
-        farmer: tokens.farmer,
+        farmer: farmerObj,
       };
       
       saveSession(session);
       setAccessToken(session.accessToken);
-      setFarmer(session.farmer);
+      setFarmer(farmerObj);
+      return tokens;
     } catch (err) {
       console.error("Failed to login with Google via backend", err);
       throw err;

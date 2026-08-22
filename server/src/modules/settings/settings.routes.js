@@ -56,7 +56,7 @@ router.get("/", async (req, res, next) => {
     );
 
     // Create default settings automatically
-    if (!result.rows.length) {
+    if (!result?.length) {
       const created = await query(
         `
         INSERT INTO farmer_settings (farmer_id)
@@ -67,12 +67,12 @@ router.get("/", async (req, res, next) => {
       );
 
       return res.json({
-        settings: serializeSettings(created.rows[0]),
+        settings: serializeSettings(created[0]),
       });
     }
 
     return res.json({
-      settings: serializeSettings(result.rows[0]),
+      settings: serializeSettings(result[0]),
     });
   } catch (error) {
     console.error("[Settings] GET failed:", error);
@@ -183,7 +183,7 @@ router.patch("/", async (req, res, next) => {
 
     return res.json({
       success: true,
-      settings: serializeSettings(result.rows[0]),
+      settings: serializeSettings(result[0]),
     });
   } catch (error) {
     console.error("[Settings] PATCH failed:", error);

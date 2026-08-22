@@ -14,8 +14,8 @@ const LoginContent = ({ onSuccess }) => {
       setIsLoading(true);
       setError(null);
       try {
-        await loginWithGoogle(tokenResponse);
-        onSuccess?.();
+        const tokens = await loginWithGoogle(tokenResponse);
+        onSuccess?.(tokens);
         // NOTE: setIsLoading(false) intentionally omitted here — onSuccess
         // triggers a route change that unmounts this component, so updating
         // state on an unmounted component is a no-op and harmless.

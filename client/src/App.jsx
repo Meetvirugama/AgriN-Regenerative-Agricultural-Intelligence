@@ -65,7 +65,17 @@ function LoginPageWrapper() {
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
   
-  return <LoginPage onSuccess={() => navigate(from, { replace: true })} />;
+  return (
+    <LoginPage
+      onSuccess={(tokens) => {
+        if (tokens?.is_new_user || tokens?.farmer?.is_new_user) {
+          navigate("/onboarding", { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
+      }}
+    />
+  );
 }
 
 /**
@@ -86,6 +96,16 @@ function AppRoutes() {
           }
         />
 
+        {/* Onboarding — standalone full-page setup screen */}
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Farmer routes — protected */}
         <Route
           path="/"
@@ -96,7 +116,6 @@ function AppRoutes() {
           }
         >
           <Route index element={<Home />} />
-          <Route path="onboarding" element={<Onboarding />} />
           <Route path="intelligence" element={<Intelligence />} />
           <Route path="ask" element={<Ask />} />
           <Route path="alerts" element={<Alerts />} />
