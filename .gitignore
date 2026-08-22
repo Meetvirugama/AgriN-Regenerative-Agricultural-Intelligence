@@ -22,7 +22,22 @@ node_modules/
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
+*.key
+*.crt
+
+# IDEs and Editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# Local Databases
+*.sqlite
+*.sqlite3
+*.db
 
 # debug
 npm-debug.log*
