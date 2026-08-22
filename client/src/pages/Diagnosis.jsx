@@ -280,7 +280,9 @@ export const Diagnosis = () => {
       )}
 
       {/* ── RESULT TAB ── */}
-      {activeTab === 'result' && result && (
+      {activeTab === 'result' && result && (() => {
+        const isUnsupported = result?.disease?.toLowerCase().includes("unsupported") || result?.disease?.toLowerCase().includes("not a");
+        return (
         <div className="diagnosis-three-column-grid slide-in-right">
 
           {/* LEFT — image */}
@@ -344,39 +346,47 @@ export const Diagnosis = () => {
             </div>
 
             {/* Inner info tabs */}
-            <div className="diagnosis-tabs-card compact">
-              <div className="diagnosis-tabs">
-                {INFO_TABS.map((tab, i) => (
-                  <button
-                    key={tab}
-                    className={`diagnosis-tab ${activeInfoTab === i ? 'active' : 'inactive'}`}
-                    onClick={() => setActiveInfoTab(i)}
-                  >
-                    {tab}
-                  </button>
-                ))}
+            {isUnsupported ? (
+              <div className="diagnosis-tabs-card compact">
+                <div className="diagnosis-tab-content">
+                  {getInfoTabContent(0, result)}
+                </div>
               </div>
-              <div className="diagnosis-tab-content">
-                {getInfoTabContent(activeInfoTab, result)}
+            ) : (
+              <div className="diagnosis-tabs-card compact">
+                <div className="diagnosis-tabs">
+                  {INFO_TABS.map((tab, i) => (
+                    <button
+                      key={tab}
+                      className={`diagnosis-tab ${activeInfoTab === i ? 'active' : 'inactive'}`}
+                      onClick={() => setActiveInfoTab(i)}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+                <div className="diagnosis-tab-content">
+                  {getInfoTabContent(activeInfoTab, result)}
 
-                <div className="diagnosis-info-3box-row">
-                  <div className="diagnosis-info-box-compact">
-                    <span className="diagnosis-info-label-sm">Affects</span>
-                    <span className="diagnosis-info-value-sm">{result.crop || "Crop"}</span>
-                  </div>
-                  <div className="diagnosis-info-box-compact">
-                    <span className="diagnosis-info-label-sm">Primary Source</span>
-                    <span className="diagnosis-info-value-sm">
-                      {result.evidence?.length > 0 ? result.evidence[0].source : "Visual Analysis"}
-                    </span>
-                  </div>
-                  <div className={`diagnosis-info-box-compact ${result.severity === 'high' || result.severity === 'critical' ? 'alert' : ''}`}>
-                    <span className="diagnosis-info-label-sm">Risk Level</span>
-                    <span className="diagnosis-info-value-sm diagnosis-capitalize">{result.severity || "Unknown"}</span>
+                  <div className="diagnosis-info-3box-row">
+                    <div className="diagnosis-info-box-compact">
+                      <span className="diagnosis-info-label-sm">Affects</span>
+                      <span className="diagnosis-info-value-sm">{result.crop || "Crop"}</span>
+                    </div>
+                    <div className="diagnosis-info-box-compact">
+                      <span className="diagnosis-info-label-sm">Primary Source</span>
+                      <span className="diagnosis-info-value-sm">
+                        {result.evidence?.length > 0 ? result.evidence[0].source : "Visual Analysis"}
+                      </span>
+                    </div>
+                    <div className={`diagnosis-info-box-compact ${result.severity === 'high' || result.severity === 'critical' ? 'alert' : ''}`}>
+                      <span className="diagnosis-info-label-sm">Risk Level</span>
+                      <span className="diagnosis-info-value-sm diagnosis-capitalize">{result.severity || "Unknown"}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="diagnosis-footer-banner compact">
               <Info size={16} className="diagnosis-footer-icon" />
@@ -387,56 +397,60 @@ export const Diagnosis = () => {
 
           {/* RIGHT — widgets */}
           <div className="diagnosis-col-right">
-            <div className="diagnosis-widget compact">
-              <div className="diagnosis-widget-header">
-                <Zap size={18} className="diagnosis-icon-success" />
-                <h3 className="diagnosis-widget-title">Quick Actions</h3>
-              </div>
-              <div className="diagnosis-actions-list compact">
-                <button className="diagnosis-action-btn-compact">
-                  <CalendarClock size={16} className="diagnosis-action-icon" /> Set Treatment Reminder
-                </button>
-                <button className="diagnosis-action-btn-compact">
-                  <UserSquare2 size={16} className="diagnosis-action-icon" /> Schedule Field Visit
-                </button>
-                <button className="diagnosis-action-btn-compact" onClick={() => navigate('/ask')}>
-                  <Share2 size={16} className="diagnosis-action-icon" /> Share with Expert
-                </button>
-                <button className="diagnosis-action-btn-compact">
-                  <ListTodo size={16} className="diagnosis-action-icon-muted" /> View Similar Cases
-                </button>
-              </div>
-            </div>
-
-            <div className="diagnosis-widget compact">
-              <div className="diagnosis-widget-header">
-                <ShieldCheck size={18} className="diagnosis-icon-success" />
-                <h3 className="diagnosis-widget-title">Recommended Solutions</h3>
-              </div>
-              <div className="diagnosis-solutions-list compact">
-                <div className="diagnosis-solution-item-compact">
-                  <ShieldCheck size={16} className="diagnosis-icon-success diagnosis-shrink0 diagnosis-mt1" />
-                  <div>
-                    <h4 className="diagnosis-solution-name-sm">Primary Recommendation</h4>
-                    <p className="diagnosis-solution-desc-sm">{result.treatment_recommendation || "Consult local experts."}</p>
+            {!isUnsupported && (
+              <>
+                <div className="diagnosis-widget compact">
+                  <div className="diagnosis-widget-header">
+                    <Zap size={18} className="diagnosis-icon-success" />
+                    <h3 className="diagnosis-widget-title">Quick Actions</h3>
+                  </div>
+                  <div className="diagnosis-actions-list compact">
+                    <button className="diagnosis-action-btn-compact">
+                      <CalendarClock size={16} className="diagnosis-action-icon" /> Set Treatment Reminder
+                    </button>
+                    <button className="diagnosis-action-btn-compact">
+                      <UserSquare2 size={16} className="diagnosis-action-icon" /> Schedule Field Visit
+                    </button>
+                    <button className="diagnosis-action-btn-compact" onClick={() => navigate('/ask')}>
+                      <Share2 size={16} className="diagnosis-action-icon" /> Share with Expert
+                    </button>
+                    <button className="diagnosis-action-btn-compact">
+                      <ListTodo size={16} className="diagnosis-action-icon-muted" /> View Similar Cases
+                    </button>
                   </div>
                 </div>
 
-                {result.differential_diagnosis?.length > 0 && (
-                  <div className="diagnosis-solution-item-compact">
-                    <Info size={16} className="diagnosis-icon-warning diagnosis-shrink0 diagnosis-mt1" />
-                    <div>
-                      <h4 className="diagnosis-solution-name-sm">Other Possibilities</h4>
-                      <p className="diagnosis-solution-desc-sm">
-                        {result.differential_diagnosis
-                          .map(d => `${d.condition} (${Math.round((d.probability || 0) * 100)}%)`)
-                          .join(", ")}
-                      </p>
-                    </div>
+                <div className="diagnosis-widget compact">
+                  <div className="diagnosis-widget-header">
+                    <ShieldCheck size={18} className="diagnosis-icon-success" />
+                    <h3 className="diagnosis-widget-title">Recommended Solutions</h3>
                   </div>
-                )}
-              </div>
-            </div>
+                  <div className="diagnosis-solutions-list compact">
+                    <div className="diagnosis-solution-item-compact">
+                      <ShieldCheck size={16} className="diagnosis-icon-success diagnosis-shrink0 diagnosis-mt1" />
+                      <div>
+                        <h4 className="diagnosis-solution-name-sm">Primary Recommendation</h4>
+                        <p className="diagnosis-solution-desc-sm">{result.treatment_recommendation || "Consult local experts."}</p>
+                      </div>
+                    </div>
+
+                    {result.differential_diagnosis?.length > 0 && (
+                      <div className="diagnosis-solution-item-compact">
+                        <Info size={16} className="diagnosis-icon-warning diagnosis-shrink0 diagnosis-mt1" />
+                        <div>
+                          <h4 className="diagnosis-solution-name-sm">Other Possibilities</h4>
+                          <p className="diagnosis-solution-desc-sm">
+                            {result.differential_diagnosis
+                              .map(d => `${d.condition} (${Math.round((d.probability || 0) * 100)}%)`)
+                              .join(", ")}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
 
             <button className="diagnosis-btn-outline diagnosis-new-scan-btn" onClick={resetUpload}>
               + New Scan
@@ -444,7 +458,8 @@ export const Diagnosis = () => {
           </div>
 
         </div>
-      )}
+        );
+      })}
 
       {/* ── PREVIOUS DIAGNOSIS TAB ── */}
       {activeTab === 'previous' && (
