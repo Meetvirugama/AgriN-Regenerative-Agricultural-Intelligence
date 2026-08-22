@@ -91,7 +91,7 @@ export const Home = () => {
   return (
     <div className="home-container">
       <section className="home-header">
-        <h1>Good morning, {farmer?.name?.split(' ')[0] || "Farmer"}</h1>
+        <h1>Good morning, {farmer?.name ? farmer.name.split(' ')[0] : "Farmer"}</h1>
         <p>Here's what's happening in your fields today.</p>
       </section>
 

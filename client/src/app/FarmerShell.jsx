@@ -217,7 +217,7 @@ export const FarmerShell = () => {
                           <UserIcon size={14} isHovered={isProfileHovered} />
                         </div>
                         <span className="dashboard-header-action">
-                          {farmer?.name?.split(' ')[0] || "Farmer"} <DownChevron size={14} isHovered={isProfileHovered} />
+                          {farmer?.name ? farmer.name.split(' ')[0] : "Farmer"} <DownChevron size={14} isHovered={isProfileHovered} />
                         </span>
                       </div>
 
