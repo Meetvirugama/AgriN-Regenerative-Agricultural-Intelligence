@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Stethoscope, Search, Sprout, Menu, X,
-  Home as HomeIconLucide, MapPin, BellDot, ScanLine, User as UserLucide
+  Home as HomeIconLucide, MapPin, BellDot, ScanLine, User as UserLucide,
+  BrainCircuit, MessageSquare, Settings as SettingsLucide
 } from "lucide-react";
 import { GlobalMicButton } from "../features/voice/components/GlobalMicButton";
 import { LanguageSwitcher } from "../features/voice/components/LanguageSwitcher";
@@ -155,13 +156,7 @@ export const FarmerShell = () => {
 
         <main className="dashboard-main">
           <header className="dashboard-header">
-              {/* Mobile Menu Toggle - Always visible on mobile */}
-              <button 
-                className="dashboard-mobile-menu-btn"
-                onClick={() => setIsMobileMenuOpen(true)}
-              >
-                <Menu size={24} />
-              </button>
+              {/* Mobile Menu removed as requested */}
 
               {location.pathname === '/intelligence' ? (
                 <div id="intelligence-header-portal" className="intelligence-header-portal-slot"></div>
@@ -242,9 +237,12 @@ export const FarmerShell = () => {
             {[
               { to: "/",         icon: HomeIconLucide, label: "Home" },
               { to: "/fields",   icon: MapPin,         label: "Fields" },
+              { to: "/intelligence", icon: BrainCircuit, label: "AI" },
+              { to: "/ask",      icon: MessageSquare,  label: "Ask" },
               { to: "/alerts",   icon: BellDot,        label: "Alerts" },
               { to: "/diagnosis",icon: ScanLine,       label: "Scan" },
               { to: "/profile",  icon: UserLucide,     label: "Profile" },
+              { to: "/settings", icon: SettingsLucide, label: "Settings" },
             ].map(({ to, icon: Icon, label }) => {
               const isActive = location.pathname === to ||
                 (to !== "/" && location.pathname.startsWith(to));

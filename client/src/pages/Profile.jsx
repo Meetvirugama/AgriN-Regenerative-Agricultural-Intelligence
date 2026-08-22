@@ -153,7 +153,7 @@ export const Profile = () => {
       {portalTarget && createPortal(
         <>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <h1 className="profile-title" style={{ fontSize: '1.5rem', lineHeight: '2rem', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>My Profile</h1>
+            <h1 className="profile-title" style={{ fontSize: '1.5rem', lineHeight: '2rem', fontWeight: 700, margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>My Profile</h1>
           </div>
           <div className="dashboard-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <button className="dashboard-header-action language" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)', fontSize: '0.875rem', fontWeight: 500 }}>
