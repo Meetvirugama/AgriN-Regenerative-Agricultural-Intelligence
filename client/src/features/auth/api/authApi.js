@@ -8,7 +8,15 @@ async function apiFetch(path, options = {}) {
       ...options.headers,
     },
   });
-  const data = await res.json();
+  
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (e) {
+    throw new Error(`API Error (${res.status}): Expected JSON but got: ${text.slice(0, 50)}...`);
+  }
+  
   if (!res.ok) {
     throw new Error(data?.error?.message ?? `Request failed: ${res.status}`);
   }
