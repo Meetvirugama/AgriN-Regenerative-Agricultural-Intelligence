@@ -51,21 +51,8 @@ class SoilService {
         });
         return profile;
       } catch (err) {
-        console.warn(`[Soil] SoilGrids unavailable for field ${fieldId}: ${err.message}. Falling back to regional baseline.`);
+        console.warn(`[Soil] SoilGrids unavailable for field ${fieldId}: ${err.message}. Returning null instead of fallback.`);
       }
-    }
-
-    // 3. Fall back to regional baseline based on field location
-    const region = this._inferRegion(field?.lat, field?.lng);
-    const baseline = await soilRepo.findRegionalBaseline(region);
-    if (baseline) {
-      return {
-        field_id: fieldId,
-        source: "regional_inference",
-        region,
-        ...baseline,
-        confidence: 0.45,
-      };
     }
 
     return null;

@@ -235,27 +235,8 @@ export class ObservationService {
       const result = await model.generateContent([prompt, imagePart]);
       text = result.response.text();
     } catch (err) {
-      console.warn(`[Disease] Gemini Vision failed (likely 429 quota): ${err.message}. Using demo fallback.`);
-      // Smart Fallback for Demonstration when API quota is exhausted
-      return {
-        image_quality: "good",
-        condition_name: "Cotton Boll Rot / Healthy Bolls",
-        condition_category: "healthy",
-        confidence: 0.92,
-        severity: "none",
-        what_is_happening: "The cotton bolls appear healthy and mature, ready for harvest. There are no major signs of boll rot or pest infestation.",
-        why_is_it_happening: "Optimal weather and soil conditions have supported healthy boll development.",
-        treatment_recommendation: "Proceed with harvesting. Ensure dry storage to prevent post-harvest fungal growth.",
-        action_timing: "Immediate",
-        monitor: "Monitor harvested cotton for moisture to prevent rot during storage.",
-        requires_expert: false,
-        escalation_triggered: false,
-        differential_diagnosis: [],
-        evidence: [
-          { source: "image", finding: "Clear, white mature cotton bolls visible", supports_primary: true },
-          { source: "weather", finding: "Dry conditions ideal for boll opening", supports_primary: true }
-        ]
-      };
+      console.warn(`[Disease] Gemini Vision failed: ${err.message}`);
+      throw new Error("Diagnosis failed due to AI service unavailability.");
     }
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);

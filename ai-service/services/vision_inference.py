@@ -244,7 +244,7 @@ class CropVisionPredictor:
             }
         except Exception as e:
             print(f"[Vision] Gemini fallback failed: {e}")
-            return {"condition": "Unknown", "confidence": 0.0, "top_k": []}
+            raise Exception(f"Gemini fallback failed: {e}")
 
     def list_supported_crops(self) -> list[str]:
         """Return all crops with an active local .pth model."""

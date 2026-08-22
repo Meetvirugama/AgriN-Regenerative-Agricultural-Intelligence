@@ -13,15 +13,13 @@ function createSatelliteProvider() {
   if (process.env.CDSE_CLIENT_ID && process.env.CDSE_CLIENT_SECRET) {
     return new CopernicusProvider();
   }
-  console.warn("[Satellite] ⚠ No CDSE credentials — using MockSatelliteProvider. Data is NOT real.");
-  return new MockSatelliteProvider();
+  console.warn("[Satellite] ⚠ No CDSE credentials provided. Real satellite data is unavailable.");
+  return null;
 }
 
 class SatelliteService {
   constructor() {
     this.provider = createSatelliteProvider();
-    // Keep a mock instance ready for fallback when Copernicus fails
-    this.mockProvider = new MockSatelliteProvider();
   }
 
   /**
@@ -58,19 +56,15 @@ class SatelliteService {
     // For the mock provider, geojson can be null.
     const geojson = field.geojson ?? null;
 
+    if (!this.provider) {
+      throw new Error("No CDSE credentials provided. Satellite data unavailable.");
+    }
+
     let raw;
     try {
       raw = await this.provider.fetchLatestTile(geojson, fieldId);
     } catch (providerErr) {
-      // Copernicus failed — fall back to mock provider with a clear warning
-      if (this.provider !== this.mockProvider) {
-        console.warn(
-          `[Satellite] CopernicusProvider failed (${providerErr.message}) — falling back to MockSatelliteProvider. Data will be simulated.`
-        );
-        raw = await this.mockProvider.fetchLatestTile(geojson, fieldId);
-      } else {
-        throw providerErr; // Mock also failed — propagate
-      }
+      throw providerErr; // Propagate the error directly
     }
 
     // Persist all NDVI stats

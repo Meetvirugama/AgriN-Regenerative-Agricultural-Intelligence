@@ -73,23 +73,8 @@ def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, s
                 return json.loads(match.group(0))
             return json.loads(text)
         except Exception as e:
-            print(f"[Gemini] Error parsing response: {e}, returning fallback dict.")
-            return {
-                "image_quality": "poor",
-                "condition_name": "Undetermined",
-                "condition_category": "unknown",
-                "confidence": 0.0,
-                "severity": "unknown",
-                "what_is_happening": "Unable to determine.",
-                "why_is_it_happening": "AI processing failed.",
-                "treatment_recommendation": "Consult an expert.",
-                "action_timing": "Immediately",
-                "monitor": "Check again later",
-                "requires_expert": True,
-                "escalation_triggered": True,
-                "differential_diagnosis": [{"condition": "Unknown", "probability": 1.0, "rationale": "Fallback"}],
-                "evidence": [{"source": "image", "finding": "Image analysis failed.", "supports_primary": True}]
-            }
+            print(f"[Gemini] Error parsing response: {e}")
+            raise Exception(f"Failed to parse Gemini response: {e}")
     return {"text": getattr(response, 'text', '')}
 
 def generate_text(prompt: str, schema_class=None) -> dict:
