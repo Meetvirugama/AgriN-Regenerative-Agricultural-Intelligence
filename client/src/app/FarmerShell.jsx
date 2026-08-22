@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Stethoscope, Users, Search, Sprout, Menu, X
+  Stethoscope, Search, Sprout, Menu, X,
+  Home as HomeIconLucide, MapPin, BellDot, ScanLine, User as UserLucide
 } from "lucide-react";
 import { GlobalMicButton } from "../features/voice/components/GlobalMicButton";
 import { LanguageSwitcher } from "../features/voice/components/LanguageSwitcher";
@@ -153,8 +154,7 @@ export const FarmerShell = () => {
         </aside>
 
         <main className="dashboard-main">
-          {location.pathname !== '/profile' && (
-            <header className="dashboard-header">
+          <header className="dashboard-header">
               {/* Mobile Menu Toggle - Always visible on mobile */}
               <button 
                 className="dashboard-mobile-menu-btn"
@@ -236,7 +236,31 @@ export const FarmerShell = () => {
                     </div>
                   </div>
             </header>
-          )}
+
+          {/* ── Mobile Bottom Navigation — always visible on mobile ── */}
+          <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
+            {[
+              { to: "/",         icon: HomeIconLucide, label: "Home" },
+              { to: "/fields",   icon: MapPin,         label: "Fields" },
+              { to: "/alerts",   icon: BellDot,        label: "Alerts" },
+              { to: "/diagnosis",icon: ScanLine,       label: "Scan" },
+              { to: "/profile",  icon: UserLucide,     label: "Profile" },
+            ].map(({ to, icon: Icon, label }) => {
+              const isActive = location.pathname === to ||
+                (to !== "/" && location.pathname.startsWith(to));
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`mobile-bottom-nav-item ${isActive ? "active" : ""}`}
+                  aria-label={label}
+                >
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 1.75} />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
           <div className="dashboard-content">
             <Outlet />

@@ -568,3 +568,62 @@
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   MOBILE BOTTOM NAVIGATION BAR
+   Always visible on mobile. Hidden on desktop.
+   ========================================================================== */
+.mobile-bottom-nav {
+  display: none; /* hidden by default (desktop) */
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #ffffff;
+    border-top: 1px solid #E5E7EB;
+    z-index: 100;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .mobile-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    color: #9CA3AF;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 6px 4px;
+    transition: color 150ms;
+    min-width: 0;
+  }
+
+  .mobile-bottom-nav-item.active {
+    color: #16A34A;
+  }
+
+  .mobile-bottom-nav-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    letter-spacing: -0.01em;
+  }
+
+  /* Push content above the bottom nav bar */
+  .dashboard-content {
+    padding-bottom: 72px !important;
+  }
+}
+
