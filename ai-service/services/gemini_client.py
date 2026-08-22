@@ -30,8 +30,8 @@ def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, s
     if not client:
         raise ValueError("GEMINI_API_KEYS is not configured.")
 
-    # We use gemini-3.6-flash as the default multimodal model
-    model = 'gemini-3.6-flash'
+    # We use gemini-2.0-flash as the default multimodal model
+    model = 'gemini-2.0-flash'
     
     contents = [
         types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
@@ -100,7 +100,7 @@ def generate_text(prompt: str, schema_class=None) -> dict:
     if not client:
         raise ValueError("GEMINI_API_KEYS is not configured.")
 
-    model = "gemini-3.6-flash"
+    model = "gemini-2.0-flash"
     
     config_args = {"temperature": 0.4}
     
