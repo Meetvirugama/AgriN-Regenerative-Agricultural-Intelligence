@@ -251,6 +251,30 @@
       "test_accuracy": 0.99,
       "test_macro_f1": 0.99,
       "notes": "Added from backup zip"
+    },
+    "cotton": {
+      "model_name": "cotton-gemini-fallback",
+      "model_version": "v1.0-gemini",
+      "backbone": "gemini-vision",
+      "type": "gemini-fallback",
+      "status": "active",
+      "notes": "Local model missing. Using Gemini fallback natively."
+    },
+    "wheat": {
+      "model_name": "wheat-gemini-fallback",
+      "model_version": "v1.0-gemini",
+      "backbone": "gemini-vision",
+      "type": "gemini-fallback",
+      "status": "active",
+      "notes": "Local model missing. Using Gemini fallback natively."
+    },
+    "rice": {
+      "model_name": "rice-gemini-fallback",
+      "model_version": "v1.0-gemini",
+      "backbone": "gemini-vision",
+      "type": "gemini-fallback",
+      "status": "active",
+      "notes": "Local model missing. Using Gemini fallback natively."
     }
   },
   "pending_models": {
