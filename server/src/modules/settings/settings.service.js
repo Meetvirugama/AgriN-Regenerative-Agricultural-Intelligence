@@ -47,8 +47,8 @@ export const settingsService = {
         [farmerId]
       );
 
-      if (!result.rows.length) {
-        // Return defaults if no settings found
+      if (!result?.rows?.length) {
+        // Return defaults if no settings found or table not yet migrated
         return {
           language: "English",
           timezone: "Asia/Kolkata",
@@ -71,7 +71,24 @@ export const settingsService = {
       return serializeSettings(result.rows[0]);
     } catch (error) {
       console.error("[Settings Service] Failed to fetch settings:", error);
-      throw error;
+      // Return defaults rather than crashing the caller (intelligence, advisory, etc.)
+      return {
+        language: "English",
+        timezone: "Asia/Kolkata",
+        enableSounds: true,
+        personalizedRecs: true,
+        voiceResponses: false,
+        autoReadRecs: false,
+        adviceLevel: "Simple",
+        permissions: {
+          crop: true,
+          soil: true,
+          weather: true,
+          history: true,
+          health: true,
+          irrigation: true,
+        },
+      };
     }
   },
 };

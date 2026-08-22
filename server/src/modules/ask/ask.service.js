@@ -32,7 +32,7 @@ export const askService = {
     }
 
     try {
-      const satelliteData = await satelliteService.getLatestObservation(field.id);
+      const satelliteData = await satelliteService.getLatestForField(field.id);
       if (satelliteData) {
         satellite = satelliteData;
       }
@@ -41,7 +41,7 @@ export const askService = {
     }
 
     try {
-      const soilData = await soilService.getSoilProfile(field.id);
+      const soilData = await soilService.getActiveSoilProfile(field.id);
       if (soilData) {
         soil = soilData;
       }
