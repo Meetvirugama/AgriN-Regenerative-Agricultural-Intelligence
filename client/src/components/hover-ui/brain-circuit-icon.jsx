@@ -65,11 +65,11 @@ const BrainCircuitIcon = forwardRef(
     }));
     useEffect(() => {
       if (isHovered) {
-        start();
+        startAnimation();
       } else {
-        stop();
+        stopAnimation();
       }
-    }, [isHovered]);
+    }, [isHovered, startAnimation, stopAnimation]);
 
     return (
       <div
