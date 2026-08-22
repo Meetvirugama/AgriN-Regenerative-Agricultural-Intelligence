@@ -27,23 +27,42 @@ import { AuthProvider } from "./app/providers/AuthProvider";
 import { LoginPage } from "./features/auth/components/LoginPage";
 import { ProtectedRoute } from "./app/ProtectedRoute";
 
+/**
+ * GlobalErrorBoundary
+ *
+ * Catches unhandled render errors so the whole app doesn't go blank.
+ * Accepts a `resetKey` prop — when this value changes (e.g. on navigation),
+ * the error state is automatically cleared so the user can keep using the app.
+ */
 class GlobalErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
+
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
+
   componentDidCatch(error, info) {
     console.error("[GlobalErrorBoundary] App crashed:", error, info);
   }
+
+  // Auto-reset when the user navigates to a different route.
+  componentDidUpdate(prevProps) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       return (
         <div style={{ padding: "2rem", color: "#ef4444", fontFamily: "system-ui, sans-serif" }}>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "0.5rem" }}>Something went wrong.</h1>
-          <p style={{ color: "#6b7280" }}>Please refresh the page to try again.</p>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
+            Something went wrong.
+          </h1>
+          <p style={{ color: "#6b7280" }}>Please navigate to another page or refresh.</p>
           {process.env.NODE_ENV !== "production" && (
             <pre style={{ marginTop: "1rem", padding: "1rem", background: "#fee2e2", borderRadius: "0.5rem", overflowX: "auto" }}>
               {this.state.error?.toString()}
@@ -57,6 +76,22 @@ class GlobalErrorBoundary extends React.Component {
 }
 
 /**
+ * LocationAwareErrorBoundary
+ *
+ * Must be a function component so it can use useLocation.
+ * Passes the current pathname as `resetKey` to GlobalErrorBoundary
+ * so errors are cleared automatically on every route change.
+ */
+function LocationAwareErrorBoundary({ children }) {
+  const location = useLocation();
+  return (
+    <GlobalErrorBoundary resetKey={location.pathname}>
+      {children}
+    </GlobalErrorBoundary>
+  );
+}
+
+/**
  * LoginPageWrapper — redirects to the intended page (or "/") after successful login.
  * Must be inside <Router> so useNavigate/useLocation are available.
  */
@@ -64,18 +99,8 @@ function LoginPageWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
-  
-  return (
-    <LoginPage
-      onSuccess={(tokens) => {
-        if (tokens?.is_new_user || tokens?.farmer?.is_new_user) {
-          navigate("/onboarding", { replace: true });
-        } else {
-          navigate(from, { replace: true });
-        }
-      }}
-    />
-  );
+
+  return <LoginPage onSuccess={() => navigate(from, { replace: true })} />;
 }
 
 /**
@@ -85,66 +110,59 @@ function LoginPageWrapper() {
 function AppRoutes() {
   return (
     <AuthProvider>
-      <Routes>
-        {/* Login — redirect away if already authenticated */}
-        <Route
-          path="/login"
-          element={
-            <ProtectedRoute redirectIfAuthenticated>
-              <LoginPageWrapper />
-            </ProtectedRoute>
-          }
-        />
+      <LocationAwareErrorBoundary>
+        <Routes>
+          {/* Login — redirect away if already authenticated */}
+          <Route
+            path="/login"
+            element={
+              <ProtectedRoute redirectIfAuthenticated>
+                <LoginPageWrapper />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Onboarding — standalone full-page setup screen */}
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute>
-              <Onboarding />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Farmer routes — protected */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <FarmerShell />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Home />} />
-          <Route path="intelligence" element={<Intelligence />} />
-          <Route path="ask" element={<Ask />} />
-          <Route path="alerts" element={<Alerts />} />
-          <Route path="diagnosis" element={<Diagnosis />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="fields">
-            <Route index element={<MyFields />} />
-            {/* Add Field — 3 separate pages, connected by URL params */}
-            <Route path="add" element={<Navigate to="/fields/add/location" replace />} />
-            <Route path="add/location" element={<AddFieldStep1Location />} />
-            <Route path="add/boundary" element={<AddFieldStep2Boundary />} />
-            <Route path="add/details" element={<AddFieldStep3Details />} />
-            <Route path=":fieldId" element={<Field />} />
+          {/* Farmer routes — protected */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <FarmerShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Home />} />
+            <Route path="onboarding" element={<Onboarding />} />
+            <Route path="intelligence" element={<Intelligence />} />
+            <Route path="ask" element={<Ask />} />
+            <Route path="alerts" element={<Alerts />} />
+            <Route path="diagnosis" element={<Diagnosis />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="fields">
+              <Route index element={<MyFields />} />
+              {/* Add Field — 3 separate pages, connected by URL params */}
+              <Route path="add" element={<Navigate to="/fields/add/location" replace />} />
+              <Route path="add/location" element={<AddFieldStep1Location />} />
+              <Route path="add/boundary" element={<AddFieldStep2Boundary />} />
+              <Route path="add/details" element={<AddFieldStep3Details />} />
+              <Route path=":fieldId" element={<Field />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* Extension routes — protected */}
-        <Route
-          path="/extension"
-          element={
-            <ProtectedRoute>
-              <ExtensionShell />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<ExtensionDashboard />} />
-        </Route>
-      </Routes>
+          {/* Extension routes — protected */}
+          <Route
+            path="/extension"
+            element={
+              <ProtectedRoute>
+                <ExtensionShell />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<ExtensionDashboard />} />
+          </Route>
+        </Routes>
+      </LocationAwareErrorBoundary>
     </AuthProvider>
   );
 }
@@ -152,9 +170,7 @@ function AppRoutes() {
 function App() {
   return (
     <Router>
-      <GlobalErrorBoundary>
-        <AppRoutes />
-      </GlobalErrorBoundary>
+      <AppRoutes />
     </Router>
   );
 }

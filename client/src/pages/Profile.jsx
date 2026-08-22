@@ -281,7 +281,7 @@ export const Profile = () => {
                 <Maximize size={18} className="stat-icon text-success" />
               </div>
               <div className="stat-val">
-                {isLoading ? "-" : profileStats.acres.toFixed(2)}
+                {isLoading ? "-" : (Number(profileStats.acres) || 0).toFixed(2)}
               </div>
               <div className="stat-lbl">Acres</div>
             </div>
