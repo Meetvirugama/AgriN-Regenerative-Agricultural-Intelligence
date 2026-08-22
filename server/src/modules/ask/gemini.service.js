@@ -123,8 +123,8 @@ export const geminiService = {
     };
 
     const result = await ai.models.generateContent({
-      // Hardcoding model to prevent invalid environment variables on Render (e.g. gemini-3.7-flash) from crashing the server
-      model: "gemini-2.0-flash",
+      // Use gemini-3.6-flash as instructed by the API
+      model: process.env.GEMINI_MODEL || "gemini-3.6-flash",
       contents: [
         {
           role: "user",
