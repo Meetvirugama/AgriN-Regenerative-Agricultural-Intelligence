@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Stethoscope, Search, Sprout, Menu, X,
+  Stethoscope, Search, Menu, X,
   Home as HomeIconLucide, MapPin, BellDot, ScanLine, User as UserLucide,
   BrainCircuit, MessageSquare, Settings as SettingsLucide
 } from "lucide-react";
@@ -116,9 +116,7 @@ export const FarmerShell = () => {
         <aside className={`dashboard-sidebar ${isMobileMenuOpen ? "open" : ""}`}>
           <div className="dashboard-sidebar-header">
             <div className="dashboard-sidebar-logo">
-              <div className="dashboard-sidebar-logo-icon">
-                <Sprout size={24} strokeWidth={2.5} />
-              </div>
+              <img src="/agri-logo.png" alt="AgriMesh Logo" className="dashboard-sidebar-logo-img" />
               <span>AgriMesh</span>
             </div>
             <button 

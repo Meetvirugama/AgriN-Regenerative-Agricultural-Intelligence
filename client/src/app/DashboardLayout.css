@@ -44,9 +44,10 @@
   gap: 12px;
 }
 
-.dashboard-sidebar-logo-icon {
-  color: #16A34A;
-  transform: rotate(-15deg);
+.dashboard-sidebar-logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
 }
 
 .dashboard-sidebar-logo span {
