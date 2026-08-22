@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { runDailyWeatherIngestion } from "./ingestWeather.js";
 import { runNightlyStageRecompute } from "./recomputeStages.js";
+import { runMandiPriceIngestion } from "./mandiPriceJob.js";
 
 /**
  * AgriMesh Background Job Scheduler
@@ -9,12 +10,13 @@ import { runNightlyStageRecompute } from "./recomputeStages.js";
  * Each job is logged with its name and schedule for observability.
  *
  * Schedule overview:
- * ┌─────────────────────────────────────────────────────┐
- * │ Job                    │ Schedule    │ UTC Time     │
- * ├─────────────────────────────────────────────────────┤
- * │ Weather Ingestion       │ 0 * * * *   │ Every hour   │
- * │ Stage Recompute         │ 0 1 * * *   │ 01:00 UTC    │
- * └─────────────────────────────────────────────────────┘
+ * ┌─────────────────────────────────────────────────────────┐
+ * │ Job                    │ Schedule      │ UTC Time       │
+ * ├─────────────────────────────────────────────────────────┤
+ * │ Weather Ingestion       │ 0 * * * *     │ Every hour     │
+ * │ Stage Recompute         │ 0 1 * * *     │ 01:00 UTC      │
+ * │ Mandi Price Ingestion   │ 30 4,12 * * * │ 10AM/6PM IST   │
+ * └─────────────────────────────────────────────────────────┘
  */
 
 export function startScheduler() {
@@ -66,7 +68,30 @@ let isWeatherRunning = false;
     { timezone: "UTC" },
   );
 
+  let isMandiRunning = false;
+  // ─── Mandi Price Ingestion ─────────────────────────────────────────────────
+  cron.schedule(
+    "30 4,12 * * *",
+    async () => {
+      const label = "[Job:MandiPrices]";
+      if (isMandiRunning) {
+        console.warn(`${label} Previous run still active. Skipping this tick to prevent overlap.`);
+        return;
+      }
+      isMandiRunning = true;
+      console.log(`${label} Mandi price ingestion triggered at ${new Date().toISOString()}`);
+      try {
+        await runMandiPriceIngestion();
+      } catch (err) {
+        console.error(`${label} Job crashed:`, err.message);
+      } finally {
+        isMandiRunning = false;
+      }
+    },
+    { timezone: "UTC" },
+  );
+
   console.log(
-    "[Scheduler] Registered 2 jobs: weather (hourly), stage-recompute (01:00 UTC daily)",
+    "[Scheduler] Registered 3 jobs: weather (hourly), stage-recompute (01:00 UTC daily), mandi-prices (10AM/6PM IST)",
   );
 }

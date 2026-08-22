@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { 
-  Stethoscope, Users, Search, Sprout, Menu, X
+  Stethoscope, Users, Search, Sprout, Menu, X, TrendingUp
 } from "lucide-react";
 import { GlobalMicButton } from "../features/voice/components/GlobalMicButton";
 import { LanguageSwitcher } from "../features/voice/components/LanguageSwitcher";
@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { label: "Ask AgriMesh", path: "/ask", icon: BrandTelegramIcon },
   { label: "Alerts", path: "/alerts", icon: FilledBellIcon },
   { label: "Crop Diagnosis", path: "/diagnosis", icon: Stethoscope },
+  { label: "Market Prices", path: "/market-prices", icon: TrendingUp },
 ];
 
 const SidebarNavItem = ({ item, isActive, activeAlertsCount, onClick }) => {

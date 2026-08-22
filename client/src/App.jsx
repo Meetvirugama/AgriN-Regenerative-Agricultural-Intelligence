@@ -16,6 +16,7 @@ import { Intelligence } from "./pages/Intelligence";
 import { Ask } from "./pages/Ask";
 import { Alerts } from "./pages/Alerts";
 import { Diagnosis } from "./pages/Diagnosis";
+import { MarketPrices } from "./pages/MarketPrices";
 import { Profile } from "./pages/Profile";
 import { Settings } from "./pages/Settings";
 import { AddFieldStep1Location } from "./features/field-management/components/AddFieldStep1Location";
@@ -137,6 +138,7 @@ function AppRoutes() {
             <Route path="ask" element={<Ask />} />
             <Route path="alerts" element={<Alerts />} />
             <Route path="diagnosis" element={<Diagnosis />} />
+            <Route path="market-prices" element={<MarketPrices />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
             <Route path="fields">
