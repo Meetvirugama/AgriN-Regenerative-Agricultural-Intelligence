@@ -1,9 +1,12 @@
 .protected-route-loader-container {
   min-height: 100vh;
+  min-height: 100dvh; /* Better for mobile Safari address bars */
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: var(--background);
+  /* Optically center the loader slightly above true center */
+  padding-bottom: 10vh;
 }
 
 .protected-route-spinner {

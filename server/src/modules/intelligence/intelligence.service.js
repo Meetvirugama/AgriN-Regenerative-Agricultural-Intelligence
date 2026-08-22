@@ -42,7 +42,7 @@ const getHealthDistribution = (scores) => {
 };
 
 const getFields = async (farmerId) => {
-  const result = await query(
+  const rows = await query(
     `
     SELECT 
       id, name, crop_type, crop_variety, sowing_date::text, 
@@ -53,11 +53,11 @@ const getFields = async (farmerId) => {
     `,
     [farmerId]
   );
-  return result.rows;
+  return rows;
 };
 
 const getAlerts = async (farmerId) => {
-  const result = await query(
+  const rows = await query(
     `
     SELECT id, title, priority, type, field_id, created_at
     FROM alerts
@@ -74,7 +74,7 @@ const getAlerts = async (farmerId) => {
     `,
     [farmerId]
   );
-  return result.rows;
+  return rows;
 };
 
 const getFieldHealth = async (fields) => {
@@ -197,7 +197,7 @@ const buildRealTrend = async (fields) => {
 
   const fieldIds = fields.map((field) => field.id);
 
-  const result = await query(
+  const rows = await query(
     `
     SELECT 
       field_id,
@@ -218,7 +218,7 @@ const buildRealTrend = async (fields) => {
   const groupedAll = new Map();
   const groupedByField = {};
 
-  for (const row of result.rows) {
+  for (const row of rows) {
     // Note: row.date might be a Date object or string depending on pg config.
     // Ensure we format it to string (YYYY-MM-DD) for consistency
     const dateStr = typeof row.date === 'string' ? row.date.split('T')[0] : row.date.toISOString().split('T')[0];
@@ -261,7 +261,11 @@ export const intelligenceService = {
       settingsService.getSettings(farmerId),
     ]);
 
-    if (!fields.length) {
+    console.log("fields:", typeof fields, fields ? fields.length : 'null');
+    console.log("alerts:", typeof alerts, alerts ? alerts.length : 'null');
+    console.log("settings:", typeof settings);
+
+    if (!fields || !fields.length) {
       return {
         stats: {
           totalFields: 0,

@@ -7,23 +7,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Initialize Gemini Client
-# It will automatically pick up GEMINI_API_KEY from environment variables
-api_key = os.environ.get("GEMINI_API_KEY")
+import itertools
 
-if not api_key:
-    print("WARNING: GEMINI_API_KEY not set. Gemini API calls will fail.")
-    client = None
+keys_str = os.environ.get("GEMINI_API_KEYS", os.environ.get("GEMINI_API_KEY", ""))
+gemini_keys = [k.strip() for k in keys_str.split(",") if k.strip()]
+
+if not gemini_keys:
+    print("WARNING: GEMINI_API_KEYS not set. Gemini API calls will fail.")
+    client_cycle = None
 else:
-    client = genai.Client(api_key=api_key)
+    client_cycle = itertools.cycle([genai.Client(api_key=k) for k in gemini_keys])
+
+def _get_client():
+    return next(client_cycle) if client_cycle else None
 
 def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, schema_class=None, extra_images: list = None) -> dict:
     """
     Analyzes an image (or multiple images) with a prompt using Gemini.
     extra_images: list of {bytes, mime_type} for additional photos (up to 2 more).
     """
+    client = _get_client()
     if not client:
-        raise ValueError("GEMINI_API_KEY is not configured.")
+        raise ValueError("GEMINI_API_KEYS is not configured.")
 
     # We use gemini-3.6-flash as the default multimodal model
     model = 'gemini-3.6-flash'
@@ -87,82 +92,51 @@ def analyze_image_with_prompt(image_bytes: bytes, mime_type: str, prompt: str, s
             }
     return {"text": getattr(response, 'text', '')}
 
-import httpx
-import itertools
-
-groq_keys_str = os.environ.get("GROQ_API_KEYS", "")
-groq_keys = [k.strip() for k in groq_keys_str.split(",") if k.strip()]
-groq_key_cycle = itertools.cycle(groq_keys) if groq_keys else None
-
 def generate_text(prompt: str, schema_class=None) -> dict:
     """
-    Generates text from a prompt using Groq (to avoid Gemini rate limits).
-    Uses a round-robin rotation of provided API keys.
+    Generates text from a prompt using Gemini.
     """
-    if not groq_keys:
-        raise ValueError("GROQ_API_KEYS is not configured in .env.")
+    client = _get_client()
+    if not client:
+        raise ValueError("GEMINI_API_KEYS is not configured.")
 
-    current_key = next(groq_key_cycle)
+    model = "gemini-3.6-flash"
     
-    # We use qwen/qwen3.6-27b for JSON generation
-    model = "qwen/qwen3.6-27b"
-    
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.4,
-        "max_tokens": 4096
-    }
+    config_args = {"temperature": 0.4}
     
     if schema_class:
-        # Groq supports JSON mode
-        payload["response_format"] = {"type": "json_object"}
-        schema_str = json.dumps(schema_class.model_json_schema())
-        payload["messages"].append({
-            "role": "user", 
-            "content": f"You must respond in valid JSON format matching this schema: {schema_str}"
-        })
-
-    max_retries = len(groq_keys)
-    
-    for attempt in range(max_retries):
-        current_key = next(groq_key_cycle)
-        headers = {
-            "Authorization": f"Bearer {current_key}",
-            "Content-Type": "application/json"
-        }
+        config_args["response_mime_type"] = "application/json"
         
-        try:
-            response = httpx.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                json=payload,
-                headers=headers,
-                timeout=30.0
-            )
-            response.raise_for_status()
-            result_json = response.json()
-            
-            content = result_json["choices"][0]["message"]["content"]
-            
-            if schema_class:
-                return json.loads(content)
-            return {"text": content}
-            
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 429:
-                print(f"[Groq] Key rate limited (429). Trying next key... (Attempt {attempt+1}/{max_retries})")
-                continue # Try the next key
-            else:
-                print(f"[Groq] HTTP Error: {e.response.status_code} - {e.response.text}")
-                raise ValueError(f"Groq API call failed: {e}")
-                
-        except Exception as e:
-            print(f"[Groq] Error generating text: {e}")
-            raise ValueError(f"Groq API call failed: {e}")
-            
-    raise ValueError("All Groq API keys are currently rate limited (429). Please try again later.")
+        schema = schema_class.model_json_schema()
+        
+        # Recursively remove 'additionalProperties' which Gemini's API rejects
+        def clean_schema(d):
+            if isinstance(d, dict):
+                d.pop("additionalProperties", None)
+                for v in d.values():
+                    clean_schema(v)
+            elif isinstance(d, list):
+                for v in d:
+                    clean_schema(v)
+        
+        clean_schema(schema)
+        config_args["response_schema"] = schema
+        
+    config = types.GenerateContentConfig(**config_args)
+
+    try:
+        response = client.models.generate_content(
+            model=model,
+            contents=[prompt],
+            config=config,
+        )
+        
+        if schema_class:
+            return json.loads(response.text)
+        return {"text": getattr(response, 'text', '')}
+    except Exception as e:
+        print(f"[Gemini] Error generating text: {e}")
+        raise ValueError(f"Gemini API call failed: {e}")
 
 
 # =============================================================================

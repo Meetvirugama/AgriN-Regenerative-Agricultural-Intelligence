@@ -1,8 +1,12 @@
 import { PythonClient } from "../../services/pythonClient.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
-const REGEN_MODEL = "gemini-3.6-flash";
+const GEMINI_API_KEYS = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "";
+const keys = GEMINI_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean);
+const GEMINI_API_KEY = keys.length > 0 ? keys[0] : "";
+
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const REGEN_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
 export class RegenAI {
   /**

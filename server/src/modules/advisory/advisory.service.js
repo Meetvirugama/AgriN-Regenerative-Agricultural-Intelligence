@@ -3,17 +3,15 @@ import { layer3Service } from "../weather/weather.service.js";
 import { satelliteService } from "../satellite/satellite.service.js";
 import { soilService } from "../soil/soil.service.js";
 import { PythonClient } from "../../services/pythonClient.js";
-import { generateJson } from "../../services/groqClient.js";
 import { queryOne } from "../../db/connection.js";
 
 /**
  * AdvisoryService
  *
  * Orchestrates the real data pipeline:
- *   Field → Weather → Satellite → Soil → Evidence → Groq → Advisory
+ *   Field → Weather → Satellite → Soil → Evidence → Python AI Service → Advisory
  *
  * Primary path: calls the Python AI service (PythonClient).
- * Fallback path: calls Groq directly from Node.js when Python service is down.
  *
  * This service NEVER fabricates missing data.
  */
@@ -85,7 +83,7 @@ class AdvisoryService {
     const weatherSummary = weatherEvidence ? JSON.stringify(weatherEvidence) : "Unavailable";
     const soilSummary = soilEvidence ? JSON.stringify(soilEvidence) : "Unavailable";
 
-    // ─── 5. Try Python AI service, fall back to direct Groq ─────────────────
+    // ─── 5. Call Python AI service ──────────────────────────────────────────
     let geminiAdvisory;
     try {
       geminiAdvisory = await PythonClient.generateAdvisory(
@@ -99,15 +97,8 @@ class AdvisoryService {
       );
       console.log(`[Advisory] Generated via Python AI service for field ${fieldId}`);
     } catch (pythonErr) {
-      console.warn(`[Advisory] Python service unavailable (${pythonErr.message}). Using Groq fallback.`);
-      geminiAdvisory = await this._generateViaGroq(
-        field.crop_type,
-        stage,
-        satelliteSummary,
-        weatherSummary,
-        soilSummary,
-      );
-      console.log(`[Advisory] Generated via Groq fallback for field ${fieldId}`);
+      console.error(`[Advisory] Python service failed: ${pythonErr.message}`);
+      throw new Error(`AI service unavailable: ${pythonErr.message}`);
     }
 
     // ─── 6. Persist advisory ─────────────────────────────────────────────────
@@ -127,60 +118,7 @@ class AdvisoryService {
     };
   }
 
-  /**
-   * Generate advisory directly using Groq API (fallback when Python service is down).
-   */
-  async _generateViaGroq(cropType, cropStage, satelliteSummary, weatherSummary, soilSummary) {
-    const prompt = `You are AgriMesh's agricultural decision-support engine.
 
-Your job is NOT to provide generic agricultural information.
-You must reason ONLY from the supplied field context and clearly indicate uncertainty when evidence is insufficient.
-
-FIELD
------
-Crop: ${cropType}
-Growth stage: ${cropStage}
-
-SATELLITE DATA
---------------
-${satelliteSummary}
-
-WEATHER
--------
-${weatherSummary}
-
-SOIL
-----
-${soilSummary}
-
-REASONING RULES
----------------
-1. Identify what is happening (what_text).
-2. Explain why using supplied evidence (why_text).
-3. State severity/urgency as one of: Low, Medium, High, Urgent.
-4. Give the most useful practical action (action_text).
-5. Give a concrete timeframe (action_deadline).
-6. State what the farmer should monitor next (monitor_text).
-7. Include source_layers (array like ["Weather", "Soil", "Satellite"]).
-8. Do not invent measurements, weather values, or soil values.
-9. If evidence is insufficient, explicitly say so.
-10. Prefer conservative recommendations when uncertainty is high.
-
-Respond ONLY with valid JSON matching this structure exactly:
-{
-  "what_text": "string",
-  "why_text": "string",
-  "severity": "Low|Medium|High|Urgent",
-  "action_text": "string",
-  "action_deadline": "string",
-  "monitor_text": "string",
-  "source_layers": ["Weather", "Soil", "Satellite"],
-  "confidence": 0.75,
-  "confidence_reason": "string"
-}`;
-
-    return generateJson(prompt, { temperature: 0.3, maxTokens: 1024 });
-  }
 
   _estimateCropStage(days, cropType) {
     const calendars = {

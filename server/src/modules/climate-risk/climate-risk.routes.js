@@ -2,7 +2,6 @@ import { Router } from "express";
 import { layer1Service } from "../field/field.service.js";
 import { layer3Service } from "../weather/weather.service.js";
 import { PythonClient } from "../../services/pythonClient.js";
-import { generateJson } from "../../services/groqClient.js";
 
 const router = Router();
 
@@ -39,47 +38,7 @@ function getCropContext(field) {
   };
 }
 
-/**
- * Generate climate risk via Groq directly (fallback when Python service is down).
- */
-async function generateClimateRiskViaGroq({ fieldId, lat, lng, cropType, cropStage, sowingDate, weatherSummary }) {
-  const prompt = `You are the Climate Risk reasoning engine for AgriMesh.
 
-Your task is to identify the most important climate-related agricultural risk for this specific field.
-
-FIELD CONTEXT
--------------
-Field ID: ${fieldId}
-Latitude: ${lat}
-Longitude: ${lng}
-Crop: ${cropType}
-Growth stage: ${cropStage}
-Sowing date: ${sowingDate || "unknown"}
-
-WEATHER FORECAST / SUMMARY
---------------------------
-${JSON.stringify(weatherSummary, null, 2)}
-
-DECISION RULES
---------------
-- Use only evidence actually present in the supplied context.
-- Do not invent weather measurements.
-- If there is insufficient evidence, return severity="unknown".
-- Keep primaryRisks concise and evidence-based (0-4 items).
-
-SEVERITY LEVELS: low | medium | high | critical | unknown
-
-Respond ONLY with valid JSON matching this structure exactly:
-{
-  "severity": "low|medium|high|critical|unknown",
-  "riskType": "string (e.g. Heatwave, Drought, Extreme Rainfall, No Significant Climate Risk)",
-  "timeframe": "string (e.g. Next 24 hours, 2-3 days, Next 7 days)",
-  "protectiveAction": "string (most important practical action)",
-  "primaryRisks": ["string", "string"]
-}`;
-
-  return generateJson(prompt, { temperature: 0.3, maxTokens: 512 });
-}
 
 /**
  * GET /api/v1/fields/:fieldId/climate-risk
@@ -136,23 +95,14 @@ router.get("/fields/:fieldId/climate-risk", async (req, res) => {
       historical_context: historicalContext && typeof historicalContext === "object" ? historicalContext : {},
     };
 
-    // 5. Try Python AI service first, then fall back to Groq
+    // 5. Call Python AI service
     let aiResponse;
     try {
       aiResponse = await PythonClient.assessClimateRisk(aiPayload);
       console.log(`[ClimateRisk] Generated via Python AI service for field ${fieldId}`);
     } catch (pythonErr) {
-      console.warn(`[ClimateRisk] Python service unavailable (${pythonErr.message}). Using Groq fallback.`);
-      aiResponse = await generateClimateRiskViaGroq({
-        fieldId,
-        lat: coordinates.lat,
-        lng: coordinates.lng,
-        cropType: crop.cropType,
-        cropStage: crop.cropStage,
-        sowingDate: crop.sowingDate,
-        weatherSummary,
-      });
-      console.log(`[ClimateRisk] Generated via Groq fallback for field ${fieldId}`);
+      console.error(`[ClimateRisk] Python service failed: ${pythonErr.message}`);
+      throw new Error(`AI service unavailable: ${pythonErr.message}`);
     }
 
     return res.status(200).json(aiResponse);

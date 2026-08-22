@@ -470,8 +470,11 @@
     padding-left: 10px;
   }
 
-  /* Hide username text on mobile */
-  .dashboard-header-profile-trigger > .dashboard-header-action > span:first-child {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .farmer-name-text {
     display: none;
   }
 
@@ -589,7 +592,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     background: #ffffff;
     border-top: 1px solid #E5E7EB;
     z-index: 100;
@@ -630,7 +634,12 @@
 
   /* Push content above the bottom nav bar */
   .dashboard-content {
-    padding-bottom: 72px !important;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 16px)) !important;
+  }
+  
+  /* Ensure the global mic button doesn't overlap with the bottom nav */
+  .global-mic-btn {
+    bottom: calc(80px + env(safe-area-inset-bottom, 16px)) !important;
   }
 }
 

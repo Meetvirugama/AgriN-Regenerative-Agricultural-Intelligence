@@ -1,9 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEYS = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "";
+const keys = GEMINI_API_KEYS.split(",").map((k) => k.trim()).filter(Boolean);
+const GEMINI_API_KEY = keys.length > 0 ? keys[0] : null;
 
 if (!GEMINI_API_KEY) {
-  console.warn("[Intelligence AI] GEMINI_API_KEY is missing.");
+  console.warn("[Intelligence AI] GEMINI_API_KEYS is missing.");
 }
 
 const ai = new GoogleGenAI({

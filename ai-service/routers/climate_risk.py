@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, status
 from models.schemas import ClimateRiskRequest, ClimateRiskResponse
 
 # IMPORTANT:
-# Keep this import pointed at your existing Groq service.
+# Keep this import pointed at your existing Gemini service.
 # It should expose generate_text(...) with JSON-schema enforcement.
 from services.gemini_client import generate_text
 
@@ -220,7 +220,7 @@ Return ONLY the JSON object matching the supplied schema.
 
 def _normalise_response(raw: Any) -> ClimateRiskResponse:
     """
-    Convert the Groq result into the canonical Pydantic response.
+    Convert the AI result into the canonical Pydantic response.
 
     The model is already constrained by JSON schema, but this second
     validation layer protects the API boundary.
@@ -233,10 +233,10 @@ def _normalise_response(raw: Any) -> ClimateRiskResponse:
         try:
             raw = json.loads(raw)
         except json.JSONDecodeError as exc:
-            raise ValueError("Groq returned invalid JSON") from exc
+            raise ValueError("AI returned invalid JSON") from exc
 
     if not isinstance(raw, dict):
-        raise ValueError("Groq returned a non-object response")
+        raise ValueError("AI returned a non-object response")
 
     return ClimateRiskResponse.model_validate(raw)
 

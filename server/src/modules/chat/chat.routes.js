@@ -4,7 +4,8 @@ import { query, queryOne } from "../../db/connection.js";
 import { layer1Service } from "../field/field.service.js";
 
 const router = Router();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
+const apiKey = process.env.GEMINI_API_KEY || (process.env.GEMINI_API_KEYS || "").split(",")[0];
+const genAI = new GoogleGenerativeAI(apiKey || "");
 const CHAT_MODEL = "gemini-3.6-flash";
 
 /** System persona for the AgriMesh chat assistant */

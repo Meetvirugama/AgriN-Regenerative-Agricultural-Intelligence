@@ -47,8 +47,7 @@ async def root():
 async def health():
     return {
         "status": "healthy",
-        "gemini_configured": bool(os.environ.get("GEMINI_API_KEY")),
-        "groq_configured": bool(os.environ.get("GROQ_API_KEYS"))
+        "gemini_configured": bool(os.environ.get("GEMINI_API_KEYS") or os.environ.get("GEMINI_API_KEY"))
     }
 
 # Inject the /api/v1 prefix so that the Node.js backend client logic remains functional.

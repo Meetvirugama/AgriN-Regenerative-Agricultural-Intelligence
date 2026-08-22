@@ -135,8 +135,7 @@ router.patch(
           read_at = COALESCE(
             read_at,
             NOW()
-          ),
-          updated_at = NOW()
+          )
 
         WHERE id = $1
           AND farmer_id = $2
@@ -186,8 +185,7 @@ router.patch(
           read_at = COALESCE(
             read_at,
             NOW()
-          ),
-          updated_at = NOW()
+          )
 
         WHERE farmer_id = $1
           AND read = FALSE

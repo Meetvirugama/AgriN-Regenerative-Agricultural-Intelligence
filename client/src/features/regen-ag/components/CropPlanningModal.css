@@ -6,11 +6,24 @@
   gap: 1rem;
 }
 
+@media (min-width: 640px) {
+  .crop-plan-container {
+    gap: 1.25rem;
+  }
+}
+
 .crop-plan-subtitle {
-  color: var(--text-muted);
-  font-size: 0.875rem;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.8125rem;
   margin-top: -0.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 640px) {
+  .crop-plan-subtitle {
+    font-size: 0.875rem;
+  }
 }
 
 .crop-plan-list {
@@ -19,116 +32,234 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding-right: 0.25rem;
+  padding-right: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .crop-plan-list {
+    gap: 1.25rem;
+  }
+}
+
+.crop-plan-list::-webkit-scrollbar {
+  width: 6px;
+}
+.crop-plan-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.crop-plan-list::-webkit-scrollbar-thumb {
+  background: rgba(209, 213, 219, 0.8);
+  border-radius: 4px;
+}
+.crop-plan-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
 }
 
 .crop-plan-card {
   padding: 1rem;
-  border-radius: 0.75rem;
-  border: 2px solid transparent;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+
+@media (min-width: 640px) {
+  .crop-plan-card {
+    padding: 1.25rem;
+  }
+}
+
+.crop-plan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .crop-plan-card-high {
-  border-color: var(--primary);
-  background-color: rgba(16, 185, 129, 0.05); /* primary/5 */
+  border-color: rgba(16, 185, 129, 0.4); /* primary/40 */
+  background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02));
+}
+
+.crop-plan-card-high:hover {
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.15);
 }
 
 .crop-plan-card-medium {
-  border-color: var(--secondary);
-  background-color: rgba(14, 165, 233, 0.05); /* secondary/5 */
+  border-color: rgba(14, 165, 233, 0.4); /* secondary/40 */
+  background: linear-gradient(to bottom right, rgba(14, 165, 233, 0.08), rgba(14, 165, 233, 0.02));
+}
+
+.crop-plan-card-medium:hover {
+  border-color: rgba(14, 165, 233, 0.6);
+  box-shadow: 0 4px 12px -2px rgba(14, 165, 233, 0.15);
 }
 
 .crop-plan-card-low {
-  border-color: rgba(239, 68, 68, 0.3); /* danger/30 */
-  background-color: rgba(239, 68, 68, 0.05); /* danger/5 */
+  border-color: rgba(239, 68, 68, 0.4); /* danger/40 */
+  background: linear-gradient(to bottom right, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.02));
+}
+
+.crop-plan-card-low:hover {
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 4px 12px -2px rgba(239, 68, 68, 0.15);
 }
 
 .crop-plan-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .crop-plan-title {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 1.125rem;
   margin: 0;
+  color: var(--text-main, #111827);
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 640px) {
+  .crop-plan-title {
+    font-size: 1.25rem;
+  }
 }
 
 .crop-plan-variety {
-  color: var(--text-muted);
-  font-size: 0.875rem;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
+  margin-top: 0.125rem;
+}
+
+@media (min-width: 640px) {
+  .crop-plan-variety {
+    font-size: 0.8125rem;
+  }
 }
 
 .crop-plan-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 640px) {
+  .crop-plan-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+  }
 }
 
 .crop-plan-badge-high {
-  background-color: var(--primary);
-  color: var(--primary-content);
+  background-color: var(--primary, #10b981);
+  color: #fff;
 }
 
 .crop-plan-badge-medium {
-  background-color: var(--secondary);
-  color: var(--secondary-content);
+  background-color: var(--secondary, #0ea5e9);
+  color: #fff;
 }
 
 .crop-plan-badge-low {
-  background-color: var(--danger);
-  color: var(--background);
+  background-color: var(--danger, #ef4444);
+  color: #fff;
 }
 
 .crop-plan-reasoning {
   margin-top: 1rem;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.625rem;
   align-items: flex-start;
-  font-size: 0.875rem;
-  color: var(--text-main);
+  font-size: 0.8125rem;
+  color: var(--text-main, #374151);
+  line-height: 1.5;
+}
+
+@media (min-width: 640px) {
+  .crop-plan-reasoning {
+    font-size: 0.875rem;
+  }
 }
 
 .crop-plan-reasoning-icon {
-  color: var(--primary);
+  color: var(--primary, #10b981);
   flex-shrink: 0;
   margin-top: 0.125rem;
 }
 
 .crop-plan-risks-container {
   margin-top: 1rem;
-  padding: 0.75rem;
-  background-color: var(--background);
-  border-radius: 0.5rem;
-  border: 1px solid var(--neutral);
+  padding: 0.75rem 1rem;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(229, 231, 235, 0.8);
+}
+
+@media (min-width: 640px) {
+  .crop-plan-risks-container {
+    padding: 1rem 1.25rem;
+  }
 }
 
 .crop-plan-risks-title {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.6875rem;
+  font-weight: 800;
   text-transform: uppercase;
-  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  color: var(--text-muted, #6b7280);
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
+  gap: 0.375rem;
+  margin-bottom: 0.625rem;
+}
+
+@media (min-width: 640px) {
+  .crop-plan-risks-title {
+    font-size: 0.75rem;
+  }
 }
 
 .crop-plan-warning-icon {
-  color: var(--warning);
+  color: var(--warning, #f59e0b);
 }
 
 .crop-plan-risks-list {
-  list-style-type: disc;
-  padding-left: 1rem;
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  list-style-type: none;
+  padding-left: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted, #4b5563);
   margin: 0;
+  line-height: 1.5;
+}
+
+@media (min-width: 640px) {
+  .crop-plan-risks-list {
+    font-size: 0.875rem;
+  }
+}
+
+.crop-plan-risks-list li {
+  position: relative;
+  margin-bottom: 0.375rem;
+}
+
+.crop-plan-risks-list li:last-child {
+  margin-bottom: 0;
+}
+
+.crop-plan-risks-list li::before {
+  content: '•';
+  position: absolute;
+  left: -1rem;
+  color: var(--warning, #f59e0b);
+  font-weight: bold;
 }

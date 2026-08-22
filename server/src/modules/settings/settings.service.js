@@ -47,7 +47,7 @@ export const settingsService = {
         [farmerId]
       );
 
-      if (!result?.rows?.length) {
+      if (!result?.length) {
         // Return defaults if no settings found or table not yet migrated
         return {
           language: "English",
@@ -68,7 +68,7 @@ export const settingsService = {
         };
       }
 
-      return serializeSettings(result.rows[0]);
+      return serializeSettings(result[0]);
     } catch (error) {
       console.error("[Settings Service] Failed to fetch settings:", error);
       // Return defaults rather than crashing the caller (intelligence, advisory, etc.)

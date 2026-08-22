@@ -1,10 +1,27 @@
 /* HealthDimensionCard.css */
 
 .dimension-card-container {
-  background-color: var(--background);
-  border: 1px solid var(--border);
+  background-color: var(--surface, #fff);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  border-radius: 1rem;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin-bottom: 0.75rem;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .dimension-card-container {
+    margin-bottom: 1rem;
+    border-radius: 1.25rem;
+  }
+}
+
+.dimension-card-container:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
 }
 
 .dimension-card-header {
@@ -13,41 +30,79 @@
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  transition: background-color 0.2s;
+  background-color: var(--surface, #fff);
+  transition: background-color 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .dimension-card-header {
+    padding: 1.25rem 1.5rem;
+  }
 }
 
 .dimension-card-header:hover {
-  background-color: var(--surface);
+  background-color: rgba(249, 250, 251, 0.8);
 }
 
 .dimension-card-title-group {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex: 1;
 }
 
 .dimension-card-icon {
-  color: var(--text-muted);
+  color: var(--text-muted, #9ca3af);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .dimension-card-icon {
+    transform: scale(1.1);
+  }
 }
 
 .dimension-card-title {
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
+  color: var(--text-muted, #6b7280);
   margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .dimension-card-title {
+    font-size: 0.8125rem;
+  }
 }
 
 .dimension-card-value {
-  font-weight: 600;
+  font-weight: 800;
+  font-size: 1.125rem;
+  color: var(--text-main, #111827);
   margin: 0;
+  margin-top: 0.125rem;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 640px) {
+  .dimension-card-value {
+    font-size: 1.25rem;
+  }
 }
 
 .dimension-card-label {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
   margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .dimension-card-status-group {
@@ -56,39 +111,80 @@
   gap: 0.75rem;
 }
 
+@media (min-width: 640px) {
+  .dimension-card-status-group {
+    gap: 1rem;
+  }
+}
+
 .dimension-card-status-dot {
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 9999px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
 }
 
-.dimension-status-success { background-color: var(--success); }
-.dimension-status-warning { background-color: var(--warning); }
-.dimension-status-danger { background-color: var(--danger); }
+@media (min-width: 640px) {
+  .dimension-card-status-dot {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}
+
+.dimension-status-success { background-color: var(--success, #16a34a); box-shadow: 0 0 8px rgba(22, 163, 74, 0.4); }
+.dimension-status-warning { background-color: var(--warning, #f59e0b); box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
+.dimension-status-danger { background-color: var(--danger, #ef4444); box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
 
 .dimension-card-chevron {
-  color: var(--text-muted);
+  color: var(--text-muted, #9ca3af);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dimension-card-body {
   padding: 0 1rem 1rem 1rem;
-  border-top: 1px solid rgba(115, 115, 115, 0.5); /* border/50 */
-  background-color: var(--surface);
+  border-top: 1px dashed rgba(229, 231, 235, 1);
+  background: linear-gradient(to bottom, rgba(249, 250, 251, 0.5), rgba(249, 250, 251, 0.8));
   font-size: 0.875rem;
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  color: var(--text-main, #374151);
+}
+
+@media (min-width: 640px) {
+  .dimension-card-body {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    font-size: 0.9375rem;
+  }
 }
 
 .dimension-card-list {
   margin-top: 1rem;
-  list-style-type: disc;
-  list-style-position: inside;
+  padding-left: 1.5rem;
+  list-style-type: none;
+}
+
+@media (min-width: 640px) {
+  .dimension-card-list {
+    margin-top: 1.25rem;
+  }
 }
 
 .dimension-card-list-item {
-  color: var(--text-main);
-  margin-bottom: 0.5rem;
+  color: var(--text-main, #111827);
+  margin-bottom: 0.625rem;
+  line-height: 1.5;
+  position: relative;
+}
+
+.dimension-card-list-item::before {
+  content: '•';
+  position: absolute;
+  left: -1rem;
+  color: var(--primary, #16a34a);
+  font-weight: bold;
 }
 
 .dimension-card-empty-item {
-  color: var(--text-muted);
+  color: var(--text-muted, #6b7280);
+  font-style: italic;
+  font-weight: 500;
 }

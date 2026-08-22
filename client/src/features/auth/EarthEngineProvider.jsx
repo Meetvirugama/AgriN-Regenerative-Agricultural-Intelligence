@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 import ee from '@google/earthengine';
 

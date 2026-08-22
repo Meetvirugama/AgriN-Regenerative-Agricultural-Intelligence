@@ -45,25 +45,12 @@ async def parse_soil_report(
             ),
         )
 
-    import os
-    from google import genai
-    from pydantic import ValidationError
-
-    gemini_key = os.environ.get("GEMINI_API_KEY")
-    if not gemini_key:
-        raise HTTPException(
-            status_code=500,
-            detail="GEMINI_API_KEY not configured.",
-        )
-
+    from services.gemini_client import analyze_image_with_prompt
+    
     try:
-        client = genai.Client(api_key=gemini_key)
-        
         # We need to read the file content
         file_content = await image.read()
         
-        # Upload the file to Gemini (or send it inline)
-        # Using inline for simplicity since it's < 10MB
         prompt = (
             "You are an agricultural data extraction AI. "
             "Extract the soil properties from this laboratory report. "
@@ -73,28 +60,14 @@ async def parse_soil_report(
             "For water_holding_capacity, map to 'low', 'medium', or 'high'."
         )
         
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[
-                prompt,
-                genai.types.Part.from_bytes(
-                    data=file_content,
-                    mime_type=image.content_type,
-                )
-            ],
-            config=genai.types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=SoilVisionResponse,
-                temperature=0.0,
-            ),
+        return analyze_image_with_prompt(
+            file_content, 
+            image.content_type, 
+            prompt, 
+            schema_class=SoilVisionResponse
         )
         
-        if not response.text:
-            raise ValueError("Empty response from Gemini")
-            
-        return SoilVisionResponse.model_validate_json(response.text)
-        
-    except ValidationError as e:
+    except ValueError as e:
         raise HTTPException(
             status_code=422,
             detail=f"Failed to parse Gemini response into schema: {e}",

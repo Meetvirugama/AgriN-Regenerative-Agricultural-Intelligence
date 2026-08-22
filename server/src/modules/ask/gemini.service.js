@@ -1,8 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 
+const apiKey = process.env.GEMINI_API_KEY || (process.env.GEMINI_API_KEYS || "").split(",")[0];
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+  apiKey: apiKey,
 });
 
 const AdvisorySchema = z.object({

@@ -186,7 +186,7 @@ export const FarmerShell = () => {
 
               <div className="dashboard-header-actions">
                     <button 
-                      className="dashboard-header-action alerts" 
+                      className="dashboard-header-action alerts hide-on-mobile" 
                       onClick={() => navigate('/alerts')}
                       onMouseEnter={() => setIsAlertsHovered(true)}
                       onMouseLeave={() => setIsAlertsHovered(false)}
@@ -212,7 +212,8 @@ export const FarmerShell = () => {
                           <UserIcon size={14} isHovered={isProfileHovered} />
                         </div>
                         <span className="dashboard-header-action">
-                          {farmer?.name ? farmer.name.split(' ')[0] : "Farmer"} <DownChevron size={14} isHovered={isProfileHovered} />
+                          <span className="farmer-name-text">{farmer?.name ? farmer.name.split(' ')[0] : "Farmer"}</span> 
+                          <DownChevron size={14} isHovered={isProfileHovered} />
                         </span>
                       </div>
 

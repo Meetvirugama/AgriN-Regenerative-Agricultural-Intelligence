@@ -1,23 +1,33 @@
 /* SoilSummaryCard.css */
 
 .soil-card-container {
-  padding: 1.5rem;
-  border-radius: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
   position: relative;
   overflow: hidden;
+  background-color: var(--surface, #fff);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(229, 231, 235, 0.8);
 }
 
 @media (min-width: 640px) {
   .soil-card-container {
     padding: 2rem;
+    border-radius: 1.5rem;
   }
+}
+
+.soil-card-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .soil-card-backdrop {
   position: absolute;
   pointer-events: none;
   border-radius: 9999px;
-  transition: colors 700ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .soil-card-backdrop-primary {
@@ -26,15 +36,20 @@
   width: 16rem;
   height: 16rem;
   filter: blur(60px);
-  opacity: 0.3;
+  opacity: 0.4;
 }
 
 .soil-card-backdrop-primary.bg-success {
-  background-color: var(--success);
+  background-color: rgba(16, 185, 129, 0.2);
 }
 
 .soil-card-backdrop-primary.bg-warning {
-  background-color: var(--warning);
+  background-color: rgba(245, 158, 11, 0.2);
+}
+
+.soil-card-container:hover .soil-card-backdrop-primary {
+  transform: scale(1.1);
+  opacity: 0.6;
 }
 
 .soil-card-backdrop-secondary {
@@ -42,13 +57,14 @@
   bottom: 0;
   width: 12rem;
   height: 12rem;
-  background-color: rgba(16, 185, 129, 0.1); /* primary/10 */
+  background-color: rgba(16, 185, 129, 0.08); /* primary/8 */
   filter: blur(50px);
-  opacity: 0.4;
+  opacity: 0.5;
 }
 
 .soil-card-container:hover .soil-card-backdrop-secondary {
-  background-color: rgba(16, 185, 129, 0.2);
+  background-color: rgba(16, 185, 129, 0.15);
+  transform: scale(1.1);
 }
 
 .soil-card-header {
@@ -70,34 +86,58 @@
 .soil-card-eyebrow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
   font-size: 0.625rem;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted, #6b7280);
+  margin-bottom: 0.375rem;
+}
+
+@media (min-width: 640px) {
+  .soil-card-eyebrow {
+    font-size: 0.6875rem;
+    gap: 0.5rem;
+    letter-spacing: 0.2em;
+    margin-bottom: 0.5rem;
+  }
 }
 
 .soil-card-title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 1.875rem;
-  line-height: 2.25rem;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  line-height: 1.2;
   font-weight: 900;
-  letter-spacing: -0.025em;
-  color: var(--text-main);
+  letter-spacing: -0.02em;
+  color: var(--text-main, #111827);
   margin: 0;
+}
+
+@media (min-width: 640px) {
+  .soil-card-title {
+    font-size: 1.875rem;
+    gap: 0.75rem;
+    letter-spacing: -0.025em;
+  }
 }
 
 .soil-card-desc {
   font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--text-muted, #4b5563);
   margin-top: 0.5rem;
-  line-height: 1.625;
+  line-height: 1.5;
   max-width: 24rem;
+}
+
+@media (min-width: 640px) {
+  .soil-card-desc {
+    font-size: 0.9375rem;
+    line-height: 1.625;
+  }
 }
 
 .soil-card-source-badge {
@@ -113,44 +153,57 @@
   white-space: nowrap;
   flex-shrink: 0;
   border-width: 1px;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 640px) {
+  .soil-card-source-badge {
+    padding: 0.375rem 0.875rem;
+    gap: 0.5rem;
+  }
 }
 
 .soil-card-source-badge-lab {
   background-color: rgba(16, 185, 129, 0.1);
-  color: var(--success-strong);
+  color: var(--success-strong, #059669);
   border-color: rgba(16, 185, 129, 0.2);
 }
 
 .soil-card-source-badge-regional {
   background-color: rgba(245, 158, 11, 0.1);
-  color: var(--warning-strong);
+  color: var(--warning-strong, #d97706);
   border-color: rgba(245, 158, 11, 0.2);
 }
 
 .soil-card-summary-box {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 2rem;
-  padding: 1.5rem;
-  border-radius: 1.5rem;
-  background-color: rgba(255, 255, 255, 0.5); /* surface/50 fallback */
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   position: relative;
   z-index: 10;
-  box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.6), 0 4px 6px -1px rgba(0,0,0,0.02);
 }
 
 @media (min-width: 640px) {
   .soil-card-summary-box {
     flex-direction: row;
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    gap: 1.5rem;
   }
 }
 
 :root[class~="dark"] .soil-card-summary-box {
   box-shadow: none;
+  background-color: rgba(31, 41, 55, 0.6);
+  border-color: rgba(55, 65, 81, 0.8);
 }
 
 .soil-card-summary-content {
@@ -162,58 +215,85 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .soil-card-summary-header {
+    margin-bottom: 0.75rem;
+  }
 }
 
 .soil-card-summary-eyebrow {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 900;
-  color: var(--text-muted);
+  color: var(--text-muted, #6b7280);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
+}
+
+@media (min-width: 640px) {
+  .soil-card-summary-eyebrow {
+    font-size: 0.75rem;
+  }
 }
 
 .soil-card-summary-text {
-  font-size: 1rem;
-  font-weight: 500;
-  line-height: 1.625;
-  color: var(--text-main);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text-main, #374151);
   max-width: 36rem;
 }
 
+@media (min-width: 640px) {
+  .soil-card-summary-text {
+    font-size: 1rem;
+    line-height: 1.625;
+  }
+}
+
 .soil-card-confidence {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   font-size: 0.625rem;
-  font-weight: 700;
-  color: var(--text-muted);
+  font-weight: 800;
+  color: var(--text-muted, #6b7280);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
+}
+
+@media (min-width: 640px) {
+  .soil-card-confidence {
+    margin-top: 1rem;
+    gap: 0.5rem;
+  }
 }
 
 .soil-card-confidence-badge {
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
+  font-weight: 900;
 }
 
 .soil-card-confidence-badge-high {
   background-color: rgba(16, 185, 129, 0.1);
-  color: var(--success-strong);
+  color: var(--success-strong, #059669);
 }
 
 .soil-card-confidence-badge-low {
   background-color: rgba(245, 158, 11, 0.1);
-  color: var(--warning-strong);
+  color: var(--warning-strong, #d97706);
 }
 
 .soil-card-metrics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
   position: relative;
   z-index: 10;
 }
@@ -221,6 +301,7 @@
 @media (min-width: 640px) {
   .soil-card-metrics-grid {
     gap: 1rem;
+    margin-top: 1.5rem;
   }
 }
 
@@ -228,42 +309,56 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  gap: 0.5rem;
+  padding: 0.875rem;
+  border: 1px solid rgba(229, 231, 235, 0.8);
   border-radius: 1rem;
-  background-color: rgba(255, 255, 255, 0.4);
-  transition: background-color 0.2s;
+  background-color: rgba(249, 250, 251, 0.7);
+  transition: all 0.2s ease;
   backdrop-filter: blur(4px);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   cursor: default;
 }
 
 @media (min-width: 640px) {
   .soil-card-metric-item {
     padding: 1.25rem;
+    gap: 0.75rem;
+    border-radius: 1.25rem;
   }
 }
 
 .soil-card-metric-item:hover {
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(209, 213, 219, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  transform: translateY(-1px);
 }
 
 .soil-card-metric-icon-wrapper {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   background-color: white;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 640px) {
+  .soil-card-metric-icon-wrapper {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+  }
 }
 
 .soil-card-metric-item:hover .soil-card-metric-icon-wrapper {
   transform: scale(1.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .soil-card-metric-content {
@@ -273,42 +368,54 @@
 
 .soil-card-metric-label {
   display: block;
-  font-size: 0.625rem;
-  font-weight: 700;
-  color: var(--text-muted);
+  font-size: 0.5625rem;
+  font-weight: 800;
+  color: var(--text-muted, #6b7280);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
+@media (min-width: 640px) {
+  .soil-card-metric-label {
+    font-size: 0.625rem;
+  }
+}
+
 .soil-card-metric-value {
   display: block;
-  margin-top: 0.25rem;
-  font-size: 1.25rem;
-  line-height: 1.75rem;
+  margin-top: 0.125rem;
+  font-size: 1.125rem;
+  line-height: 1.2;
   font-weight: 900;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-transform: capitalize;
-  color: rgba(0, 0, 0, 0.9);
+  color: var(--text-main, #111827);
   transition: color 0.2s;
 }
 
-:root[class~="dark"] .soil-card-metric-value {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.soil-card-metric-item:hover .soil-card-metric-value {
-  color: var(--text-main);
+@media (min-width: 640px) {
+  .soil-card-metric-value {
+    font-size: 1.25rem;
+    line-height: 1.5;
+    margin-top: 0.25rem;
+  }
 }
 
 .soil-card-metric-desc {
   display: block;
-  margin-top: 0.25rem;
+  margin-top: 0.125rem;
   font-size: 0.625rem;
-  font-weight: 500;
-  color: rgba(115, 115, 115, 0.7); /* text-muted/70 approx */
+  font-weight: 600;
+  color: var(--text-muted, #9ca3af);
   line-height: 1.25;
+}
+
+@media (min-width: 640px) {
+  .soil-card-metric-desc {
+    margin-top: 0.25rem;
+  }
 }
 
 .soil-card-footer {
@@ -316,9 +423,9 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(115, 115, 115, 0.3); /* border/50 */
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed rgba(209, 213, 219, 0.8);
   position: relative;
   z-index: 10;
 }
@@ -327,6 +434,8 @@
   .soil-card-footer {
     flex-direction: row;
     align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
   }
 }
 
@@ -334,25 +443,40 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background-color: rgba(115, 115, 115, 0.1);
-  color: var(--text-main);
+  gap: 0.375rem;
+  padding: 0.625rem 1rem;
+  background-color: var(--surface, #fff);
+  color: var(--text-main, #374151);
   font-weight: 900;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   border-radius: 0.75rem;
-  transition: all 0.2s;
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(209, 213, 219, 0.8);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   cursor: pointer;
+  font-family: inherit;
+}
+
+@media (min-width: 640px) {
+  .soil-card-upload-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.75rem;
+    gap: 0.5rem;
+  }
 }
 
 .soil-card-upload-btn:hover:not(:disabled) {
-  background-color: var(--primary);
+  background-color: var(--primary, #10b981);
   color: white;
-  border-color: var(--primary);
+  border-color: var(--primary, #10b981);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+}
+
+.soil-card-upload-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .soil-card-upload-btn:disabled {
@@ -363,18 +487,26 @@
 .soil-card-upload-chevron {
   opacity: 0;
   margin-left: -0.5rem;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .soil-card-upload-btn:hover:not(:disabled) .soil-card-upload-chevron {
   opacity: 1;
   margin-left: 0;
+  transform: translateX(2px);
 }
 
 .soil-card-updated {
   font-size: 0.625rem;
-  font-weight: 700;
-  color: var(--text-muted);
+  font-weight: 800;
+  color: var(--text-muted, #6b7280);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .soil-card-updated {
+    text-align: right;
+  }
 }

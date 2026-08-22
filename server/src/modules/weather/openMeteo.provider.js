@@ -81,7 +81,7 @@ export class OpenMeteoProvider {
     const fmt = (d) => d.toISOString().split("T")[0];
 
     const url =
-      `${OPEN_METEO_BASE}/archive?` +
+      `https://archive-api.open-meteo.com/v1/archive?` +
       `latitude=${useLat}&longitude=${useLng}` +
       `&start_date=${fmt(startDate)}&end_date=${fmt(endDate)}` +
       `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,relative_humidity_2m_max,weathercode` +
