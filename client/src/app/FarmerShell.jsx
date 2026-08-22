@@ -5,7 +5,6 @@ import {
   Home as HomeIconLucide, MapPin, BellDot, ScanLine, User as UserLucide,
   BrainCircuit, MessageSquare, Settings as SettingsLucide
 } from "lucide-react";
-import { GlobalMicButton } from "../features/voice/components/GlobalMicButton";
 import { LanguageSwitcher } from "../features/voice/components/LanguageSwitcher";
 import { FieldProvider } from "./providers/FieldProvider";
 import { useAuth } from "./providers/AuthProvider";
@@ -264,8 +263,6 @@ export const FarmerShell = () => {
           <div className="dashboard-content">
             <Outlet />
           </div>
-
-          <GlobalMicButton />
         </main>
       </div>
     </FieldProvider>
