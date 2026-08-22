@@ -36,9 +36,10 @@ export class FarmerRepository {
     const row = await queryOne(
       `INSERT INTO farmers (id, phone_number, name, preferred_language, email, location, profile_image_url, farming_experience_years)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (phone_number) DO UPDATE
+       ON CONFLICT (id) DO UPDATE
          SET name = EXCLUDED.name,
              preferred_language = EXCLUDED.preferred_language,
+             phone_number = COALESCE(EXCLUDED.phone_number, farmers.phone_number),
              email = COALESCE(EXCLUDED.email, farmers.email),
              location = COALESCE(EXCLUDED.location, farmers.location),
              profile_image_url = COALESCE(EXCLUDED.profile_image_url, farmers.profile_image_url),
@@ -46,7 +47,7 @@ export class FarmerRepository {
        RETURNING id, phone_number, name, preferred_language, email, location, profile_image_url, farming_experience_years, created_at::text`,
       [
         farmer.id, 
-        farmer.phone_number, 
+        farmer.phone_number ?? null, 
         farmer.name, 
         farmer.preferred_language,
         farmer.email ?? null,

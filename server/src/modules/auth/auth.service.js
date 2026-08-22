@@ -56,12 +56,15 @@ export class AuthService {
     // Validate OTP (throws on failure)
     await authRepo.verifyOtp(phoneNumber, code);
 
+    const existing = await farmerRepo.findFarmerByPhone(phoneNumber);
+    const farmerId = existing?.id || crypto.randomUUID();
+
     // Upsert farmer — this creates the account on first login
     const farmer = await farmerRepo.upsertFarmer({
-      id: crypto.randomUUID(), // ignored if farmer already exists (upsert by phone)
+      id: farmerId,
       phone_number: phoneNumber,
-      name: phoneNumber, // Farmer can set their name later (Phase 5 profile endpoint)
-      preferred_language: "en",
+      name: existing?.name || phoneNumber,
+      preferred_language: existing?.preferred_language || "en",
     });
 
     // Issue tokens
@@ -119,9 +122,7 @@ export class AuthService {
     }
     const userInfo = await response.json();
     
-    // We use the Google subject ID as the farmer ID (UUID format is required by DB, so we might need a workaround or generate one)
-    // Wait, the DB farmer table uses UUID. userInfo.sub is an integer string!
-    // Let's generate a deterministic UUID from the Google sub!
+    // Generate deterministic UUID from Google sub
     const hash = crypto.createHash('md5').update(userInfo.sub).digest('hex');
     const deterministicUuid = [
       hash.substring(0, 8),
@@ -131,11 +132,19 @@ export class AuthService {
       hash.substring(20, 32)
     ].join('-');
 
+    let existingFarmer = userInfo.email ? await farmerRepo.findFarmerByEmail(userInfo.email) : null;
+    if (!existingFarmer) {
+      existingFarmer = await farmerRepo.findFarmerById(deterministicUuid);
+    }
+    const farmerId = existingFarmer?.id || deterministicUuid;
+
     const farmer = await farmerRepo.upsertFarmer({
-      id: deterministicUuid,
-      phone_number: userInfo.email, // using email as phone_number since it's required and unique
-      name: userInfo.name || "Google User",
-      preferred_language: "en",
+      id: farmerId,
+      email: userInfo.email,
+      phone_number: existingFarmer?.phone_number || null,
+      name: userInfo.name || existingFarmer?.name || "Google User",
+      profile_image_url: userInfo.picture || existingFarmer?.profile_image_url || null,
+      preferred_language: existingFarmer?.preferred_language || "en",
     });
 
     const tokens = await AuthService.issueTokens(farmer, meta);
@@ -155,8 +164,9 @@ export class AuthService {
   static signAccessToken(farmer) {
     const payload = {
       sub: farmer.id,
-      phone: farmer.phone_number,
+      phone: farmer.phone_number || farmer.email || farmer.id,
       name: farmer.name,
+      email: farmer.email,
     };
     const options = { expiresIn: JWT_EXPIRES_IN };
     return jwt.sign(payload, JWT_SECRET, options);
