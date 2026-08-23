@@ -29,7 +29,7 @@ export function VoiceAssistantFAB() {
               <X size={24} />
             </button>
             
-            <div style={{ marginTop: "1rem", height: "100%" }}>
+            <div className="voice-modal-inner">
               <AIAssistant />
             </div>
           </div>

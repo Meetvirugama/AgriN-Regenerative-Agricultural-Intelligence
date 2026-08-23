@@ -26,13 +26,18 @@ app = FastAPI(
     ),
 )
 
-# Preserve CORS middleware for the Node.js frontend requests
+# CORS: only allow the Node.js BFF to call this service (internal traffic only).
+# In production, set NODE_SERVICE_URL to your backend's internal URL.
+# Default to localhost for local development.
+_node_service_url = os.getenv("NODE_SERVICE_URL", "http://localhost:8000")
+_allowed_origins = [_node_service_url, "http://localhost:5173"]  # 5173 for local Vite dev
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_allowed_origins,
+    allow_credentials=False,  # No cookies on server-to-server
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-Internal-Key"],
 )
 
 @app.get("/")

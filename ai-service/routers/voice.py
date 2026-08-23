@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Header, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import asyncio
@@ -15,7 +15,19 @@ from services.voice_agent.agent import run_agent
 
 router = APIRouter()
 
-# Setup Gemini Client (reusing env var from main.py)
+# ── Internal Security ────────────────────────────────────────────────────────
+# Shared secret between Node.js BFF and this FastAPI service.
+# Set INTERNAL_API_KEY in both server/.env and ai-service/.env.
+# If not set (local dev), validation is skipped.
+_INTERNAL_KEY = os.getenv("INTERNAL_API_KEY", "")
+
+def _verify_internal_key(x_internal_key: str = Header(default="")):
+    """Dependency: reject requests that don't carry the correct internal key."""
+    if _INTERNAL_KEY and x_internal_key != _INTERNAL_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden: invalid internal key.")
+
+# ── Gemini Client ────────────────────────────────────────────────────────────
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 api_key = os.getenv("GEMINI_API_KEY")
 if api_key:
     client = genai.Client(api_key=api_key)
@@ -39,7 +51,7 @@ class TTSRequest(BaseModel):
 # ==================================================
 
 @router.post("/chat")
-def chat(request: ChatRequest):
+def chat(request: ChatRequest, _key=Depends(_verify_internal_key)):
     try:
         result = run_agent(request.session_id, request.message)
         return result
@@ -55,7 +67,7 @@ def chat(request: ChatRequest):
 # ==================================================
 
 @router.post("/stt")
-async def transcribe_audio(languageCode: str = Form(default="en-US"), audio: UploadFile = File(...)):
+async def transcribe_audio(languageCode: str = Form(default="en-US"), audio: UploadFile = File(...), _key=Depends(_verify_internal_key)):
     if not client:
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not set.")
 
@@ -108,7 +120,7 @@ Do NOT translate.
 Keep the transcript in the original language spoken by the user.
 """
         response = client.models.generate_content(
-            model="gemini-3.7-flash",
+            model=GEMINI_MODEL,
             contents=[
                 types.Part.from_bytes(data=wav_data, mime_type="audio/wav"),
                 prompt
@@ -132,7 +144,7 @@ Keep the transcript in the original language spoken by the user.
 # ==================================================
 
 @router.post("/tts")
-def synthesize_speech(request: TTSRequest):
+def synthesize_speech(request: TTSRequest, _key=Depends(_verify_internal_key)):
     try:
         # We can map some languageCodes to gTTS supported langs (en, hi, gu)
         lang = "en"

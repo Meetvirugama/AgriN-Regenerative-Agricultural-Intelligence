@@ -686,8 +686,27 @@ export const Intelligence = () => {
           
           return (
           <div className="intelligence-view-grid weather-view animate-fade-in">
-            {/* Current Weather Telemetry */}
-            <div className="intelligence-compact-card weather-current-card">
+            {/* ── No weather data empty state ── */}
+            {!selectedWeather && (
+              <div className="intelligence-compact-card full-span empty-state-card">
+                <div className="empty-state-visual">
+                  <div className="empty-state-glow" style={{ background: "radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)" }} />
+                  <div className="empty-state-icon-box" style={{ background: "rgba(59,130,246,0.08)", color: "#3b82f6" }}>
+                    <CloudSun size={28} />
+                  </div>
+                </div>
+                <div className="empty-state-content">
+                  <h3 className="empty-state-title">Weather Data Unavailable</h3>
+                  <p className="empty-state-desc">
+                    Real-time microclimate data will appear here once your fields are registered 
+                    and the weather service has fetched the first reading for your location.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Current Weather Telemetry — only shown when real data exists */}
+            {selectedWeather && <div className="intelligence-compact-card weather-current-card">
               <div className="compact-card-header">
                 <div>
                   <h2 className="compact-card-title">Current Microclimate</h2>
@@ -749,10 +768,10 @@ export const Intelligence = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div>}
 
-            {/* 5-Day Forecast Grid */}
-            <div className="intelligence-compact-card weather-forecast-card">
+            {/* 5-Day Forecast Grid — only shown when real data exists */}
+            {selectedWeather && <div className="intelligence-compact-card weather-forecast-card">
               <div className="compact-card-header">
                 <div>
                   <h2 className="compact-card-title">5-Day Agro Forecast</h2>
@@ -786,7 +805,7 @@ export const Intelligence = () => {
                   Adjust irrigation schedules based on 48h precipitation outlook.
                 </span>
               </div>
-            </div>
+            </div>}
           </div>
           );
         })()}

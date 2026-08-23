@@ -99,8 +99,8 @@ export class AuthService {
     // Issue tokens
     const tokens = await AuthService.issueTokens(farmer, meta);
 
-    // Using otp_verified as a generic login success event for now
-    await authRepo.logEvent("otp_verified", {
+    // Log the password login event with a descriptive event type
+    await authRepo.logEvent("login_password", {
       farmerId: farmer.id,
       email,
       loginMethod: "password",
@@ -137,7 +137,7 @@ export class AuthService {
 
     const tokens = await AuthService.issueTokens(farmer, meta);
     
-    await authRepo.logEvent("otp_verified", {
+    await authRepo.logEvent("register_email", {
       farmerId: farmer.id,
       email,
       loginMethod: "register",
@@ -185,8 +185,8 @@ export class AuthService {
     }
     const userInfo = await response.json();
     
-    // Generate deterministic UUID from Google sub
-    const hash = crypto.createHash('md5').update(userInfo.sub).digest('hex');
+    // Generate deterministic UUID from Google sub using SHA-256 (MD5 is cryptographically broken)
+    const hash = crypto.createHash('sha256').update(userInfo.sub).digest('hex');
     const deterministicUuid = [
       hash.substring(0, 8),
       hash.substring(8, 12),
@@ -215,7 +215,7 @@ export class AuthService {
     tokens.is_new_user = isNewUser;
     tokens.farmer.is_new_user = isNewUser;
     
-    await authRepo.logEvent("otp_verified", {
+    await authRepo.logEvent("login_google", {
       farmerId: farmer.id,
       email: userInfo.email,
       loginMethod: "google",

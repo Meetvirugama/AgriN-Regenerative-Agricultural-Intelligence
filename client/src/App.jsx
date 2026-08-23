@@ -60,16 +60,61 @@ class GlobalErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: "2rem", color: "#ef4444", fontFamily: "system-ui, sans-serif" }}>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
-            Something went wrong.
-          </h1>
-          <p style={{ color: "#6b7280" }}>Please navigate to another page or refresh.</p>
-          {process.env.NODE_ENV !== "production" && (
-            <pre style={{ marginTop: "1rem", padding: "1rem", background: "#fee2e2", borderRadius: "0.5rem", overflowX: "auto" }}>
-              {this.state.error?.toString()}
-            </pre>
-          )}
+        <div style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)",
+          fontFamily: "'Inter', system-ui, sans-serif",
+          padding: "2rem",
+        }}>
+          <div style={{
+            maxWidth: "440px",
+            width: "100%",
+            background: "white",
+            borderRadius: "16px",
+            boxShadow: "0 20px 48px rgba(0,0,0,0.1)",
+            padding: "2.5rem",
+            textAlign: "center",
+            border: "1px solid #e5e7eb",
+          }}>
+            <div style={{
+              width: "64px", height: "64px",
+              background: "rgba(220, 38, 38, 0.08)",
+              borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 1.25rem",
+              fontSize: "28px"
+            }}>⚠️</div>
+            <h1 style={{ fontSize: "1.35rem", fontWeight: "700", color: "#111827", margin: "0 0 0.5rem" }}>
+              Something went wrong
+            </h1>
+            <p style={{ color: "#6b7280", margin: "0 0 1.5rem", lineHeight: "1.6" }}>
+              An unexpected error occurred. Please navigate to another page or refresh to continue.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                background: "linear-gradient(135deg, #16a34a, #15803d)",
+                color: "white", border: "none", borderRadius: "10px",
+                padding: "12px 24px", fontSize: "0.95rem", fontWeight: "600",
+                cursor: "pointer", width: "100%",
+              }}
+            >
+              Refresh Page
+            </button>
+            {process.env.NODE_ENV !== "production" && this.state.error && (
+              <pre style={{
+                marginTop: "1.25rem", padding: "1rem",
+                background: "#fee2e2", borderRadius: "8px",
+                overflowX: "auto", fontSize: "0.75rem",
+                color: "#991b1b", textAlign: "left",
+              }}>
+                {this.state.error.toString()}
+              </pre>
+            )}
+          </div>
         </div>
       );
     }
