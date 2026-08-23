@@ -12,8 +12,10 @@ const BASE_URL = `https://api.data.gov.in/resource/${RESOURCE_ID}`;
 
 // Static fallbacks for dropdowns since we bypassed the DB
 const COMMON_COMMODITIES = [
-  "Tomato", "Potato", "Onion", "Wheat", "Rice", "Cotton", 
-  "Maize", "Soyabean", "Gram", "Groundnut", "Mustard"
+  "Apple", "Banana", "Bajra", "Cabbage", "Chilli Red", "Cotton", 
+  "Garlic", "Ginger", "Gram", "Groundnut", "Jowar", "Maize", 
+  "Moong", "Mustard", "Onion", "Paddy", "Potato", "Rice", 
+  "Soyabean", "Tomato", "Tur", "Urad", "Wheat"
 ].map(name => ({ name }));
 
 const COMMON_STATES = [

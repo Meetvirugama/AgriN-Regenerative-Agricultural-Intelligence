@@ -77,5 +77,30 @@
     "alertSet": "Price alert has been set for this crop!",
     "insightUnavailable": "Unable to generate insight at this moment.",
     "qtl": "qtl"
+  },
+  "crops": {
+    "Apple": "સફરજન",
+    "Banana": "કેળા",
+    "Bajra": "બાજરી",
+    "Cabbage": "કોબીજ",
+    "Chilli Red": "લાલ મરચું",
+    "Cotton": "કપાસ",
+    "Garlic": "લસણ",
+    "Ginger": "આદુ",
+    "Gram": "ચણા",
+    "Groundnut": "મગફળી",
+    "Jowar": "જુવાર",
+    "Maize": "મકાઈ",
+    "Moong": "મગ",
+    "Mustard": "સરસવ",
+    "Onion": "ડુંગળી",
+    "Paddy": "ડાંગર",
+    "Potato": "બટાકા",
+    "Rice": "ચોખા",
+    "Soyabean": "સોયાબીન",
+    "Tomato": "ટમેટા",
+    "Tur": "તુવેર",
+    "Urad": "અડદ",
+    "Wheat": "ઘઉં"
   }
 }

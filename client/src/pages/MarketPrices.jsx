@@ -248,7 +248,7 @@ export function MarketPrices() {
                 className="market-crop-card"
                 onClick={() => handleCropClick(crop)}
               >
-                <span className="market-crop-card-name">{crop.commodity}</span>
+                <span className="market-crop-card-name">{t(`crops.${crop.commodity}`, { defaultValue: crop.commodity })}</span>
                 <span className="market-crop-card-price">
                   {formatPrice(crop.modalPrice)}
                   <span style={{ fontSize: "0.7rem", color: "#6b7280", fontWeight: 500 }}>
@@ -271,7 +271,7 @@ export function MarketPrices() {
             placeholder={t("market.cropPlaceholder")}
             value={selectedCommodity}
             onChange={(val) => setSelectedCommodity(val)}
-            options={commodities.map((c) => c.name)}
+            options={commodities.map((c) => ({ value: c.name, label: t(`crops.${c.name}`, { defaultValue: c.name }) }))}
           />
 
           <Combobox emptyText={t("market.noOptions")} label={t("market.state")}
@@ -326,7 +326,7 @@ export function MarketPrices() {
           <div className="market-results-header">
             <div>
               <h2 className="market-results-title">
-                {searchResult.commodity}
+                {t(`crops.${searchResult.commodity}`, { defaultValue: searchResult.commodity })}
                 {searchResult.prices?.[0]?.market && ` — ${searchResult.prices[0].market}`}
               </h2>
               <p className="market-results-subtitle">

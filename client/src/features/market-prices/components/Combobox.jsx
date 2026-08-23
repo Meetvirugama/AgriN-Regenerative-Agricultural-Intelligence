@@ -4,68 +4,75 @@ import "./Combobox.css";
 /**
  * Combobox Component
  * A custom select input that allows typing to filter.
- * Crucially, it sorts matching items to the top, but keeps non-matching items below them.
+ * Supports strings OR objects { value, label } for i18n support.
  */
 export function Combobox({ label, value, onChange, options, placeholder, disabled, emptyText = "No options available" }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(value || "");
+  const [inputValue, setInputValue] = useState("");
   const containerRef = useRef(null);
+
+  const getLabel = (opt) => (typeof opt === "string" ? opt : opt.label);
+  const getValue = (opt) => (typeof opt === "string" ? opt : opt.value);
 
   // Sync internal input value with external value prop
   useEffect(() => {
-    setInputValue(value || "");
-  }, [value]);
+    if (!value) {
+      setInputValue("");
+      return;
+    }
+    const matchingOpt = options.find((opt) => getValue(opt) === value);
+    if (matchingOpt) {
+      setInputValue(getLabel(matchingOpt));
+    } else {
+      setInputValue(value);
+    }
+  }, [value, options]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setIsOpen(false);
-        // Reset input to actual value if user typed but didn't select
-        setInputValue(value || "");
+        const matchingOpt = options.find((opt) => getValue(opt) === value);
+        setInputValue(matchingOpt ? getLabel(matchingOpt) : (value || ""));
       }
     };
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [value]);
+  }, [value, options]);
 
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
     setIsOpen(true);
-    // If they clear the input, clear the actual value too
     if (e.target.value === "") {
       onChange("");
     }
   };
 
-  const handleOptionClick = (option) => {
-    setInputValue(option);
-    onChange(option);
+  const handleOptionClick = (opt) => {
+    setInputValue(getLabel(opt));
+    onChange(getValue(opt));
     setIsOpen(false);
   };
 
-  // Sort options: exact matches first, partial matches second, non-matches last
   const sortedOptions = [...options].sort((a, b) => {
     if (!inputValue) return 0;
     
     const search = inputValue.toLowerCase();
-    const aLower = a.toLowerCase();
-    const bLower = b.toLowerCase();
+    const aLower = getLabel(a).toLowerCase();
+    const bLower = getLabel(b).toLowerCase();
     
     const aStarts = aLower.startsWith(search);
     const bStarts = bLower.startsWith(search);
     const aIncludes = aLower.includes(search);
     const bIncludes = bLower.includes(search);
 
-    // Both start with the search term
     if (aStarts && !bStarts) return -1;
     if (!aStarts && bStarts) return 1;
-
-    // Both include the search term
     if (aIncludes && !bIncludes) return -1;
     if (!aIncludes && bIncludes) return 1;
 
-    return a.localeCompare(b);
+    return getLabel(a).localeCompare(getLabel(b));
   });
 
   return (
@@ -86,14 +93,16 @@ export function Combobox({ label, value, onChange, options, placeholder, disable
             {sortedOptions.length > 0 ? (
               sortedOptions.map((opt, i) => {
                 const search = inputValue.toLowerCase();
-                const isMatch = opt.toLowerCase().includes(search) && search !== "";
+                const lbl = getLabel(opt);
+                const val = getValue(opt);
+                const isMatch = lbl.toLowerCase().includes(search) && search !== "";
                 return (
                   <li
                     key={i}
                     onClick={() => handleOptionClick(opt)}
-                    className={`combobox-option ${isMatch ? "highlight" : ""} ${value === opt ? "selected" : ""}`}
+                    className={`combobox-option ${isMatch ? "highlight" : ""} ${value === val ? "selected" : ""}`}
                   >
-                    {opt}
+                    {lbl}
                   </li>
                 );
               })

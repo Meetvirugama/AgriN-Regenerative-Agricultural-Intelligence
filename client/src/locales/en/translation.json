@@ -77,5 +77,30 @@
     "alertSet": "Price alert has been set for this crop!",
     "insightUnavailable": "Unable to generate insight at this moment.",
     "qtl": "qtl"
+  },
+  "crops": {
+    "Apple": "Apple",
+    "Banana": "Banana",
+    "Bajra": "Bajra",
+    "Cabbage": "Cabbage",
+    "Chilli Red": "Chilli Red",
+    "Cotton": "Cotton",
+    "Garlic": "Garlic",
+    "Ginger": "Ginger",
+    "Gram": "Gram",
+    "Groundnut": "Groundnut",
+    "Jowar": "Jowar",
+    "Maize": "Maize",
+    "Moong": "Moong",
+    "Mustard": "Mustard",
+    "Onion": "Onion",
+    "Paddy": "Paddy",
+    "Potato": "Potato",
+    "Rice": "Rice",
+    "Soyabean": "Soyabean",
+    "Tomato": "Tomato",
+    "Tur": "Tur",
+    "Urad": "Urad",
+    "Wheat": "Wheat"
   }
 }
