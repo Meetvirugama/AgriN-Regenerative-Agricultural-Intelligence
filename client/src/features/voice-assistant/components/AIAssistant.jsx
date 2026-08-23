@@ -1,21 +1,23 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Mic, Send, Square, Volume2, Bot, Loader2 } from "lucide-react";
+import "./AIAssistant.css";
 
 function AIAssistant() {
-
     const navigate = useNavigate();
+    const chatEndRef = useRef(null);
 
     // ==================================================
     // TEXT / AI STATE
     // ==================================================
-
     const [message, setMessage] = useState("");
-    const [response, setResponse] = useState("");
+    const [chatHistory, setChatHistory] = useState([
+        { role: "ai", text: "Hello! I am AgriMesh AI. How can I help you with your fields today?" }
+    ]);
 
     // ==================================================
     // RECORDING STATE
     // ==================================================
-
     const [recording, setRecording] = useState(false);
     const [processingAudio, setProcessingAudio] = useState(false);
 
@@ -26,615 +28,223 @@ function AIAssistant() {
     // ==================================================
     // SESSION ID
     // ==================================================
+    const [sessionId] = useState(() => crypto.randomUUID());
 
-    const [sessionId] = useState(
-        () => crypto.randomUUID()
-    );
-
+    // Auto-scroll to bottom of chat
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [chatHistory, processingAudio]);
 
     // ==================================================
     // TEXT CHAT
     // ==================================================
-
     async function sendMessage(text = message) {
+        if (!text || !text.trim()) return;
 
-        if (!text || !text.trim()) {
-            return;
-        }
+        // Add user message to history
+        setChatHistory(prev => [...prev, { role: "user", text }]);
+        setMessage("");
 
         try {
-
-            setResponse("Thinking...");
+            setChatHistory(prev => [...prev, { role: "system", text: "Thinking..." }]);
 
             const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
-            const res = await fetch(
-                `${apiUrl}/voice/chat`,
-                {
-                    method: "POST",
+            const res = await fetch(`${apiUrl}/voice/chat`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ session_id: sessionId, message: text })
+            });
 
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        session_id: sessionId,
-                        message: text
-                    })
-                }
-            );
-
-            if (!res.ok) {
-
-                throw new Error(
-                    `Server error: ${res.status}`
-                );
-            }
-
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
             const data = await res.json();
 
-            console.log(
-                "AI response:",
-                data
-            );
+            // Replace thinking with actual response
+            setChatHistory(prev => {
+                const newHist = [...prev];
+                newHist.pop(); // remove thinking
+                newHist.push({ role: "ai", text: data.message || "I didn't quite get that." });
+                return newHist;
+            });
 
-            setResponse(
-                data.message || ""
-            );
-
-
-            // -----------------------------------------
-            // Navigation
-            // -----------------------------------------
-
-            if (
-                data.action &&
-                data.action.action === "NAVIGATE"
-            ) {
-
-                navigate(
-                    data.action.path
-                );
-
+            // Navigation action
+            if (data.action && data.action.action === "NAVIGATE") {
+                navigate(data.action.path);
             }
 
-
-            // -----------------------------------------
-            // Text to Speech
-            // -----------------------------------------
-
+            // Speak response
             if (data.message) {
-
-                speakText(
-                    data.message
-                );
-
+                speakText(data.message);
             }
 
         } catch (error) {
-
-            console.error(
-                "AI Error:",
-                error
-            );
-
-            setResponse(
-                "Could not connect to the AI server."
-            );
-
+            console.error("AI Error:", error);
+            setChatHistory(prev => {
+                const newHist = [...prev];
+                newHist.pop(); // remove thinking
+                newHist.push({ role: "system", text: "Could not connect to the AI server." });
+                return newHist;
+            });
         }
-
-        setMessage("");
     }
-
 
     // ==================================================
     // START RECORDING
     // ==================================================
-
     async function startRecording() {
-
         try {
-
-            // -----------------------------------------
-            // Get microphone
-            // -----------------------------------------
-
-            const stream =
-                await navigator.mediaDevices.getUserMedia({
-                    audio: true
-                });
-
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             streamRef.current = stream;
 
-            console.log(
-                "Microphone permission granted"
-            );
-
-
-            // -----------------------------------------
-            // Choose supported MIME type
-            // -----------------------------------------
-
             let mimeType = "";
-
-            if (
-                MediaRecorder.isTypeSupported(
-                    "audio/webm;codecs=opus"
-                )
-            ) {
-
-                mimeType =
-                    "audio/webm;codecs=opus";
-
-            } else if (
-                MediaRecorder.isTypeSupported(
-                    "audio/webm"
-                )
-            ) {
-
-                mimeType =
-                    "audio/webm";
-
-            } else if (
-                MediaRecorder.isTypeSupported(
-                    "audio/mp4"
-                )
-            ) {
-
-                mimeType =
-                    "audio/mp4";
-
+            if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+                mimeType = "audio/webm;codecs=opus";
+            } else if (MediaRecorder.isTypeSupported("audio/webm")) {
+                mimeType = "audio/webm";
+            } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+                mimeType = "audio/mp4";
             }
 
+            const mediaRecorder = mimeType 
+                ? new MediaRecorder(stream, { mimeType }) 
+                : new MediaRecorder(stream);
 
-            console.log(
-                "Selected MIME type:",
-                mimeType
-            );
-
-
-            // -----------------------------------------
-            // Create MediaRecorder
-            // -----------------------------------------
-
-            const mediaRecorder =
-                mimeType
-                    ? new MediaRecorder(
-                        stream,
-                        {
-                            mimeType: mimeType
-                        }
-                    )
-                    : new MediaRecorder(
-                        stream
-                    );
-
-
-            mediaRecorderRef.current =
-                mediaRecorder;
-
+            mediaRecorderRef.current = mediaRecorder;
             audioChunksRef.current = [];
 
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
 
-            console.log(
-                "Actual recorder MIME type:",
-                mediaRecorder.mimeType
-            );
+            mediaRecorder.onstop = async () => {
+                const actualMimeType = mediaRecorder.mimeType || "audio/webm";
+                const audioBlob = new Blob(audioChunksRef.current, { type: actualMimeType });
 
-
-            // -----------------------------------------
-            // Receive chunks
-            // -----------------------------------------
-
-            mediaRecorder.ondataavailable =
-                (event) => {
-
-                    console.log(
-                        "Audio chunk:",
-                        event.data.size,
-                        "bytes"
-                    );
-
-                    if (
-                        event.data &&
-                        event.data.size > 0
-                    ) {
-
-                        audioChunksRef.current.push(
-                            event.data
-                        );
-
-                    }
-
-                };
-
-
-            // -----------------------------------------
-            // When recording stops
-            // -----------------------------------------
-
-            mediaRecorder.onstop =
-                async () => {
-
-                    console.log(
-                        "Recording stopped"
-                    );
-
-
-                    // Use actual MIME type
-                    const actualMimeType =
-                        mediaRecorder.mimeType ||
-                        "audio/webm";
-
-
-                    // ---------------------------------
-                    // Create final audio Blob
-                    // ---------------------------------
-
-                    const audioBlob =
-                        new Blob(
-                            audioChunksRef.current,
-                            {
-                                type: actualMimeType
-                            }
-                        );
-
-
-                    console.log(
-                        "Final audio MIME type:",
-                        actualMimeType
-                    );
-
-                    console.log(
-                        "Final audio size:",
-                        audioBlob.size,
-                        "bytes"
-                    );
-
-
-                    // ---------------------------------
-                    // Stop microphone
-                    // ---------------------------------
-
-                    if (streamRef.current) {
-
-                        streamRef.current
-                            .getTracks()
-                            .forEach(
-                                track => track.stop()
-                            );
-
-                        streamRef.current =
-                            null;
-
-                    }
-
-
-                    // ---------------------------------
-                    // Send audio
-                    // ---------------------------------
-
-                    await sendAudio(
-                        audioBlob
-                    );
-
-                };
-
-
-            // -----------------------------------------
-            // Start recording
-            // -----------------------------------------
-
-            // Generate chunks every 1 second.
-            // This makes WebM recording much more reliable.
+                if (streamRef.current) {
+                    streamRef.current.getTracks().forEach(track => track.stop());
+                    streamRef.current = null;
+                }
+                await sendAudio(audioBlob);
+            };
 
             mediaRecorder.start(1000);
-
             setRecording(true);
-
             setProcessingAudio(false);
-
-            setResponse(
-                "🎤 Listening..."
-            );
-
-            console.log(
-                "🎤 Recording started"
-            );
+            setChatHistory(prev => [...prev, { role: "system", text: "Listening... (Speak now)" }]);
 
         } catch (error) {
-
-            console.error(
-                "Microphone error:",
-                error
-            );
-
+            console.error("Microphone error:", error);
             setRecording(false);
-
             setProcessingAudio(false);
-
-            alert(
-                "Could not access microphone. Please allow microphone permission."
-            );
-
+            alert("Could not access microphone. Please allow microphone permission.");
         }
     }
-
 
     // ==================================================
     // STOP RECORDING
     // ==================================================
-
     function stopRecording() {
-
-        const recorder =
-            mediaRecorderRef.current;
-
-
-        if (
-            recorder &&
-            recorder.state !== "inactive"
-        ) {
-
-            console.log(
-                "Stopping recording..."
-            );
-
+        const recorder = mediaRecorderRef.current;
+        if (recorder && recorder.state !== "inactive") {
             setRecording(false);
-
             setProcessingAudio(true);
-
-            setResponse(
-                "🎧 Processing your voice..."
-            );
-
-
+            
+            // Update the "Listening..." message to "Processing..."
+            setChatHistory(prev => {
+                const newHist = [...prev];
+                if (newHist[newHist.length - 1]?.role === "system") {
+                    newHist[newHist.length - 1].text = "Processing audio...";
+                }
+                return newHist;
+            });
             recorder.stop();
-
         }
-
     }
-
 
     // ==================================================
     // SEND AUDIO TO BACKEND
     // ==================================================
-
     async function sendAudio(audioBlob) {
-
         try {
-
             setProcessingAudio(true);
 
-            setResponse(
-                "🎧 Processing your voice..."
-            );
-
-
-            // -----------------------------------------
-            // Check audio
-            // -----------------------------------------
-
-            if (
-                !audioBlob ||
-                audioBlob.size === 0
-            ) {
-
-                console.error(
-                    "Empty audio blob"
-                );
-
+            if (!audioBlob || audioBlob.size === 0) {
+                setChatHistory(prev => {
+                    const newHist = [...prev];
+                    newHist.pop();
+                    newHist.push({ role: "system", text: "No audio was recorded." });
+                    return newHist;
+                });
                 setProcessingAudio(false);
-
-                setResponse(
-                    "No audio was recorded."
-                );
-
                 return;
-
             }
 
-
-            console.log(
-                "Sending audio:",
-                audioBlob.size,
-                "bytes"
-            );
-
-
-            console.log(
-                "Audio type:",
-                audioBlob.type
-            );
-
-
-            // -----------------------------------------
-            // FormData
-            // -----------------------------------------
-
-            const formData =
-                new FormData();
-
-
-            formData.append(
-                "audio",
-                audioBlob,
-                "recording.webm"
-            );
-
-
-            // -----------------------------------------
-            // Send to FastAPI
-            // -----------------------------------------
+            const formData = new FormData();
+            formData.append("audio", audioBlob, "recording.webm");
 
             const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
-            const res =
-                await fetch(
-                    `${apiUrl}/voice/stt`,
-                    {
-                        method: "POST",
-                        body: formData
-                    }
-                );
+            const res = await fetch(`${apiUrl}/voice/stt`, {
+                method: "POST",
+                body: formData
+            });
 
-
-            if (!res.ok) {
-
-                throw new Error(
-                    `Transcription error: ${res.status}`
-                );
-
-            }
-
-
-            // -----------------------------------------
-            // Read response
-            // -----------------------------------------
-
-            const data =
-                await res.json();
-
-
-            console.log(
-                "Transcription response:",
-                data
-            );
-
-
+            if (!res.ok) throw new Error(`Transcription error: ${res.status}`);
+            
+            const data = await res.json();
             setProcessingAudio(false);
 
+            // Remove the "Processing audio..." system message
+            setChatHistory(prev => {
+                const newHist = [...prev];
+                if (newHist[newHist.length - 1]?.role === "system") {
+                    newHist.pop();
+                }
+                return newHist;
+            });
 
-            // -----------------------------------------
-            // Transcription failed
-            // -----------------------------------------
-
-            if (
-                !data.success ||
-                !data.transcript
-            ) {
-
-                console.error(
-                    "Transcription failed:",
-                    data.error
-                );
-
-                setResponse(
-                    data.error ||
-                    "I couldn't understand the audio."
-                );
-
+            if (!data.success || !data.transcript) {
+                setChatHistory(prev => [...prev, { role: "system", text: data.error || "Could not understand audio." }]);
                 return;
-
             }
 
-
-            // -----------------------------------------
-            // Transcript
-            // -----------------------------------------
-
-            const transcript =
-                data.text.trim();
-
-
-            console.log(
-                "Transcript:",
-                transcript
-            );
-
-
-            setMessage(
-                transcript
-            );
-
-
-            // -----------------------------------------
-            // Send transcript to AI
-            // -----------------------------------------
-
-            await sendMessage(
-                transcript
-            );
-
+            const transcript = data.text.trim();
+            // We got the transcript! Now send it as a message
+            await sendMessage(transcript);
 
         } catch (error) {
-
-            console.error(
-                "Audio processing error:",
-                error
-            );
-
+            console.error("Audio processing error:", error);
             setProcessingAudio(false);
-
-            setResponse(
-                "Could not process the voice input."
-            );
-
+            setChatHistory(prev => {
+                const newHist = [...prev];
+                if (newHist[newHist.length - 1]?.role === "system") {
+                    newHist.pop();
+                }
+                newHist.push({ role: "system", text: "Could not process the voice input." });
+                return newHist;
+            });
         }
-
     }
-
 
     // ==================================================
     // TEXT TO SPEECH
     // ==================================================
-
     async function speakText(text) {
-
-        if (
-            !text ||
-            !text.trim()
-        ) {
-
-            return;
-
-        }
-
+        if (!text || !text.trim()) return;
 
         try {
-
-            console.log(
-                "TTS request:",
-                text
-            );
-
-
             const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
-            const res =
-                await fetch(
-                    `${apiUrl}/voice/tts`,
-                    {
-                        method: "POST",
+            const res = await fetch(`${apiUrl}/voice/tts`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: text })
+            });
 
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body: JSON.stringify({
-                            text: text
-                        })
-                    }
-                );
-
-
-            if (!res.ok) {
-
-                throw new Error(
-                    `TTS server error: ${res.status}`
-                );
-
-            }
-
-
-            // -----------------------------------------
-            // Receive audio
-            // -----------------------------------------
+            if (!res.ok) throw new Error(`TTS server error: ${res.status}`);
 
             const data = await res.json();
-            if (!data.audioContent) {
-                throw new Error("TTS returned empty audio");
-            }
-            // Decode base64 audio
+            if (!data.audioContent) throw new Error("TTS returned empty audio");
+            
             const byteCharacters = atob(data.audioContent);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -643,261 +253,95 @@ function AIAssistant() {
             const byteArray = new Uint8Array(byteNumbers);
             const audioBlob = new Blob([byteArray], { type: data.format || "audio/mpeg" });
 
+            if (audioBlob.size === 0) throw new Error("TTS returned empty audio");
 
-            console.log(
-                "Received TTS audio:",
-                audioBlob.size,
-                "bytes"
-            );
-
-
-            if (
-                audioBlob.size === 0
-            ) {
-
-                throw new Error(
-                    "TTS returned empty audio"
-                );
-
-            }
-
-
-            // -----------------------------------------
-            // Create audio URL
-            // -----------------------------------------
-
-            const audioUrl =
-                URL.createObjectURL(
-                    audioBlob
-                );
-
-
-            const audio =
-                new Audio(
-                    audioUrl
-                );
-
-
-            audio.onended = () => {
-
-                URL.revokeObjectURL(
-                    audioUrl
-                );
-
-            };
-
-
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.onended = () => URL.revokeObjectURL(audioUrl);
             audio.onerror = () => {
-
-                URL.revokeObjectURL(
-                    audioUrl
-                );
-
-                console.error(
-                    "Audio playback failed"
-                );
-
+                URL.revokeObjectURL(audioUrl);
+                console.error("Audio playback failed");
             };
-
 
             await audio.play();
-
-
-            console.log(
-                "🔊 AI speaking"
-            );
-
-
         } catch (error) {
-
-            console.error(
-                "TTS error:",
-                error
-            );
-
+            console.error("TTS error:", error);
         }
-
     }
-
 
     // ==================================================
     // TEST TTS
     // ==================================================
-
     async function testTTS() {
-
-        await speakText(
-            "Hello! I am your AI assistant."
-        );
-
+        await speakText("Voice system is working properly!");
     }
-
 
     // ==================================================
     // UI
     // ==================================================
-
     return (
+        <div className="ai-assistant-container">
+            <div className="ai-assistant-header">
+                <div className="ai-header-icon">
+                    <Bot size={24} />
+                </div>
+                <div>
+                    <h2 className="ai-header-title">AgriMesh AI</h2>
+                    <p className="ai-header-subtitle">Voice Assistant</p>
+                </div>
+            </div>
 
-        <div
-            style={{
-                padding: "20px",
-                border: "1px solid #ddd",
-                margin: "20px",
-                borderRadius: "10px"
-            }}
-        >
+            <div className="ai-chat-window">
+                {chatHistory.map((msg, index) => (
+                    <div key={index} className={`ai-chat-bubble ${msg.role}`}>
+                        {msg.text}
+                    </div>
+                ))}
+                <div ref={chatEndRef} />
+            </div>
 
-            <h2>
-                🤖 AI Assistant
-            </h2>
+            <div className="ai-input-area">
+                <div className="ai-input-row">
+                    <input
+                        type="text"
+                        className="ai-text-input"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") sendMessage();
+                        }}
+                        placeholder="Type or speak..."
+                        disabled={recording || processingAudio}
+                    />
 
-
-            {/* ----------------------------------------
-                Text input
-            ----------------------------------------- */}
-
-            <input
-                type="text"
-
-                value={message}
-
-                onChange={(e) =>
-                    setMessage(
-                        e.target.value
-                    )
-                }
-
-                onKeyDown={(e) => {
-
-                    if (
-                        e.key === "Enter"
-                    ) {
-
-                        sendMessage();
-
-                    }
-
-                }}
-
-                placeholder="Ask me something..."
-
-                disabled={
-                    recording ||
-                    processingAudio
-                }
-
-                style={{
-                    padding: "10px",
-                    width: "300px"
-                }}
-            />
-
-
-            {/* ----------------------------------------
-                Send button
-            ----------------------------------------- */}
-
-            <button
-                onClick={() =>
-                    sendMessage()
-                }
-
-                disabled={
-                    recording ||
-                    processingAudio
-                }
-
-                style={{
-                    marginLeft: "10px",
-                    padding: "10px"
-                }}
-            >
-
-                Send
-
-            </button>
-
-
-            {/* ----------------------------------------
-                Microphone button
-            ----------------------------------------- */}
-
-            <button
-                onClick={
-                    recording
-                        ? stopRecording
-                        : startRecording
-                }
-
-                disabled={
-                    processingAudio
-                }
-
-                style={{
-                    marginLeft: "10px",
-                    padding: "10px"
-                }}
-            >
-
-                {recording
-
-                    ? "🛑 Stop Recording"
-
-                    : processingAudio
-
-                        ? "⏳ Processing..."
-
-                        : "🎤 Start Recording"
-
-                }
-
-            </button>
-
-
-            {/* ----------------------------------------
-                TTS test
-            ----------------------------------------- */}
-
-            <button
-                onClick={testTTS}
-
-                disabled={
-                    recording ||
-                    processingAudio
-                }
-
-                style={{
-                    marginLeft: "10px",
-                    padding: "10px"
-                }}
-            >
-
-                🔊 Test TTS
-
-            </button>
-
-
-            {/* ----------------------------------------
-                AI response
-            ----------------------------------------- */}
-
-            <p>
-
-                <strong>
-                    AI:
-                </strong>
-
-                {" "}
-
-                {response}
-
-            </p>
-
+                    {message.trim() ? (
+                        <button
+                            className="ai-action-btn ai-btn-send"
+                            onClick={() => sendMessage()}
+                            disabled={recording || processingAudio}
+                            aria-label="Send message"
+                        >
+                            <Send size={18} />
+                        </button>
+                    ) : (
+                        <button
+                            className={`ai-action-btn ${recording ? 'ai-btn-stop' : 'ai-btn-mic'}`}
+                            onClick={recording ? stopRecording : startRecording}
+                            disabled={processingAudio}
+                            aria-label={recording ? "Stop recording" : "Start recording"}
+                        >
+                            {processingAudio ? <Loader2 size={18} className="tts-loading-icon" /> : (recording ? <Square size={16} fill="currentColor" /> : <Mic size={18} />)}
+                        </button>
+                    )}
+                </div>
+                <div className="ai-tools-row">
+                    <button className="ai-tts-btn" onClick={testTTS} disabled={recording || processingAudio}>
+                        <Volume2 size={14} /> Test Speaker
+                    </button>
+                </div>
+            </div>
         </div>
-
     );
-
 }
 
 export default AIAssistant;
