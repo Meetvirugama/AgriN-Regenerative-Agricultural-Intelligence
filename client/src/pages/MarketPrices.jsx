@@ -15,6 +15,8 @@ import {
 import { marketApi } from "../features/market-prices/api/marketApi";
 import { PriceChart } from "../features/market-prices/components/PriceChart";
 import { Combobox } from "../features/market-prices/components/Combobox";
+import { motion } from "framer-motion";
+import { FadeIn, StaggerContainer, StaggerItem, CountUp } from "../components/animations/AnimationKit";
 import "./MarketPrices.css";
 
 /**
@@ -226,45 +228,47 @@ export function MarketPrices() {
   return (
     <div className="market-prices-page">
       {/* Page Header */}
-      <div className="market-prices-header">
+      <FadeIn direction="up" className="market-prices-header">
         <h1>
           <TrendingUp size={24} /> {t("market.title")}
         </h1>
         <p className="market-prices-subtitle">
           {t("market.subtitle")}
         </p>
-      </div>
+      </FadeIn>
 
       {/* ─── Your Crops ────────────────────────────────────────────────────── */}
       {!myCropsLoading && myCrops.length > 0 && (
-        <div className="market-your-crops">
+        <FadeIn direction="up" delay={0.05} className="market-your-crops">
           <h3 className="market-your-crops-title">
             <Sprout size={16} /> {t("market.yourCrops")}
           </h3>
-          <div className="market-your-crops-grid">
+          <StaggerContainer className="market-your-crops-grid">
             {myCrops.map((crop, i) => (
-              <div
-                key={i}
-                className="market-crop-card"
-                onClick={() => handleCropClick(crop)}
-              >
-                <span className="market-crop-card-name">{t(`crops.${crop.commodity}`, { defaultValue: crop.commodity })}</span>
-                <span className="market-crop-card-price">
-                  {formatPrice(crop.modalPrice)}
-                  <span style={{ fontSize: "0.7rem", color: "#6b7280", fontWeight: 500 }}>
-                    /q
+              <StaggerItem key={i}>
+                <motion.div
+                  className="market-crop-card"
+                  onClick={() => handleCropClick(crop)}
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                >
+                  <span className="market-crop-card-name">{t(`crops.${crop.commodity}`, { defaultValue: crop.commodity })}</span>
+                  <span className="market-crop-card-price">
+                    {formatPrice(crop.modalPrice)}
+                    <span style={{ fontSize: "0.7rem", color: "#6b7280", fontWeight: 500 }}>
+                      /q
+                    </span>
                   </span>
-                </span>
-                <ChangeIndicator change={crop.change} />
-                <span className="market-crop-card-market">{crop.market}</span>
-              </div>
+                  <ChangeIndicator change={crop.change} />
+                  <span className="market-crop-card-market">{crop.market}</span>
+                </motion.div>
+              </StaggerItem>
             ))}
-          </div>
-        </div>
+          </StaggerContainer>
+        </FadeIn>
       )}
 
       {/* ─── Search Form ──────────────────────────────────────────────────── */}
-      <div className="market-search-card">
+      <FadeIn direction="up" delay={0.1} className="market-search-card">
         <h3 className="market-search-card-title">{t("market.searchTitle")}</h3>
         <div className="market-search-form">
           <Combobox emptyText={t("market.noOptions")} label={t("market.crop")}
@@ -292,23 +296,25 @@ export function MarketPrices() {
             disabled={!selectedState}
           />
 
-          <button
+          <motion.button
             className="market-search-btn"
             onClick={() => handleSearch()}
             disabled={!selectedCommodity || searchLoading}
+            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.02 }}
           >
             <Search size={16} />
             {searchLoading ? t("market.searching") : t("market.search")}
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </FadeIn>
 
       {/* ─── Error State ──────────────────────────────────────────────────── */}
       {searchError && (
-        <div className="market-error">
+        <FadeIn direction="down" className="market-error">
           <AlertCircle size={16} />
           {searchError}
-        </div>
+        </FadeIn>
       )}
 
       {/* ─── Loading State ────────────────────────────────────────────────── */}
@@ -321,7 +327,7 @@ export function MarketPrices() {
 
       {/* ─── Search Results ──────────────────────────────────────────────── */}
       {searchResult && !searchLoading && (
-        <div className="market-results">
+        <FadeIn direction="up" className="market-results">
           {/* Results Header */}
           <div className="market-results-header">
             <div>
@@ -343,46 +349,61 @@ export function MarketPrices() {
 
           {/* Price Summary Cards */}
           {searchResult.prices?.length > 0 ? (
-            <div className="market-price-cards">
-              <div className="market-price-card">
-                <div className="market-price-card-label">{t("market.minPrice")}</div>
-                <div className="market-price-card-value">
-                  {formatPrice(searchResult.prices[0].min_price)}
-                </div>
-                <div className="market-price-card-unit">{t("market.perQuintalLabel")}</div>
-              </div>
-
-              <div className="market-price-card modal">
-                <div className="market-price-card-label">{t("market.modalPrice")}</div>
-                <div className="market-price-card-value">
-                  {formatPrice(searchResult.prices[0].modal_price)}
-                </div>
-                <div className="market-price-card-unit">{t("market.perQuintalLabel")}</div>
-                {searchResult.change !== null && (
-                  <div
-                    className={`market-price-card-change ${
-                      searchResult.change > 0 ? "up" : searchResult.change < 0 ? "down" : ""
-                    }`}
-                  >
-                    {searchResult.change > 0 ? (
-                      <ArrowUpRight size={14} />
-                    ) : searchResult.change < 0 ? (
-                      <ArrowDownRight size={14} />
-                    ) : null}
-                    {searchResult.change > 0 ? "+" : ""}
-                    {searchResult.change}{t("market.fromPrevious")}
+            <StaggerContainer className="market-price-cards">
+              <StaggerItem>
+                <motion.div 
+                  className="market-price-card"
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                >
+                  <div className="market-price-card-label">{t("market.minPrice")}</div>
+                  <div className="market-price-card-value">
+                    {formatPrice(searchResult.prices[0].min_price)}
                   </div>
-                )}
-              </div>
+                  <div className="market-price-card-unit">{t("market.perQuintalLabel")}</div>
+                </motion.div>
+              </StaggerItem>
 
-              <div className="market-price-card">
-                <div className="market-price-card-label">{t("market.maxPrice")}</div>
-                <div className="market-price-card-value">
-                  {formatPrice(searchResult.prices[0].max_price)}
-                </div>
-                <div className="market-price-card-unit">{t("market.perQuintalLabel")}</div>
-              </div>
-            </div>
+              <StaggerItem>
+                <motion.div 
+                  className="market-price-card modal"
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                >
+                  <div className="market-price-card-label">{t("market.modalPrice")}</div>
+                  <div className="market-price-card-value">
+                    {formatPrice(searchResult.prices[0].modal_price)}
+                  </div>
+                  <div className="market-price-card-unit">{t("market.perQuintalLabel")}</div>
+                  {searchResult.change !== null && (
+                    <div
+                      className={`market-price-card-change ${
+                        searchResult.change > 0 ? "up" : searchResult.change < 0 ? "down" : ""
+                      }`}
+                    >
+                      {searchResult.change > 0 ? (
+                        <ArrowUpRight size={14} />
+                      ) : searchResult.change < 0 ? (
+                        <ArrowDownRight size={14} />
+                      ) : null}
+                      {searchResult.change > 0 ? "+" : ""}
+                      {searchResult.change}{t("market.fromPrevious")}
+                    </div>
+                  )}
+                </motion.div>
+              </StaggerItem>
+
+              <StaggerItem>
+                <motion.div 
+                  className="market-price-card"
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                >
+                  <div className="market-price-card-label">{t("market.maxPrice")}</div>
+                  <div className="market-price-card-value">
+                    {formatPrice(searchResult.prices[0].max_price)}
+                  </div>
+                  <div className="market-price-card-unit">{t("market.perQuintalLabel")}</div>
+                </motion.div>
+              </StaggerItem>
+            </StaggerContainer>
           ) : (
             <div className="market-empty-state">
               <BarChart3 size={40} />
@@ -400,7 +421,7 @@ export function MarketPrices() {
 
           {/* Nearby Markets */}
           {nearbyMarkets.length > 0 && (
-            <div className="market-nearby">
+            <FadeIn direction="up" delay={0.15} className="market-nearby">
               <h3 className="market-nearby-title">
                 <MapPin size={16} /> {t("market.nearby")}
               </h3>
@@ -419,9 +440,9 @@ export function MarketPrices() {
                   </div>
                 ))}
               </div>
-            </div>
+            </FadeIn>
           )}
-        </div>
+        </FadeIn>
       )}
 
       {/* ─── Initial Empty State ──────────────────────────────────────────── */}

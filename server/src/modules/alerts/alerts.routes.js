@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { query, execute } from "../../db/connection.js";
+import { validateUuidParam } from "../../middleware/validate.js";
 
 const router = Router();
 
@@ -120,6 +121,7 @@ router.get("/", async (req, res, next) => {
  */
 router.patch(
   "/:alertId/read",
+  validateUuidParam("alertId"),
   async (req, res, next) => {
     try {
       const farmerId = req.farmer?.sub;

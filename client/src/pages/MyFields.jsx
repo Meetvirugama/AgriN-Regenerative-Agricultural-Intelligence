@@ -16,6 +16,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { cropApi } from "../features/crop-context/api/cropApi";
 
+import { motion } from "framer-motion";
+import { FadeIn, StaggerContainer, StaggerItem } from "../components/animations/AnimationKit";
+
 import "./MyFields.css";
 
 // ── Crop config ────────────────────────────────────────────────────────────
@@ -227,46 +230,54 @@ export const MyFields = () => {
     <div className="myfields-container">
 
       {/* HEADER */}
-      <div className="myfields-header">
-        <div>
+      <FadeIn direction="up" className="myfields-header">
+        <div className="myfields-header-content">
           <h1 className="myfields-title">My Fields</h1>
           <p className="myfields-subtitle">
-            {fields.length > 0
-              ? `${fields.length} field${fields.length !== 1 ? "s" : ""} registered`
-              : "Manage and monitor all your fields from here."}
+            Manage your registered plots, crop health, and growth stages.
           </p>
         </div>
+        <button
+          onClick={() => navigate("/fields/add")}
+          className="myfields-add-btn"
+        >
+          <Plus size={18} /> Add New Field
+        </button>
+      </FadeIn>
 
-      </div>
-
-      {/* CONTROLS ROW */}
+      {/* FILTER & SORT TOOLBAR */}
       {fields.length > 0 && (
-        <div className="myfields-controls">
-          <div className="myfields-filters">
-            <div className="myfields-select-wrapper">
-              <select
-                className="myfields-filter-select"
-                value={filterMode}
-                onChange={(e) => setFilterMode(e.target.value)}
+        <FadeIn direction="up" delay={0.08} className="myfields-controls-bar">
+          <div className="myfields-controls-left">
+            {/* Filter Pills */}
+            <div className="myfields-filter-pills">
+              <button
+                onClick={() => setFilterMode("all")}
+                className={`myfields-pill ${filterMode === "all" ? "active" : ""}`}
               >
-                <option value="all">All Crops</option>
-                {uniqueCrops.map((crop) => (
-                  <option key={crop} value={crop}>
-                    {crop.charAt(0).toUpperCase() + crop.slice(1)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={16} className="myfields-filter-icon" />
+                All Fields ({fields.length})
+              </button>
+              {uniqueCrops.map((crop) => (
+                <button
+                  key={crop}
+                  onClick={() => setFilterMode(crop)}
+                  className={`myfields-pill ${filterMode === crop ? "active" : ""}`}
+                >
+                  {CROP_EMOJI[crop?.toLowerCase()] || "🌿"} {crop.charAt(0).toUpperCase() + crop.slice(1)} (
+                  {fields.filter((f) => f.crop_type === crop).length})
+                </button>
+              ))}
             </div>
-            
-            <div className="myfields-select-wrapper">
+
+            {/* Sort Dropdown */}
+            <div className="myfields-sort-wrapper">
               <select
-                className="myfields-filter-select"
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value)}
+                className="myfields-sort-select"
               >
-                <option value="recent">Sort by: Recent</option>
-                <option value="oldest">Sort by: Oldest</option>
+                <option value="recent">Sort by: Recently Added</option>
+                <option value="oldest">Sort by: Oldest First</option>
                 <option value="name">Sort by: Name (A-Z)</option>
                 <option value="area">Sort by: Area</option>
               </select>
@@ -290,7 +301,7 @@ export const MyFields = () => {
               </button>
             </div>
           </div>
-        </div>
+        </FadeIn>
       )}
 
       {/* CONTENT */}
@@ -301,78 +312,89 @@ export const MyFields = () => {
       ) : displayedFields.length === 0 ? (
         <EmptyState onAdd={() => navigate("/fields/add")} />
       ) : (
-        <div className="myfields-grid" data-view={viewMode}>
+        <StaggerContainer className="myfields-grid" data-view={viewMode}>
           {displayedFields.map((field) => (
-            <div key={field.id} className="myfields-card">
-              <div className="myfields-card-header">
-                <div className="myfields-card-image-wrapper">
-                  <img src={field.image} alt={field.name} className="myfields-card-image" />
-                  <span className="myfields-card-crop-badge">{field.cropEmoji}</span>
-                </div>
-                <div className="myfields-card-header-content">
-                  <div className="myfields-card-title-row">
-                    <h3 className="myfields-card-title">{field.name}</h3>
-                    <CardMenu
-                      fieldId={field.id}
-                      fieldName={field.name}
-                      onDeleted={handleFieldDeleted}
-                    />
-                  </div>
-                  <div className="myfields-card-meta">
-                    {field.cropEmoji} {field.crop_type
-                      ? field.crop_type.charAt(0).toUpperCase() + field.crop_type.slice(1)
-                      : "—"}
-                    {field.variety !== "Standard" ? ` • ${field.variety}` : ""}
-                  </div>
-                  <div className="myfields-card-sub-meta">
-                    {field.area} • {field.age}
-                  </div>
-                  {field.locationLabel && field.locationLabel !== "—" && (
-                    <div className="myfields-card-location">
-                      <MapPin size={12} /> {field.locationLabel}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="myfields-card-body">
-                <div className="myfields-card-row">
-                  <span className="myfields-card-label">
-                    <Sprout size={16} className="myfields-card-icon" /> Growth Stage
-                  </span>
-                  <span className="myfields-card-value green">{field.growthStage}</span>
-                </div>
-                <div className="myfields-card-row">
-                  <span className="myfields-card-label">
-                    <Droplet size={16} className="myfields-card-icon" /> Irrigation
-                  </span>
-                  <span className="myfields-card-value">{field.irrigationLabel}</span>
-                </div>
-                <div className="myfields-card-row">
-                  <span className="myfields-card-label">
-                    <Activity size={16} className="myfields-card-icon" /> Field Health
-                  </span>
-                  <span className="myfields-card-value green">Active</span>
-                </div>
-              </div>
-
-              <button
-                className="myfields-card-action-btn"
-                onClick={() => navigate(`/fields/${field.id}`)}
+            <StaggerItem key={field.id}>
+              <motion.div 
+                className="myfields-card"
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
               >
-                <ExternalLink size={14} /> View Field Dashboard
-              </button>
-            </div>
+                <div className="myfields-card-header">
+                  <div className="myfields-card-image-wrapper">
+                    <img src={field.image} alt={field.name} className="myfields-card-image" />
+                    <span className="myfields-card-crop-badge">{field.cropEmoji}</span>
+                  </div>
+                  <div className="myfields-card-header-content">
+                    <div className="myfields-card-title-row">
+                      <h3 className="myfields-card-title">{field.name}</h3>
+                      <CardMenu
+                        fieldId={field.id}
+                        fieldName={field.name}
+                        onDeleted={handleFieldDeleted}
+                      />
+                    </div>
+                    <div className="myfields-card-meta">
+                      {field.cropEmoji} {field.crop_type
+                        ? field.crop_type.charAt(0).toUpperCase() + field.crop_type.slice(1)
+                        : "—"}
+                      {field.variety !== "Standard" ? ` • ${field.variety}` : ""}
+                    </div>
+                    <div className="myfields-card-sub-meta">
+                      {field.area} • {field.age}
+                    </div>
+                    {field.locationLabel && field.locationLabel !== "—" && (
+                      <div className="myfields-card-location">
+                        <MapPin size={12} /> {field.locationLabel}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="myfields-card-body">
+                  <div className="myfields-card-row">
+                    <span className="myfields-card-label">
+                      <Sprout size={16} className="myfields-card-icon" /> Growth Stage
+                    </span>
+                    <span className="myfields-card-value green">{field.growthStage}</span>
+                  </div>
+                  <div className="myfields-card-row">
+                    <span className="myfields-card-label">
+                      <Droplet size={16} className="myfields-card-icon" /> Irrigation
+                    </span>
+                    <span className="myfields-card-value">{field.irrigationLabel}</span>
+                  </div>
+                  <div className="myfields-card-row">
+                    <span className="myfields-card-label">
+                      <Activity size={16} className="myfields-card-icon" /> Field Health
+                    </span>
+                    <span className="myfields-card-value green">Active</span>
+                  </div>
+                </div>
+
+                <button
+                  className="myfields-card-action-btn"
+                  onClick={() => navigate(`/fields/${field.id}`)}
+                >
+                  <ExternalLink size={14} /> View Field Dashboard
+                </button>
+              </motion.div>
+            </StaggerItem>
           ))}
 
           {/* Add New Field Card */}
-          <div className="myfields-add-card" onClick={() => navigate("/fields/add")}>
-            <Plus size={36} className="myfields-add-icon" />
-            <span className="myfields-add-text">Add New Field</span>
-          </div>
-        </div>
+          <StaggerItem>
+            <motion.div 
+              className="myfields-add-card" 
+              onClick={() => navigate("/fields/add")}
+              whileHover={{ scale: 1.02, y: -4, transition: { duration: 0.2 } }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Plus size={36} className="myfields-add-icon" />
+              <span className="myfields-add-text">Add New Field</span>
+            </motion.div>
+          </StaggerItem>
+        </StaggerContainer>
       )}
-
 
     </div>
   );

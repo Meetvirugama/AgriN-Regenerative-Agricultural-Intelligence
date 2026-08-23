@@ -22,6 +22,8 @@ import UserIcon from "../components/hover-ui/user-icon";
 import DownChevron from "../components/hover-ui/down-chevron";
 import GearIcon from "../components/hover-ui/gear-icon";
 
+import { motion, AnimatePresence } from "framer-motion";
+
 import "./DashboardLayout.css";
 
 const NAV_ITEMS = [
@@ -269,7 +271,18 @@ export const FarmerShell = () => {
           </nav>
 
           <div className="dashboard-content">
-            <Outlet />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                style={{ width: "100%", height: "100%" }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
       </div>

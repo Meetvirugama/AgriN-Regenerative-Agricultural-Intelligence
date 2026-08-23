@@ -8,6 +8,8 @@ import { useAuth } from "../app/providers/AuthProvider";
 import Cloud2Icon from "../components/hover-ui/cloud-2-icon";
 import TriangleAlertIcon from "../components/hover-ui/triangle-alert-icon";
 import InfoCircleIcon from "../components/hover-ui/info-circle-icon";
+import { motion } from "framer-motion";
+import { FadeIn, StaggerContainer, StaggerItem } from "../components/animations/AnimationKit";
 
 import "./Home.css";
 
@@ -124,17 +126,17 @@ export const Home = () => {
     <div className="home-container">
 
       {/* ── Page Header ── */}
-      <section className="home-header">
+      <FadeIn direction="up" className="home-header">
         <h1>{greeting}, {firstName}</h1>
         <p>Here's what's happening in your fields today.</p>
-      </section>
+      </FadeIn>
 
       {/* ── Load Error Banner ── */}
       {loadError && (
-        <div className="home-error-banner">
+        <FadeIn direction="down" className="home-error-banner">
           <AlertCircle size={16} />
           <span>{loadError}</span>
-        </div>
+        </FadeIn>
       )}
 
       {/* ── Row 1: Fields + Recommendation ── */}
@@ -147,15 +149,20 @@ export const Home = () => {
             <Link to="/fields" className="home-section-link">View All Fields</Link>
           </div>
 
-          <div className="home-fields-grid">
-            {isLoading ? (
+          {isLoading ? (
+            <div className="home-fields-grid">
               <div className="home-loading-row">
                 <Loader2 className="home-spinner" size={28} />
               </div>
-            ) : (
-              <>
-                {displayFields.slice(0, 2).map((field) => (
-                  <div key={field.id} className="home-card">
+            </div>
+          ) : (
+            <StaggerContainer className="home-fields-grid">
+              {displayFields.slice(0, 2).map((field) => (
+                <StaggerItem key={field.id}>
+                  <motion.div 
+                    className="home-card"
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  >
                     <div className="home-card-top-content">
                       <div className="home-card-info-row">
                         <div className="home-card-image">
@@ -185,32 +192,37 @@ export const Home = () => {
                     >
                       View Field
                     </button>
-                  </div>
-                ))}
+                  </motion.div>
+                </StaggerItem>
+              ))}
 
-                <div
+              <StaggerItem>
+                <motion.div
                   role="button"
                   tabIndex={0}
                   onClick={() => navigate("/fields/add")}
                   onKeyDown={(e) => e.key === "Enter" && navigate("/fields/add")}
                   className="home-add-field"
                   aria-label="Add new field"
+                  whileHover={{ scale: 1.02, y: -4, transition: { duration: 0.2 } }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <Plus size={28} className="home-add-field-icon" />
                   <span className="home-add-field-label">Add New Field</span>
-                </div>
-              </>
-            )}
-          </div>
+                </motion.div>
+              </StaggerItem>
+            </StaggerContainer>
+          )}
         </section>
 
         {/* Today's Recommendation */}
-        <section className="home-section">
+        <FadeIn direction="up" delay={0.1} className="home-section">
           <h2 className="home-section-title">Today's Recommendation</h2>
-          <div
+          <motion.div
             className="home-recommendation-card"
             onMouseEnter={() => setIsWeatherHovered(true)}
             onMouseLeave={() => setIsWeatherHovered(false)}
+            whileHover={{ y: -3, transition: { duration: 0.2 } }}
           >
             <div className="home-recommendation-content">
               <Cloud2Icon
@@ -241,14 +253,14 @@ export const Home = () => {
             >
               View Details
             </button>
-          </div>
-        </section>
+          </motion.div>
+        </FadeIn>
       </div>
 
       {/* ── Row 2: Recent Alerts ── */}
       <div className="home-scrollable-section">
         <div className="home-grid-row-2">
-          <section className="home-section">
+          <FadeIn direction="up" delay={0.2} className="home-section">
             <div className="home-section-header">
               <h2 className="home-section-title">Recent Alerts</h2>
               <Link to="/alerts" className="home-section-link">View All</Link>
@@ -264,9 +276,13 @@ export const Home = () => {
                   No active alerts for your fields.
                 </div>
               ) : (
-                alerts.slice(0, 3).map((alert) => (
-                  <HomeAlertItem key={alert.id} alert={alert} />
-                ))
+                <StaggerContainer>
+                  {alerts.slice(0, 3).map((alert) => (
+                    <StaggerItem key={alert.id}>
+                      <HomeAlertItem alert={alert} />
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
               )}
 
               {!isLoading && alerts.length > 0 && (
@@ -278,7 +294,7 @@ export const Home = () => {
                 </button>
               )}
             </div>
-          </section>
+          </FadeIn>
         </div>
       </div>
     </div>
