@@ -116,60 +116,8 @@ router.get("/", async (req, res, next) => {
 });
 
 /**
- * PATCH /api/v1/alerts/:alertId/read
- */
-router.patch(
-  "/:alertId/read",
-  async (req, res, next) => {
-    try {
-      const farmerId = req.farmer?.sub;
-
-      const { alertId } =
-        req.params;
-
-      const rows = await query(
-        `
-        UPDATE alerts
-        SET
-          read = TRUE,
-          read_at = COALESCE(
-            read_at,
-            NOW()
-          )
-
-        WHERE id = $1
-          AND farmer_id = $2
-
-        RETURNING
-          id,
-          read,
-          read_at
-        `,
-        [
-          alertId,
-          farmerId,
-        ]
-      );
-
-      if (!rows.length) {
-        return res.status(404).json({
-          message:
-            "Alert not found.",
-        });
-      }
-
-      res.json({
-        success: true,
-        alert: rows[0],
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-/**
  * PATCH /api/v1/alerts/read-all
+ * Must be BEFORE /:alertId routes — otherwise Express matches "read-all" as alertId.
  */
 router.patch(
   "/read-all",
@@ -195,9 +143,87 @@ router.patch(
 
       res.json({
         success: true,
-        updated:
-          rowCount,
+        updated: rowCount,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * PATCH /api/v1/alerts/:alertId/read
+ */
+router.patch(
+  "/:alertId/read",
+  async (req, res, next) => {
+    try {
+      const farmerId = req.farmer?.sub;
+      const { alertId } = req.params;
+
+      const rows = await query(
+        `
+        UPDATE alerts
+        SET
+          read = TRUE,
+          read_at = COALESCE(
+            read_at,
+            NOW()
+          )
+
+        WHERE id = $1
+          AND farmer_id = $2
+
+        RETURNING
+          id,
+          read,
+          read_at
+        `,
+        [alertId, farmerId]
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({ message: "Alert not found." });
+      }
+
+      res.json({ success: true, alert: rows[0] });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * PATCH /api/v1/alerts/:alertId/resolve
+ * Marks an alert as resolved (dismissed / actioned by farmer).
+ */
+router.patch(
+  "/:alertId/resolve",
+  async (req, res, next) => {
+    try {
+      const farmerId = req.farmer?.sub;
+      const { alertId } = req.params;
+
+      const rows = await query(
+        `
+        UPDATE alerts
+        SET
+          resolved = TRUE,
+          resolved_at = COALESCE(resolved_at, NOW()),
+          read = TRUE,
+          read_at = COALESCE(read_at, NOW())
+        WHERE id = $1
+          AND farmer_id = $2
+        RETURNING id, resolved, resolved_at
+        `,
+        [alertId, farmerId]
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({ message: "Alert not found." });
+      }
+
+      res.json({ success: true, alert: rows[0] });
     } catch (error) {
       next(error);
     }

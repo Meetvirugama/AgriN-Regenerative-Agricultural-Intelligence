@@ -105,8 +105,9 @@ export const FarmerShell = () => {
         console.error("Failed to fetch shell alerts:", err);
       }
     };
-    fetchAlerts();
-  }, [location.pathname]);
+    fetchAlerts(); // Only once on mount — re-fetch is triggered by Alerts page itself
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ← removed location.pathname dependency to avoid re-fetch on every route
 
   const activeAlertsCount = alerts.filter(a => !a.resolved).length;
 

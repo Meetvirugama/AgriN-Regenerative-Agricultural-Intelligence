@@ -41,6 +41,7 @@ export const cropApi = {
     return data?.alerts || data || [];
   },
   markAlertRead: async (alertId) => request(`alerts/${alertId}/read`, { method: "PATCH" }),
+  markAlertResolved: async (alertId) => request(`alerts/${alertId}/resolve`, { method: "PATCH" }),
   markAllAlertsRead: async () => request("alerts/read-all", { method: "PATCH" }),
   getProfile: async () => request("profile"),
   updateProfile: async (payload) => request("profile", {

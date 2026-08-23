@@ -2,6 +2,7 @@ import { createWeatherProvider } from "./openMeteo.provider.js";
 import { WeatherRuleEngine } from "./weather.rules.js";
 import { layer1Service } from "../field/field.service.js";
 import { weatherRepo } from "../../db/repositories/weatherRepository.js";
+import { execute } from "../../db/connection.js";
 
 const CACHE_TTL_HOURS = 6; // Serve cached forecast if < 6 hours old
 
@@ -54,6 +55,38 @@ class Layer3Service {
           severity: flag.severity,
           message: flag.message,
         });
+
+        // ── Bridge: also write weather flags to the farmer's alerts table ──
+        // This is the only way weather events appear in the Alerts UI.
+        try {
+          const priority = flag.severity === "high" ? "high" : flag.severity === "medium" ? "medium" : "low";
+          const alertTitle = {
+            rain_expected: "🌧 Heavy Rain Expected",
+            heat_event:    "🌡 Heat Stress Alert",
+            frost_warning: "❄️ Frost Warning",
+            humidity_spike: "💧 High Humidity Alert",
+          }[flag.event_type] || "⚠️ Weather Alert";
+
+          await execute(
+            `INSERT INTO alerts
+               (farmer_id, field_id, title, description, type, priority, source, confidence)
+             SELECT
+               f.farmer_id, f.id, $3, $4, 'weather', $5, 'weather-engine', 0.85
+             FROM fields f
+             WHERE f.id = $1
+             ON CONFLICT DO NOTHING`,
+            [
+              flag.field_id,
+              flag.field_id,
+              alertTitle,
+              flag.message,
+              priority,
+            ]
+          );
+        } catch (alertErr) {
+          // Non-fatal — flag is already saved, alert write is best-effort
+          console.warn(`[Weather] Could not write alert for flag ${flag.event_type}:`, alertErr.message);
+        }
       }
     } catch (rulesErr) {
       console.warn(`[Weather] Rule evaluation failed for field ${fieldId} (non-fatal — snapshots already saved): ${rulesErr.message}`);
