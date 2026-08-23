@@ -1,10 +1,20 @@
 .login-container {
+  --bg-primary: #f3f4f6;
+  --bg-surface: #ffffff;
+  --bg-body: #f9fafb;
+  --border-color: #d1d5db; /* Darker border for visibility */
+  --primary: #16a34a;
+  --primary-dark: #15803d;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --danger: #dc2626;
+
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   background-color: var(--bg-primary);
-  padding: 1rem;
+  padding: 2rem 1rem;
+  overflow-y: auto;
 }
 
 .login-card {
@@ -15,6 +25,7 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
   padding: 2.5rem;
   border: 1px solid var(--border-color);
+  margin: auto; /* This centers it safely without scroll cutoff */
 }
 
 .login-header {
@@ -99,18 +110,18 @@
 
 .form-group input {
   padding: 12px 16px;
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: 8px;
   font-size: 1rem;
-  background-color: var(--bg-body);
+  background-color: var(--bg-surface);
   color: var(--text-primary);
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 
 .form-group input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
 .forgot-password-link {
