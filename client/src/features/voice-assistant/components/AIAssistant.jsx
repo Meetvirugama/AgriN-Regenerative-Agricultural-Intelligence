@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mic, Send, Square, Volume2, Bot, Loader2 } from "lucide-react";
+import { useAuth } from "../../../app/providers/AuthProvider";
 import "./AIAssistant.css";
 
 function AIAssistant() {
     const navigate = useNavigate();
     const chatEndRef = useRef(null);
+    const { accessToken } = useAuth();
 
     // ==================================================
     // TEXT / AI STATE
@@ -51,7 +53,10 @@ function AIAssistant() {
             const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
             const res = await fetch(`${apiUrl}/voice/chat`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${accessToken}`
+                },
                 body: JSON.stringify({ session_id: sessionId, message: text })
             });
 
@@ -186,6 +191,9 @@ function AIAssistant() {
             const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
             const res = await fetch(`${apiUrl}/voice/stt`, {
                 method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${accessToken}`
+                },
                 body: formData
             });
 
@@ -236,7 +244,10 @@ function AIAssistant() {
             const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
             const res = await fetch(`${apiUrl}/voice/tts`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${accessToken}`
+                },
                 body: JSON.stringify({ text: text })
             });
 

@@ -789,7 +789,7 @@ export const Intelligence = () => {
             </div>
           </div>
           );
-        })}
+        })()}
       </main>
     </div>
   );
