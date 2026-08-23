@@ -18,7 +18,7 @@ async function apiFetch(path, options = {}) {
   }
   
   if (!res.ok) {
-    throw new Error(data?.error?.message ?? `Request failed: ${res.status}`);
+    throw new Error(data?.error?.message ?? data?.message ?? `Request failed: ${res.status}`);
   }
   return data;
 }
