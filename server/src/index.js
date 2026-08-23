@@ -22,6 +22,7 @@ import askRoutes from "./modules/ask/ask.routes.js";
 import intelligenceRoutes from "./modules/intelligence/intelligence.routes.js";
 import profileRoutes from "./modules/profile/profile.routes.js";
 import settingsRoutes from "./modules/settings/settings.routes.js";
+import marketRoutes from "./modules/market/market.routes.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
 import { checkDatabaseHealth, pool } from "./db/connection.js";
@@ -132,6 +133,7 @@ app.use("/api/v1/ask", requireAuth, askRoutes); // New structured Ask API
 app.use("/api/v1/intelligence", requireAuth, intelligenceRoutes);
 app.use("/api/v1/profile", requireAuth, profileRoutes);
 app.use("/api/v1/settings", requireAuth, settingsRoutes);
+app.use("/api/v1", requireAuth, marketRoutes);
 
 
 // ─── 404 Handler ─────────────────────────────────────────────────────────────

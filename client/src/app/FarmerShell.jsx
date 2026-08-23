@@ -4,7 +4,8 @@ import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Stethoscope, Search, Menu, X,
   Home as HomeIconLucide, MapPin, BellDot, ScanLine, User as UserLucide,
-  BrainCircuit, MessageSquare, Settings as SettingsLucide
+  BrainCircuit, MessageSquare, Settings as SettingsLucide,
+  Users, Sprout, TrendingUp
 } from "lucide-react";
 import { LanguageSwitcher } from "../features/voice/components/LanguageSwitcher";
 import { FieldProvider } from "./providers/FieldProvider";
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { label: "Ask AgriMesh", path: "/ask", icon: BrandTelegramIcon },
   { label: "Alerts", path: "/alerts", icon: FilledBellIcon },
   { label: "Crop Diagnosis", path: "/diagnosis", icon: Stethoscope },
+  { label: "Market Prices", path: "/market-prices", icon: TrendingUp },
 ];
 
 const SidebarNavItem = ({ item, isActive, activeAlertsCount, onClick, t }) => {
