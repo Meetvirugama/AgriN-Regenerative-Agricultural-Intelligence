@@ -32,10 +32,10 @@ export class SoilRepository {
        FROM soil_profiles
        WHERE field_id = $1
          AND source = 'soilgrids'
-         AND created_at > NOW() - INTERVAL '${withinDays} days'
+         AND created_at > NOW() - make_interval(days => $2::int)
        ORDER BY created_at DESC
        LIMIT 1`,
-      [fieldId],
+      [fieldId, withinDays],
     );
   }
 

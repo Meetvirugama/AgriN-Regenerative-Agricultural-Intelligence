@@ -11,6 +11,14 @@ const voiceAdapter = new PythonVoiceAdapter();
 const audioUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
+  fileFilter: (req, file, cb) => {
+    // Only accept audio MIME types (e.g. audio/webm, audio/wav, audio/mpeg, video/webm fallback)
+    if (file.mimetype.startsWith("audio/") || file.mimetype === "video/webm") {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type: ${file.mimetype}. Only audio files are allowed.`));
+    }
+  },
 });
 
 /**
@@ -50,7 +58,7 @@ router.put("/user/language", requireAuth, async (req, res, next) => {
  * Accepts a real audio file upload (multipart/form-data field: "audio").
  * Falls back to text body if no file provided.
  */
-router.post("/voice/stt", optionalAuth, audioUpload.single("audio"), async (req, res, next) => {
+router.post("/voice/stt", requireAuth, audioUpload.single("audio"), async (req, res, next) => {
   try {
     // Determine the target language: from body, or from farmer's DB preference, or default
     let language = req.body?.language ?? "en-US";
@@ -85,7 +93,7 @@ router.post("/voice/stt", optionalAuth, audioUpload.single("audio"), async (req,
  * Text-to-Speech endpoint.
  * Accepts { text, language? } — language defaults to farmer's DB preference or "en-US".
  */
-router.post("/voice/tts", optionalAuth, async (req, res, next) => {
+router.post("/voice/tts", requireAuth, async (req, res, next) => {
   try {
     const { text } = req.body;
     if (!text) {
@@ -112,6 +120,26 @@ router.post("/voice/tts", optionalAuth, async (req, res, next) => {
     res.json({ audioContent: base64Audio, format: "audio/wav", language });
   } catch (error) {
     console.error("TTS Error:", error);
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/voice/chat
+ * Chat endpoint for voice assistant logic.
+ * Accepts { session_id, message }
+ */
+router.post("/voice/chat", requireAuth, async (req, res, next) => {
+  try {
+    const { session_id, message } = req.body;
+    if (!session_id || !message) {
+      return res.status(400).json({ error: "session_id and message are required" });
+    }
+
+    const result = await voiceAdapter.chat(session_id, message);
+    res.json(result);
+  } catch (error) {
+    console.error("Chat Error:", error);
     next(error);
   }
 });

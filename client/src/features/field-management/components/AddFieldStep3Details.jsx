@@ -22,7 +22,11 @@ export const AddFieldStep3Details = () => {
     variety: "",
     date: new Date().toISOString().split("T")[0],
     irrigation: "Tube Well",
-    soil: "Loamy Soil",
+    soilType: "Loam",
+    previousCrop: "",
+    tillageMethod: "Conventional",
+    seedRate: "",
+    targetYield: "",
     description: "",
   });
 
@@ -76,6 +80,12 @@ export const AddFieldStep3Details = () => {
         areaHectares: area || 0,
         boundaryGeojson: geojson,
         irrigationType: formData.irrigation,
+        soilType: formData.soilType,
+        previousCrop: formData.previousCrop,
+        tillageMethod: formData.tillageMethod,
+        seedRate: formData.seedRate,
+        targetYield: formData.targetYield,
+        description: formData.description,
       });
 
       navigate(newField?.id ? `/fields/${newField.id}` : "/fields", { replace: true });
@@ -232,6 +242,74 @@ export const AddFieldStep3Details = () => {
                 className="add-field-form-input"
                 value={area > 0 ? `${area} hectares` : "Not drawn yet"}
                 disabled
+              />
+            </div>
+
+            {/* Soil Type */}
+            <div className="add-field-form-group">
+              <label className="add-field-form-label">Soil Type</label>
+              <select
+                className="add-field-form-select"
+                value={formData.soilType}
+                onChange={(e) => set("soilType", e.target.value)}
+              >
+                <option value="Loam">Loam</option>
+                <option value="Clay">Clay</option>
+                <option value="Sandy">Sandy</option>
+                <option value="Silt">Silt</option>
+                <option value="Peat">Peat</option>
+                <option value="Chalk">Chalk</option>
+              </select>
+            </div>
+
+            {/* Previous Crop */}
+            <div className="add-field-form-group">
+              <label className="add-field-form-label">Previous Crop</label>
+              <input
+                type="text"
+                placeholder="e.g. Wheat, Mustard..."
+                className="add-field-form-input"
+                value={formData.previousCrop}
+                onChange={(e) => set("previousCrop", e.target.value)}
+              />
+            </div>
+
+            {/* Tillage Method */}
+            <div className="add-field-form-group">
+              <label className="add-field-form-label">Tillage Method</label>
+              <select
+                className="add-field-form-select"
+                value={formData.tillageMethod}
+                onChange={(e) => set("tillageMethod", e.target.value)}
+              >
+                <option value="Conventional">Conventional Till</option>
+                <option value="Minimum Till">Minimum Till</option>
+                <option value="No-till">No-till</option>
+                <option value="Strip Till">Strip Till</option>
+              </select>
+            </div>
+
+            {/* Seed Rate */}
+            <div className="add-field-form-group">
+              <label className="add-field-form-label">Seed Rate</label>
+              <input
+                type="text"
+                placeholder="e.g. 100 kg/ha"
+                className="add-field-form-input"
+                value={formData.seedRate}
+                onChange={(e) => set("seedRate", e.target.value)}
+              />
+            </div>
+
+            {/* Target Yield */}
+            <div className="add-field-form-group">
+              <label className="add-field-form-label">Target Yield</label>
+              <input
+                type="text"
+                placeholder="e.g. 5 tons/ha"
+                className="add-field-form-input"
+                value={formData.targetYield}
+                onChange={(e) => set("targetYield", e.target.value)}
               />
             </div>
 

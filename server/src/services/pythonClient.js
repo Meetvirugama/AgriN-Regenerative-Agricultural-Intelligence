@@ -5,6 +5,39 @@ const PYTHON_API_URL =
   process.env.PYTHON_SERVICE_URL || "http://localhost:8001/api/v1";
 
 export class PythonClient {
+  static async _safeFetch(endpoint, options = {}, timeoutMs = 30000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const res = await fetch(`${PYTHON_API_URL}${endpoint}`, {
+        ...options,
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        let errorText = "Unknown error";
+        try {
+          errorText = await res.text();
+        } catch (e) {
+          // ignore
+        }
+        throw new Error(`Python AI Error (${res.status}): ${errorText}`);
+      }
+
+      // Voice TTS returns raw buffer sometimes, but we always expect JSON in this bridge currently
+      // Except for specific endpoints? Looking at original code, ALL end with `return res.json()`.
+      return await res.json();
+    } catch (err) {
+      if (err.name === "AbortError") {
+        throw new Error(`Python AI Error: Request timed out after ${timeoutMs}ms`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   static async identifyCrop(imageBuffer, mimeType) {
     const form = new FormData();
     form.append("image", imageBuffer, {
@@ -12,13 +45,11 @@ export class PythonClient {
       filename: "image.jpg",
     });
 
-    const res = await fetch(`${PYTHON_API_URL}/crop/identify`, {
+    return this._safeFetch("/crop/identify", {
       method: "POST",
       body: form,
       headers: form.getHeaders(),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async diagnoseDisease(
@@ -37,13 +68,11 @@ export class PythonClient {
     form.append("crop_stage", cropStage);
     form.append("recent_weather", recentWeather);
 
-    const res = await fetch(`${PYTHON_API_URL}/disease/diagnose`, {
+    return this._safeFetch("/disease/diagnose", {
       method: "POST",
       body: form,
       headers: form.getHeaders(),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async generateAdvisory(
@@ -55,7 +84,7 @@ export class PythonClient {
     soilSummary,
     farmerLanguage = "en",
   ) {
-    const res = await fetch(`${PYTHON_API_URL}/advisory/generate`, {
+    return this._safeFetch("/advisory/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -68,19 +97,10 @@ export class PythonClient {
         farmer_language: farmerLanguage,
       }),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
-  /**
-   * Calculate crop phenology (GDD + stage).
-   * @param {string} sowingDate - ISO date string
-   * @param {object} calendar - crop calendar with stages
-   * @param {object} [temperatureHistory] - optional { temp_max_c: number[], temp_min_c: number[] }
-   *   from weather_snapshots. When provided, real GDD is computed instead of the 15/day stub.
-   */
   static async calculatePhenology(sowingDate, calendar, temperatureHistory = null) {
-    const res = await fetch(`${PYTHON_API_URL}/phenology/gdd`, {
+    return this._safeFetch("/phenology/gdd", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -90,12 +110,10 @@ export class PythonClient {
         temp_min_c: temperatureHistory?.temp_min_c ?? null,
       }),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async evaluateWeatherRules(fieldId, forecasts, config) {
-    const res = await fetch(`${PYTHON_API_URL}/weather/evaluate`, {
+    return this._safeFetch("/weather/evaluate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -104,22 +122,18 @@ export class PythonClient {
         config: config,
       }),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async computeHealthScore(payload) {
-    const res = await fetch(`${PYTHON_API_URL}/health-score/compute`, {
+    return this._safeFetch("/health-score/compute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async processSatelliteData(fieldId, currentTile, history) {
-    const res = await fetch(`${PYTHON_API_URL}/satellite/process`, {
+    return this._safeFetch("/satellite/process", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -128,18 +142,14 @@ export class PythonClient {
         history: history,
       }),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async generateRegenPlan(context) {
-    const res = await fetch(`${PYTHON_API_URL}/regenerative/generate-plan`, {
+    return this._safeFetch("/regenerative/generate-plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ context }),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async parseSoilReport(imageBuffer, mimeType) {
@@ -149,21 +159,15 @@ export class PythonClient {
       filename: "soil_report.jpg",
     });
 
-    const res = await fetch(`${PYTHON_API_URL}/soil/parse-soil-report`, {
+    return this._safeFetch("/soil/parse-soil-report", {
       method: "POST",
       body: form,
       headers: form.getHeaders(),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async getGlobalInsights(fieldId) {
-    const res = await fetch(
-      `${PYTHON_API_URL}/cross-border/insights/${fieldId}`,
-    );
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
+    return this._safeFetch(`/cross-border/insights/${fieldId}`);
   }
 
   static async transcribeAudio(audioBuffer, languageCode) {
@@ -174,32 +178,34 @@ export class PythonClient {
     });
     form.append("languageCode", languageCode);
 
-    const res = await fetch(`${PYTHON_API_URL}/voice/stt`, {
+    return this._safeFetch("/voice/stt", {
       method: "POST",
       body: form,
       headers: form.getHeaders(),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async synthesizeSpeech(text, languageCode) {
-    const res = await fetch(`${PYTHON_API_URL}/voice/tts`, {
+    return this._safeFetch("/voice/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, languageCode }),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
   }
 
   static async assessClimateRisk(payload) {
-    const res = await fetch(`${PYTHON_API_URL}/climate-risk/risk`, {
+    return this._safeFetch("/climate-risk/risk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error(`Python AI Error: ${await res.text()}`);
-    return res.json();
+  }
+
+  static async chatAgent(sessionId, message) {
+    return this._safeFetch("/voice/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId, message }),
+    });
   }
 }

@@ -20,7 +20,7 @@ export class Layer1Service {
   /**
    * Register a new field (real registration).
    */
-  async registerField(farmerId, name, cropType, sowingDate, cropVariety, lat, lng, locationName, areaHectares, boundaryGeojson, irrigationType) {
+  async registerField(farmerId, name, cropType, sowingDate, cropVariety, lat, lng, locationName, areaHectares, boundaryGeojson, irrigationType, soilType, previousCrop, tillageMethod, seedRate, targetYield, description) {
     return fieldRepo.createField(
       farmerId,
       name,
@@ -33,6 +33,12 @@ export class Layer1Service {
       areaHectares,
       boundaryGeojson,
       irrigationType,
+      soilType,
+      previousCrop,
+      tillageMethod,
+      seedRate,
+      targetYield,
+      description,
     );
   }
 

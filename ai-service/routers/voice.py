@@ -1,43 +1,165 @@
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Header, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import asyncio
 import base64
+import os
+import tempfile
+import subprocess
+import io
+from gtts import gTTS
+from google import genai
+from google.genai import types
+
+from services.voice_agent.agent import run_agent
 
 router = APIRouter()
 
+# ── Internal Security ────────────────────────────────────────────────────────
+# Shared secret between Node.js BFF and this FastAPI service.
+# Set INTERNAL_API_KEY in both server/.env and ai-service/.env.
+# If not set (local dev), validation is skipped.
+_INTERNAL_KEY = os.getenv("INTERNAL_API_KEY", "")
+
+def _verify_internal_key(x_internal_key: str = Header(default="")):
+    """Dependency: reject requests that don't carry the correct internal key."""
+    if _INTERNAL_KEY and x_internal_key != _INTERNAL_KEY:
+        raise HTTPException(status_code=403, detail="Forbidden: invalid internal key.")
+
+# ── Gemini Client ────────────────────────────────────────────────────────────
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+api_key = os.getenv("GEMINI_API_KEY")
+if api_key:
+    client = genai.Client(api_key=api_key)
+else:
+    client = None
+
+# ==================================================
+# REQUEST MODELS
+# ==================================================
+
+class ChatRequest(BaseModel):
+    session_id: str
+    message: str
+
 class TTSRequest(BaseModel):
     text: str
-    languageCode: str
+    languageCode: str = "en-US"
 
-class STTResponse(BaseModel):
-    text: str
+# ==================================================
+# CHAT (Agent)
+# ==================================================
 
-class TTSResponse(BaseModel):
-    audioContent: str # Base64 encoded string
-
-@router.post("/stt", response_model=STTResponse)
-async def transcribe_audio(languageCode: str = Form(...), audio: UploadFile = File(...)):
+@router.post("/chat")
+def chat(request: ChatRequest, _key=Depends(_verify_internal_key)):
     try:
-        content = await audio.read()
-        
-        # Simulate AI processing time (e.g. PyTorch Whisper or Gemini Audio)
-        await asyncio.sleep(1.5)
-        
-        # Mock response parsing agricultural terms
-        return STTResponse(text="What should I do about the heat stress on my wheat?")
+        result = run_agent(request.session_id, request.message)
+        return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Agent error: {e}")
+        return {
+            "message": "Sorry, the AI service is currently busy or rate-limited. Please try again in a few seconds.",
+            "action": None
+        }
 
-@router.post("/tts", response_model=TTSResponse)
-async def synthesize_speech(request: TTSRequest):
+# ==================================================
+# TRANSCRIBE (STT)
+# ==================================================
+
+@router.post("/stt")
+async def transcribe_audio(languageCode: str = Form(default="en-US"), audio: UploadFile = File(...), _key=Depends(_verify_internal_key)):
+    if not client:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not set.")
+
+    input_path = None
+    wav_path = None
+
     try:
-        # Simulate TTS processing
-        await asyncio.sleep(1.0)
+        audio_data = await audio.read()
+        if len(audio_data) == 0:
+            return {"text": ""}
+
+        # Save uploaded audio (likely WebM)
+        with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as temp_file:
+            temp_file.write(audio_data)
+            input_path = temp_file.name
+
+        # Prepare WAV path
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+            wav_path = temp_file.name
+
+        # FFmpeg conversion
+        import imageio_ffmpeg
+        ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+
+        command = [
+            ffmpeg_path,
+            "-y",
+            "-i", input_path,
+            "-ac", "1",
+            "-ar", "16000",
+            "-f", "wav",
+            wav_path
+        ]
+
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        if result.returncode != 0:
+            print("FFmpeg error:", result.stderr.decode(errors="ignore"))
+            raise HTTPException(status_code=500, detail="Audio conversion failed")
+
+        with open(wav_path, "rb") as wav_file:
+            wav_data = wav_file.read()
+
+        # Gemini transcription
+        prompt = f"""
+Transcribe the speech in this audio.
+Return ONLY the spoken words.
+The expected language might be {languageCode}, but detect it automatically.
+Do NOT translate.
+Keep the transcript in the original language spoken by the user.
+"""
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=[
+                types.Part.from_bytes(data=wav_data, mime_type="audio/wav"),
+                prompt
+            ]
+        )
+
+        transcript = response.text.strip() if response.text else ""
+        return {"text": transcript}
+
+    except Exception as e:
+        print("Transcription error:", repr(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if input_path and os.path.exists(input_path):
+            os.remove(input_path)
+        if wav_path and os.path.exists(wav_path):
+            os.remove(wav_path)
+
+# ==================================================
+# TTS (Text to Speech)
+# ==================================================
+
+@router.post("/tts")
+def synthesize_speech(request: TTSRequest, _key=Depends(_verify_internal_key)):
+    try:
+        # We can map some languageCodes to gTTS supported langs (en, hi, gu)
+        lang = "en"
+        if request.languageCode.startswith("hi"):
+            lang = "hi"
+        elif request.languageCode.startswith("gu"):
+            lang = "gu"
+            
+        tts = gTTS(text=request.text, lang=lang)
+        mp3_fp = io.BytesIO()
+        tts.write_to_fp(mp3_fp)
+        mp3_fp.seek(0)
         
-        # Return a dummy audio buffer encoded in base64
-        mock_audio_bytes = b"mock-audio-data"
-        encoded = base64.b64encode(mock_audio_bytes).decode('utf-8')
-        
-        return TTSResponse(audioContent=encoded)
+        # Return base64 encoded string to match Node.js adapter expectation
+        encoded = base64.b64encode(mp3_fp.read()).decode('utf-8')
+        return {"audioContent": encoded}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

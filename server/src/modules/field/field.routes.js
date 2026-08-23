@@ -10,7 +10,7 @@ const router = Router();
 const CreateFieldSchema = z.object({
   name: z.string().min(1, "Field name is required").max(100, "Field name too long").trim(),
   cropType: z.string().min(1, "Crop type is required").max(50).trim(),
-  sowingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "sowingDate must be in YYYY-MM-DD format"),
+  sowingDate: z.string().min(1, "Sowing date is required"),
   cropVariety: z.string().max(50).optional().nullable(),
   lat: z.number().min(-90).max(90).optional().nullable(),
   lng: z.number().min(-180).max(180).optional().nullable(),
@@ -18,14 +18,26 @@ const CreateFieldSchema = z.object({
   areaHectares: z.union([z.number(), z.string()]).optional().nullable(),
   boundaryGeojson: z.any().optional().nullable(),
   irrigationType: z.string().max(50).optional().nullable(),
+  soilType: z.string().optional().nullable(),
+  previousCrop: z.string().optional().nullable(),
+  tillageMethod: z.string().optional().nullable(),
+  seedRate: z.string().optional().nullable(),
+  targetYield: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
 });
 
 const UpdateFieldSchema = z.object({
   name: z.string().min(1).max(100).trim().optional(),
   cropType: z.string().min(1).max(50).trim().optional(),
   cropVariety: z.string().max(50).optional().nullable(),
-  sowingDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  sowingDate: z.string().optional(),
   irrigationType: z.string().max(50).optional().nullable(),
+  soilType: z.string().optional().nullable(),
+  previousCrop: z.string().optional().nullable(),
+  tillageMethod: z.string().optional().nullable(),
+  seedRate: z.string().optional().nullable(),
+  targetYield: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
 });
 
 // ─── Helper: fire-and-forget weather pre-fetch ─────────────────────────────
@@ -88,6 +100,12 @@ router.post("/", optionalAuth, validate({ body: CreateFieldSchema }), async (req
       areaHectares,
       boundaryGeojson,
       irrigationType,
+      soilType,
+      previousCrop,
+      tillageMethod,
+      seedRate,
+      targetYield,
+      description,
     } = req.body;
 
     const field = await layer1Service.registerField(
@@ -102,6 +120,12 @@ router.post("/", optionalAuth, validate({ body: CreateFieldSchema }), async (req
       areaHectares ? parseFloat(areaHectares) : null,
       boundaryGeojson,
       irrigationType,
+      soilType,
+      previousCrop,
+      tillageMethod,
+      seedRate,
+      targetYield,
+      description,
     );
 
     // Kick off weather pre-fetch in background
@@ -132,13 +156,32 @@ router.put(
         return res.status(403).json({ error: { message: "Access forbidden", status: 403 } });
       }
 
-      const { name, cropType, cropVariety, sowingDate, irrigationType } = req.body;
+      const {
+        name,
+        cropType,
+        cropVariety,
+        sowingDate,
+        irrigationType,
+        soilType,
+        previousCrop,
+        tillageMethod,
+        seedRate,
+        targetYield,
+        description,
+      } = req.body;
+
       const updated = await layer1Service.updateField(fieldId, {
         name,
         cropType,
         cropVariety,
         sowingDate,
         irrigationType,
+        soilType,
+        previousCrop,
+        tillageMethod,
+        seedRate,
+        targetYield,
+        description,
       });
 
       res.json(updated);

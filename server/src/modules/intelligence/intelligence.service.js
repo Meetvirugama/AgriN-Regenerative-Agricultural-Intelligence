@@ -261,9 +261,6 @@ export const intelligenceService = {
       settingsService.getSettings(farmerId),
     ]);
 
-    console.log("fields:", typeof fields, fields ? fields.length : 'null');
-    console.log("alerts:", typeof alerts, alerts ? alerts.length : 'null');
-    console.log("settings:", typeof settings);
 
     if (!fields || !fields.length) {
       return {

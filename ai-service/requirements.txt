@@ -9,3 +9,5 @@ numpy
 httpx
 torch
 torchvision
+gtts
+imageio-ffmpeg

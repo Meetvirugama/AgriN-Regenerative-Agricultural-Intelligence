@@ -32,6 +32,16 @@ import { startScheduler } from "./jobs/scheduler.js";
 
 dotenv.config();
 
+// ─── Environment Verification ────────────────────────────────────────────────
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
+  console.error("❌ CRITICAL ERROR: JWT_SECRET environment variable is missing in production!");
+  process.exit(1);
+}
+if (!process.env.PYTHON_SERVICE_URL && process.env.NODE_ENV === "production") {
+  console.error("❌ CRITICAL ERROR: PYTHON_SERVICE_URL environment variable is missing in production!");
+  process.exit(1);
+}
+
 const app = express();
 app.set("trust proxy", 1); // Trust first proxy (Render/Vercel)
 const PORT = parseInt(process.env.PORT || "8000", 10);
@@ -84,11 +94,21 @@ app.use("/api", generalLimiter);
 
 // ─── Request Logging & Timeout (lightweight, no external dependency) ──────────
 
-app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+app.use((req, res, next) => {
+  const start = Date.now();
+  const ip = req.ip ?? req.socket?.remoteAddress ?? "-";
+
+  res.on("finish", () => {
+    const ms = Date.now() - start;
+    const level = res.statusCode >= 500 ? "ERROR" : res.statusCode >= 400 ? "WARN" : "INFO";
+    console.log(
+      `[${level}] [${new Date().toISOString()}] ${req.method} ${req.path} → ${res.statusCode} (${ms}ms) ip=${ip}`
+    );
+  });
+
   // Set 60s timeout on the request socket to accommodate AI generation
   req.setTimeout(60000, () => {
-    console.warn(`[Timeout] ${req.method} ${req.path} took longer than 60s`);
+    console.warn(`[WARN] [${new Date().toISOString()}] Timeout: ${req.method} ${req.path} exceeded 60s`);
     req.destroy(new Error("Request timeout"));
   });
   next();
@@ -112,7 +132,7 @@ app.get("/health", async (_req, res) => {
 
 // Field-scoped routes
 app.use("/api/v1/fields", fieldRoutes);
-app.use("/api/v1/fields", cropRoutes);
+app.use("/api/v1/fields", requireAuth, cropRoutes);
 app.use("/api/v1/fields", requireAuth, weatherRoutes);
 app.use("/api/v1/fields", requireAuth, soilRoutes);
 app.use("/api/v1/fields", requireAuth, diagnosisRoutes);
@@ -123,7 +143,7 @@ app.use("/api/v1", requireAuth, satelliteRoutes);
 app.use("/api/v1", requireAuth, healthScoreRoutes);
 app.use("/api/v1", requireAuth, climateRiskRouter);
 app.use("/api/v1", requireAuth, advisoryRouter);
-app.use("/api/v1", voiceRoutes);
+app.use("/api/v1", requireAuth, voiceRoutes);
 app.use("/api/v1", requireAuth, feedbackRouter);
 app.use("/api/v1", requireAuth, crossBorderRoutes);
 app.use("/api/v1/escalations", requireAuth, escalationRoutes);

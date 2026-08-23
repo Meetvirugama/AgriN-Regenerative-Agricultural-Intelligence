@@ -79,3 +79,4 @@ reports/
 *.keras
 
 *.zip
+temp_ai/
