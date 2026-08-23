@@ -117,17 +117,21 @@ export class AuthRepository {
   // ─── Audit ─────────────────────────────────────────────────────────────────
 
   async logEvent(eventType, opts) {
-    await execute(
-      `INSERT INTO auth_audit_log (farmer_id, phone_number, event_type, ip_address, user_agent)
-       VALUES ($1, $2, $3, $4::inet, $5)`,
-      [
-        opts.farmerId ?? null,
-        opts.phoneNumber ?? null,
-        eventType,
-        opts.ipAddress ?? null,
-        opts.userAgent ?? null,
-      ],
-    );
+    try {
+      await execute(
+        `INSERT INTO auth_audit_log (farmer_id, phone_number, event_type, ip_address, user_agent)
+         VALUES ($1, $2, $3, $4::inet, $5)`,
+        [
+          opts.farmerId ?? null,
+          opts.phoneNumber ?? opts.email ?? null,
+          eventType,
+          opts.ipAddress ?? null,
+          opts.userAgent ?? null,
+        ],
+      );
+    } catch (err) {
+      console.warn(`[AuthAudit] Failed to log event '${eventType}':`, err.message);
+    }
   }
 }
 
