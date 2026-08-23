@@ -1,5 +1,7 @@
 import { ZodError } from "zod";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Zod validation middleware factory.
  *
@@ -38,5 +40,30 @@ export function validate(schemas) {
       }
       next(err);
     }
+  };
+}
+
+/**
+ * Validates that specified route parameter(s) conform to UUID format.
+ * Prevents malformed URL parameters and database-level type errors.
+ *
+ * Usage:
+ *   router.get('/:fieldId', validateUuidParam('fieldId'), handler)
+ */
+export function validateUuidParam(...paramNames) {
+  return (req, res, next) => {
+    for (const paramName of paramNames) {
+      const value = req.params[paramName];
+      if (value && !UUID_REGEX.test(value)) {
+        res.status(400).json({
+          error: {
+            message: `Invalid ID format for '${paramName}'. Must be a valid UUID.`,
+            status: 400,
+          },
+        });
+        return;
+      }
+    }
+    next();
   };
 }

@@ -25,6 +25,8 @@ import { useAuth } from "../app/providers/AuthProvider";
 import Cloud2Icon from "../components/hover-ui/cloud-2-icon";
 import TriangleAlertIcon from "../components/hover-ui/triangle-alert-icon";
 import InfoCircleIcon from "../components/hover-ui/info-circle-icon";
+import { motion } from "framer-motion";
+import { FadeIn, StaggerContainer, StaggerItem } from "../components/animations/AnimationKit";
 
 import "./Home.css";
 
@@ -78,21 +80,27 @@ const QuickActionBtn = ({ action }) => {
   const navigate = useNavigate();
   const Icon = action.icon;
   return (
-    <button
+    <motion.button
       className="home-quick-action"
       onClick={() => navigate(action.path)}
       style={{ "--qa-color": action.color, "--qa-bg": action.bg }}
+      whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.2 } }}
+      whileTap={{ scale: 0.97 }}
     >
       <div className="home-qa-icon-box">
         <Icon size={20} />
       </div>
       <span className="home-qa-label">{action.label}</span>
-    </button>
+    </motion.button>
   );
 };
 
 const StatCard = ({ icon: Icon, label, value, sub, color }) => (
-  <div className="home-stat-card" style={{ "--stat-color": color }}>
+  <motion.div 
+    className="home-stat-card" 
+    style={{ "--stat-color": color }}
+    whileHover={{ y: -3, transition: { duration: 0.2 } }}
+  >
     <div className="home-stat-icon">
       <Icon size={18} />
     </div>
@@ -101,7 +109,7 @@ const StatCard = ({ icon: Icon, label, value, sub, color }) => (
       <span className="home-stat-label">{label}</span>
       {sub && <span className="home-stat-sub">{sub}</span>}
     </div>
-  </div>
+  </motion.div>
 );
 
 const HomeAlertItem = ({ alert }) => {
@@ -152,7 +160,11 @@ const FieldCard = ({ field, onNavigate }) => {
   const health = getHealthStyle(field.healthScore);
 
   return (
-    <div className="home-card" onClick={() => onNavigate(`/fields/${field.id}`)}>
+    <motion.div 
+      className="home-card" 
+      onClick={() => onNavigate(`/fields/${field.id}`)}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+    >
       <div className="home-card-top-content">
         <div className="home-card-info-row">
           <div className="home-card-image">
@@ -202,7 +214,7 @@ const FieldCard = ({ field, onNavigate }) => {
           View field <ChevronRight size={12} />
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -365,7 +377,7 @@ export const Home = () => {
     <div className="home-container">
 
       {/* ── Header ── */}
-      <section className="home-header">
+      <FadeIn direction="up" className="home-header">
         <div className="home-header-left">
           <h1>{greeting}, {firstName} 👋</h1>
           <p>Here's what's happening across your farm today.</p>
@@ -376,22 +388,22 @@ export const Home = () => {
             {unreadCount} unread
           </Link>
         )}
-      </section>
+      </FadeIn>
 
       {/* ── Error Banner ── */}
       {loadError && (
-        <div className="home-error-banner">
+        <FadeIn direction="down" className="home-error-banner">
           <AlertCircle size={16} />
           <span>{loadError}</span>
-        </div>
+        </FadeIn>
       )}
 
       {/* ── Quick Actions ── */}
-      <section className="home-quick-actions-row">
+      <FadeIn direction="up" delay={0.05} className="home-quick-actions-row">
         {QUICK_ACTIONS.map((a) => (
           <QuickActionBtn key={a.label} action={a} />
         ))}
-      </section>
+      </FadeIn>
 
       {isLoading ? (
         <div className="home-loading-full">
@@ -404,7 +416,7 @@ export const Home = () => {
       ) : (
         <>
           {/* ── Farm Summary Stats ── */}
-          <div className="home-stats-row">
+          <FadeIn direction="up" delay={0.1} className="home-stats-row">
             <StatCard
               icon={Activity}
               label="Fields"
@@ -429,7 +441,7 @@ export const Home = () => {
               value={stats.recommendations}
               color="#7c3aed"
             />
-          </div>
+          </FadeIn>
 
           {/* ── Row 1: Fields + Recommendation ── */}
           <div className="home-grid-row-1">
@@ -440,26 +452,32 @@ export const Home = () => {
                 <h2 className="home-section-title">My Fields</h2>
                 <Link to="/fields" className="home-section-link">View All</Link>
               </div>
-              <div className="home-fields-grid">
+              <StaggerContainer className="home-fields-grid">
                 {displayFields.slice(0, 2).map((field) => (
-                  <FieldCard key={field.id} field={field} onNavigate={navigate} />
+                  <StaggerItem key={field.id}>
+                    <FieldCard field={field} onNavigate={navigate} />
+                  </StaggerItem>
                 ))}
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => navigate("/fields/add")}
-                  onKeyDown={(e) => e.key === "Enter" && navigate("/fields/add")}
-                  className="home-add-field"
-                  aria-label="Add new field"
-                >
-                  <Plus size={26} className="home-add-field-icon" />
-                  <span className="home-add-field-label">Add Field</span>
-                </div>
-              </div>
+                <StaggerItem>
+                  <motion.div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => navigate("/fields/add")}
+                    onKeyDown={(e) => e.key === "Enter" && navigate("/fields/add")}
+                    className="home-add-field"
+                    aria-label="Add new field"
+                    whileHover={{ scale: 1.02, y: -4, transition: { duration: 0.2 } }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Plus size={26} className="home-add-field-icon" />
+                    <span className="home-add-field-label">Add Field</span>
+                  </motion.div>
+                </StaggerItem>
+              </StaggerContainer>
             </section>
 
             {/* Weather + Recommendation */}
-            <section className="home-section">
+            <FadeIn direction="up" delay={0.12} className="home-section">
               <h2 className="home-section-title">Live Conditions</h2>
               <div className="home-recommendation-card">
                 <div className="home-rec-header">
@@ -483,13 +501,13 @@ export const Home = () => {
                   Full Intelligence Dashboard <ChevronRight size={14} />
                 </button>
               </div>
-            </section>
+            </FadeIn>
           </div>
 
           {/* ── Row 2: Recent Alerts ── */}
           <div className="home-scrollable-section">
             <div className="home-grid-row-2">
-              <section className="home-section">
+              <FadeIn direction="up" delay={0.15} className="home-section">
                 <div className="home-section-header">
                   <h2 className="home-section-title">Recent Alerts</h2>
                   <Link to="/alerts" className="home-section-link">View All</Link>
@@ -502,10 +520,16 @@ export const Home = () => {
                       No active alerts — your fields look great!
                     </div>
                   ) : (
-                    alerts
-                      .filter((a) => !a.resolved)
-                      .slice(0, 4)
-                      .map((alert) => <HomeAlertItem key={alert.id} alert={alert} />)
+                    <StaggerContainer>
+                      {alerts
+                        .filter((a) => !a.resolved)
+                        .slice(0, 4)
+                        .map((alert) => (
+                          <StaggerItem key={alert.id}>
+                            <HomeAlertItem alert={alert} />
+                          </StaggerItem>
+                        ))}
+                    </StaggerContainer>
                   )}
 
                   {alerts.filter((a) => !a.resolved).length > 0 && (
@@ -517,7 +541,7 @@ export const Home = () => {
                     </button>
                   )}
                 </div>
-              </section>
+              </FadeIn>
             </div>
           </div>
         </>

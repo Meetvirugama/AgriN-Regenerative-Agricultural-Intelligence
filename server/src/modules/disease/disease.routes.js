@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { observationService } from "./disease.service.js";
+import { validateUuidParam } from "../../middleware/validate.js";
 
 const router = Router();
+
+router.use("/:fieldId", validateUuidParam("fieldId"));
 
 /**
  * POST /api/v1/fields/:fieldId/diagnose

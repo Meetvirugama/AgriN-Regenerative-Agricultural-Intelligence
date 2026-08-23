@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { soilService } from "../soil/soil.service.js";
+import { validateUuidParam } from "../../middleware/validate.js";
 import multer from "multer";
 
 const router = Router();
+
+router.use("/:fieldId", validateUuidParam("fieldId"));
 
 // Multer config — 10 MB limit, allowlist common document/image types
 const ALLOWED_MIME_TYPES = new Set([

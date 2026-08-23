@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { layer3Service } from "../weather/weather.service.js";
+import { validateUuidParam } from "../../middleware/validate.js";
 
 const router = Router();
+
+router.use("/:fieldId", validateUuidParam("fieldId"));
 
 // GET /api/fields/:fieldId/weather/forecast
 // Smart cache: serves Postgres data if fresh, otherwise fetches from Open-Meteo

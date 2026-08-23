@@ -19,6 +19,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { diagnosisApi } from "../features/disease-diagnosis/api/diagnosisApi";
 import { useActiveField } from "../app/providers/FieldProvider";
+import { motion } from "framer-motion";
+import { FadeIn, ScalePop, CountUp } from "../components/animations/AnimationKit";
 
 import "./Diagnosis.css";
 
@@ -201,7 +203,7 @@ export const Diagnosis = () => {
 
       {/* ── UPLOAD TAB ── */}
       {activeTab === 'upload' && (
-        <div className="diagnosis-big-upload-box slide-in-left">
+        <FadeIn direction="up" className="diagnosis-big-upload-box">
           <input
             type="file"
             accept="image/*"
@@ -218,13 +220,15 @@ export const Diagnosis = () => {
             </div>
           )}
 
-          <div
+          <motion.div
             className="diagnosis-upload-area"
             onClick={() => !previewUrl && fileInputRef.current?.click()}
             role="button"
             tabIndex={0}
             onKeyDown={e => e.key === 'Enter' && !previewUrl && fileInputRef.current?.click()}
             aria-label="Click to upload crop image"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
           >
             {previewUrl ? (
               <img src={previewUrl} alt="Preview" className="diagnosis-preview-image" />
@@ -238,7 +242,7 @@ export const Diagnosis = () => {
                 <p className="diagnosis-upload-hint">Supports JPG, PNG, WEBP</p>
               </div>
             )}
-          </div>
+          </motion.div>
 
           {uploadError && (
             <div className="diagnosis-upload-error">
@@ -266,24 +270,25 @@ export const Diagnosis = () => {
                 Clear
               </button>
             )}
-            <button
+            <motion.button
               className="diagnosis-btn-primary diagnosis-diagnose-btn"
               onClick={handleDiagnose}
               disabled={!selectedFile || isUploading || !activeFieldId}
+              whileTap={{ scale: 0.96 }}
             >
               {isUploading
                 ? <><Loader2 size={18} className="diagnosis-spin" /> Analyzing...</>
                 : "Diagnose"}
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </FadeIn>
       )}
 
       {/* ── RESULT TAB ── */}
       {activeTab === 'result' && result && (() => {
         const isUnsupported = result?.disease?.toLowerCase().includes("unsupported") || result?.disease?.toLowerCase().includes("not a");
         return (
-        <div className="diagnosis-three-column-grid slide-in-right">
+        <ScalePop className="diagnosis-three-column-grid">
 
           {/* LEFT — image */}
           <div className="diagnosis-col-left">
@@ -313,10 +318,17 @@ export const Diagnosis = () => {
                   <span className="diagnosis-semibold">
                     {result.confidence >= 80 ? 'High' : result.confidence >= 50 ? 'Medium' : 'Low'} Confidence
                   </span>
-                  <span className="diagnosis-confidence-pct">{result.confidence ?? "—"}%</span>
+                  <span className="diagnosis-confidence-pct">
+                    {result.confidence != null ? <CountUp end={result.confidence} suffix="%" /> : "—"}
+                  </span>
                 </div>
                 <div className="diagnosis-score-bar-bg">
-                  <div className="diagnosis-score-bar-fill" style={{ width: `${result.confidence ?? 0}%` }} />
+                  <motion.div 
+                    className="diagnosis-score-bar-fill" 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${result.confidence ?? 0}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  />
                 </div>
               </div>
             </div>
@@ -457,7 +469,7 @@ export const Diagnosis = () => {
             </button>
           </div>
 
-        </div>
+        </ScalePop>
         );
       })()}
 

@@ -210,6 +210,9 @@ function AppRoutes() {
           >
             <Route index element={<ExtensionDashboard />} />
           </Route>
+
+          {/* Wildcard 404 catch-all — redirect safely to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </LocationAwareErrorBoundary>
     </AuthProvider>

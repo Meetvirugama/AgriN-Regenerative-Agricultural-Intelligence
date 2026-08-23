@@ -15,6 +15,8 @@ import {
 import { marketApi } from "../features/market-prices/api/marketApi";
 import { PriceChart } from "../features/market-prices/components/PriceChart";
 import { Combobox } from "../features/market-prices/components/Combobox";
+import { motion } from "framer-motion";
+import { FadeIn, StaggerContainer, StaggerItem, CountUp } from "../components/animations/AnimationKit";
 import "./MarketPrices.css";
 
 /**
@@ -102,8 +104,8 @@ export function MarketPrices() {
     }
     const loadDistricts = async () => {
       try {
-        const data = await marketApi.getDistricts(selectedState, selectedCommodity);
-        setDistricts((data || []).map((d) => d.district));
+        const districtData = await marketApi.getDistricts(selectedState, selectedCommodity);
+        setDistricts((districtData || []).map((d) => d.district));
       } catch {
         setDistricts([]);
       }
@@ -111,89 +113,76 @@ export function MarketPrices() {
     loadDistricts();
   }, [selectedState, selectedCommodity]);
 
-  // ─── Search handler ─────────────────────────────────────────────────────────
-  const handleSearch = useCallback(
+  // ─── Load secondary data when a search completes ────────────────────────────
+  const loadSecondaryData = useCallback(
     async (commodity, state, district) => {
-      const crop = commodity || selectedCommodity;
-      const st = state || selectedState;
-      const dist = district || selectedDistrict;
-
-      if (!crop) return;
-
-      setSearchLoading(true);
-      setSearchError(null);
-      setSearchResult(null);
-      setPriceHistory([]);
-      setNearbyMarkets([]);
+      setHistoryLoading(true);
+      setNearbyLoading(true);
 
       try {
-        const result = await marketApi.searchPrices(crop, st, dist);
-        setSearchResult({ ...result, commodity: crop, state: st, district: dist });
-
-        // Load history + nearby in parallel
-        const marketName =
-          result.prices?.[0]?.market || dist || st || "";
-
-        const [historyResult, nearbyResult] = await Promise.allSettled([
-          marketName
-            ? marketApi.getPriceHistory(crop, marketName, historyDays)
-            : Promise.resolve({ prices: [] }),
-          st
-            ? marketApi.getNearbyMarkets(crop, st, dist)
-            : Promise.resolve([]),
+        const [historyData, nearbyData] = await Promise.allSettled([
+          marketApi.getPriceHistory(commodity, state, district, historyDays),
+          marketApi.getNearbyMarkets(commodity, state, district),
         ]);
 
-        if (historyResult.status === "fulfilled") {
-          setPriceHistory(historyResult.value?.prices || []);
+        if (historyData.status === "fulfilled") {
+          setPriceHistory(historyData.value?.history || []);
         }
-        if (nearbyResult.status === "fulfilled") {
-          setNearbyMarkets(nearbyResult.value || []);
+        if (nearbyData.status === "fulfilled") {
+          setNearbyMarkets(nearbyData.value?.markets || []);
         }
       } catch (err) {
-        setSearchError(err.message || "Failed to fetch prices");
-      } finally {
-        setSearchLoading(false);
-      }
-    },
-    [selectedCommodity, selectedState, selectedDistrict, historyDays]
-  );
-
-  // ─── History range change handler ───────────────────────────────────────────
-  const handleRangeChange = useCallback(
-    async (days) => {
-      setHistoryDays(days);
-      if (!searchResult) return;
-
-      const marketName =
-        searchResult.prices?.[0]?.market || searchResult.district || "";
-      if (!marketName) return;
-
-      setHistoryLoading(true);
-      try {
-        const data = await marketApi.getPriceHistory(
-          searchResult.commodity,
-          marketName,
-          days
-        );
-        setPriceHistory(data?.prices || []);
-      } catch {
-        // Keep existing data
+        console.error("Failed to load secondary market data:", err);
       } finally {
         setHistoryLoading(false);
+        setNearbyLoading(false);
       }
     },
-    [searchResult]
+    [historyDays]
   );
 
-  // ─── Click a "Your Crop" card ────────────────────────────────────────────────
+  // ─── Search handler ─────────────────────────────────────────────────────────
+  const handleSearch = async (cropOverride) => {
+    const commodity = cropOverride || selectedCommodity;
+    if (!commodity) return;
+
+    setSearchLoading(true);
+    setSearchError(null);
+    setSearchResult(null);
+
+    try {
+      const data = await marketApi.getPrices(commodity, selectedState, selectedDistrict);
+      setSearchResult(data);
+      loadSecondaryData(commodity, selectedState, selectedDistrict);
+    } catch (err) {
+      setSearchError(err.message || "Failed to fetch market prices. Please try again.");
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // ─── Quick-search from "Your Crops" chips ───────────────────────────────────
   const handleCropClick = (crop) => {
     setSelectedCommodity(crop.commodity);
-    if (crop.state) setSelectedState(crop.state);
-    handleSearch(crop.commodity, crop.state, "");
+    setSelectedState(crop.state || "");
+    setSelectedDistrict(crop.district || "");
+    handleSearch(crop.commodity);
+  };
+
+  // ─── History range change ───────────────────────────────────────────────────
+  const handleRangeChange = (days) => {
+    setHistoryDays(days);
+    if (searchResult?.commodity) {
+      marketApi
+        .getPriceHistory(searchResult.commodity, selectedState, selectedDistrict, days)
+        .then((data) => setPriceHistory(data?.history || []))
+        .catch(() => {});
+    }
   };
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
   const formatPrice = (price) => {
+    if (price === null || price === undefined) return "—";
     const p = parseFloat(price);
     if (isNaN(p)) return "—";
     return `₹${p.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -226,45 +215,47 @@ export function MarketPrices() {
   return (
     <div className="market-prices-page">
       {/* Page Header */}
-      <div className="market-prices-header">
+      <FadeIn direction="up" className="market-prices-header">
         <h1>
           <TrendingUp size={24} /> {t("market.title")}
         </h1>
         <p className="market-prices-subtitle">
           {t("market.subtitle")}
         </p>
-      </div>
+      </FadeIn>
 
       {/* ─── Your Crops ────────────────────────────────────────────────────── */}
       {!myCropsLoading && myCrops.length > 0 && (
-        <div className="market-your-crops">
+        <FadeIn direction="up" delay={0.05} className="market-your-crops">
           <h3 className="market-your-crops-title">
             <Sprout size={16} /> {t("market.yourCrops")}
           </h3>
-          <div className="market-your-crops-grid">
+          <StaggerContainer className="market-your-crops-grid">
             {myCrops.map((crop, i) => (
-              <div
-                key={i}
-                className="market-crop-card"
-                onClick={() => handleCropClick(crop)}
-              >
-                <span className="market-crop-card-name">{t(`crops.${crop.commodity}`, { defaultValue: crop.commodity })}</span>
-                <span className="market-crop-card-price">
-                  {formatPrice(crop.modalPrice)}
-                  <span style={{ fontSize: "0.7rem", color: "#6b7280", fontWeight: 500 }}>
-                    /q
+              <StaggerItem key={i}>
+                <motion.div
+                  className="market-crop-card"
+                  onClick={() => handleCropClick(crop)}
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                >
+                  <span className="market-crop-card-name">{t(`crops.${crop.commodity}`, { defaultValue: crop.commodity })}</span>
+                  <span className="market-crop-card-price">
+                    {formatPrice(crop.modalPrice)}
+                    <span style={{ fontSize: "0.7rem", color: "#6b7280", fontWeight: 500 }}>
+                      /q
+                    </span>
                   </span>
-                </span>
-                <ChangeIndicator change={crop.change} />
-                <span className="market-crop-card-market">{crop.market}</span>
-              </div>
+                  <ChangeIndicator change={crop.change} />
+                  <span className="market-crop-card-market">{crop.market}</span>
+                </motion.div>
+              </StaggerItem>
             ))}
-          </div>
-        </div>
+          </StaggerContainer>
+        </FadeIn>
       )}
 
       {/* ─── Search Form ──────────────────────────────────────────────────── */}
-      <div className="market-search-card">
+      <FadeIn direction="up" delay={0.1} className="market-search-card">
         <h3 className="market-search-card-title">{t("market.searchTitle")}</h3>
         <div className="market-search-form">
           <Combobox emptyText={t("market.noOptions")} label={t("market.crop")}
@@ -292,23 +283,25 @@ export function MarketPrices() {
             disabled={!selectedState}
           />
 
-          <button
+          <motion.button
             className="market-search-btn"
             onClick={() => handleSearch()}
             disabled={!selectedCommodity || searchLoading}
+            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.02 }}
           >
             <Search size={16} />
             {searchLoading ? t("market.searching") : t("market.search")}
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </FadeIn>
 
       {/* ─── Error State ──────────────────────────────────────────────────── */}
       {searchError && (
-        <div className="market-error">
+        <FadeIn direction="down" className="market-error">
           <AlertCircle size={16} />
           {searchError}
-        </div>
+        </FadeIn>
       )}
 
       {/* ─── Loading State ────────────────────────────────────────────────── */}
@@ -321,7 +314,7 @@ export function MarketPrices() {
 
       {/* ─── Search Results ──────────────────────────────────────────────── */}
       {searchResult && !searchLoading && (
-        <div className="market-results-grid">
+        <FadeIn direction="up" className="market-results-grid">
           {/* Main Price Card */}
           <div className="market-grid-card primary-card full-width">
             {/* Results Header */}
@@ -345,42 +338,48 @@ export function MarketPrices() {
 
             {/* Price Summary Cards */}
             {searchResult.prices?.length > 0 ? (
-              <div className="primary-card-metrics">
-                <div className="metric-box">
-                  <div className="metric-label">{t("market.minPrice")}</div>
-                  <div className="metric-value">
-                    {formatPrice(searchResult.prices[0].min_price)}
-                  </div>
-                  <div className="metric-label" style={{textTransform: 'none'}}>{t("market.perQuintal")}</div>
-                </div>
-
-                <div className="metric-box highlight">
-                  <div className="metric-label">{t("market.modalPrice")}</div>
-                  <div className="metric-value highlight">
-                    {formatPrice(searchResult.prices[0].modal_price)}
-                  </div>
-                  <div className="metric-label" style={{textTransform: 'none'}}>{t("market.perQuintal")}</div>
-                  {searchResult.change !== null && (
-                    <div style={{ fontSize: '0.8rem', marginTop: '4px', color: searchResult.change > 0 ? '#16a34a' : searchResult.change < 0 ? '#dc2626' : '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {searchResult.change > 0 ? (
-                        <ArrowUpRight size={14} />
-                      ) : searchResult.change < 0 ? (
-                        <ArrowDownRight size={14} />
-                      ) : null}
-                      {searchResult.change > 0 ? "+" : ""}
-                      {searchResult.change}{t("market.fromPrevious")}
+              <StaggerContainer className="primary-card-metrics">
+                <StaggerItem>
+                  <motion.div className="metric-box" whileHover={{ y: -3, transition: { duration: 0.2 } }}>
+                    <div className="metric-label">{t("market.minPrice")}</div>
+                    <div className="metric-value">
+                      {formatPrice(searchResult.prices[0].min_price)}
                     </div>
-                  )}
-                </div>
+                    <div className="metric-label" style={{textTransform: 'none'}}>{t("market.perQuintal")}</div>
+                  </motion.div>
+                </StaggerItem>
 
-                <div className="metric-box">
-                  <div className="metric-label">{t("market.maxPrice")}</div>
-                  <div className="metric-value">
-                    {formatPrice(searchResult.prices[0].max_price)}
-                  </div>
-                  <div className="metric-label" style={{textTransform: 'none'}}>{t("market.perQuintal")}</div>
-                </div>
-              </div>
+                <StaggerItem>
+                  <motion.div className="metric-box highlight" whileHover={{ y: -3, transition: { duration: 0.2 } }}>
+                    <div className="metric-label">{t("market.modalPrice")}</div>
+                    <div className="metric-value highlight">
+                      {formatPrice(searchResult.prices[0].modal_price)}
+                    </div>
+                    <div className="metric-label" style={{textTransform: 'none'}}>{t("market.perQuintal")}</div>
+                    {searchResult.change !== null && (
+                      <div style={{ fontSize: '0.8rem', marginTop: '4px', color: searchResult.change > 0 ? '#16a34a' : searchResult.change < 0 ? '#dc2626' : '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {searchResult.change > 0 ? (
+                          <ArrowUpRight size={14} />
+                        ) : searchResult.change < 0 ? (
+                          <ArrowDownRight size={14} />
+                        ) : null}
+                        {searchResult.change > 0 ? "+" : ""}
+                        {searchResult.change}{t("market.fromPrevious")}
+                      </div>
+                    )}
+                  </motion.div>
+                </StaggerItem>
+
+                <StaggerItem>
+                  <motion.div className="metric-box" whileHover={{ y: -3, transition: { duration: 0.2 } }}>
+                    <div className="metric-label">{t("market.maxPrice")}</div>
+                    <div className="metric-value">
+                      {formatPrice(searchResult.prices[0].max_price)}
+                    </div>
+                    <div className="metric-label" style={{textTransform: 'none'}}>{t("market.perQuintal")}</div>
+                  </motion.div>
+                </StaggerItem>
+              </StaggerContainer>
             ) : (
               <div className="market-empty-state">
                 <BarChart3 size={40} />
@@ -403,13 +402,17 @@ export function MarketPrices() {
 
           {/* Nearby Markets */}
           {nearbyMarkets.length > 0 && (
-            <div className="market-grid-card full-width">
+            <FadeIn direction="up" delay={0.15} className="market-grid-card full-width">
               <h3 className="market-nearby-title">
                 <MapPin size={16} /> {t("market.nearby")}
               </h3>
               <div className="market-nearby-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
                 {nearbyMarkets.slice(0, 8).map((m, i) => (
-                  <div key={i} style={{ border: '1px solid #e5e7eb', padding: '1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <motion.div
+                    key={i}
+                    style={{ border: '1px solid #e5e7eb', padding: '1rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                    whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                  >
                     <div>
                       <div style={{ fontWeight: 600, color: '#111827', fontSize: '0.9rem' }}>{m.market}</div>
                       {m.district && (
@@ -419,12 +422,12 @@ export function MarketPrices() {
                     <div style={{ fontWeight: 700, color: '#111827' }}>
                       {formatPrice(m.modalPrice)}
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </FadeIn>
           )}
-        </div>
+        </FadeIn>
       )}
 
       {/* ─── Initial Empty State ──────────────────────────────────────────── */}
