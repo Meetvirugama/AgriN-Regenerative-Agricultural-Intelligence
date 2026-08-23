@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import { FarmerShell } from "./app/FarmerShell";
 import { ExtensionShell } from "./app/ExtensionShell";
+import { VoiceAssistantFAB } from "./features/voice-assistant/components/VoiceAssistantFAB";
 import { Home } from "./pages/Home";
 import { Field } from "./pages/Field";
 import { MyFields } from "./pages/MyFields";
@@ -112,6 +113,7 @@ function AppRoutes() {
   return (
     <AuthProvider>
       <LocationAwareErrorBoundary>
+        <VoiceAssistantFAB />
         <Routes>
           {/* Login — redirect away if already authenticated */}
           <Route

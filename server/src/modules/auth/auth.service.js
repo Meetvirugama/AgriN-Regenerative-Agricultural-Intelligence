@@ -30,21 +30,20 @@ export class AuthService {
    * In production, sends via SMS (Twilio, AWS SNS, etc.).
    * In development, logs it to the console.
    */
-  static async requestOtp(phoneNumber) {
+  static async requestOtp(identifier) {
     const code = crypto.randomInt(100_000, 999_999).toString();
 
-    await authRepo.createOtp(phoneNumber, code);
-    await authRepo.logEvent("otp_requested", { phoneNumber });
+    await authRepo.createOtp(identifier, code);
+    await authRepo.logEvent("otp_requested", { phoneNumber: identifier });
 
     if (process.env.NODE_ENV === "production") {
-      // TODO Phase 5: integrate Twilio / AWS SNS
-      // await smsService.send(phoneNumber, `Your AgriMesh code is: ${code}. Valid for 10 minutes.`);
+      // TODO Phase 5: integrate Twilio / AWS SNS / Email Provider
       console.log(
-        `[Auth] OTP for ${phoneNumber}: [SMS would be sent in production]`,
+        `[Auth] OTP for ${identifier}: [SMS/Email would be sent in production]`,
       );
     } else {
       // Development — log plaintext so developers can test without SMS
-      console.log(`[Auth] DEV OTP for ${phoneNumber}: ${code}`);
+      console.log(`[Auth] DEV OTP for ${identifier}: ${code}`);
     }
   }
 
@@ -52,18 +51,19 @@ export class AuthService {
    * Verifies the OTP, upserts the farmer record (auto-registration),
    * and returns a signed access token + refresh token pair.
    */
-  static async verifyOtpAndLogin(phoneNumber, code, meta = {}) {
+  static async verifyOtpAndLogin(identifier, code, meta = {}) {
     // Validate OTP (throws on failure)
-    await authRepo.verifyOtp(phoneNumber, code);
+    await authRepo.verifyOtp(identifier, code);
 
-    const existing = await farmerRepo.findFarmerByPhone(phoneNumber);
+    // Identifier could be phone or email, but OTP login is mainly for phone
+    const existing = await farmerRepo.findFarmerByPhone(identifier);
     const farmerId = existing?.id || crypto.randomUUID();
 
     // Upsert farmer — this creates the account on first login
     const farmer = await farmerRepo.upsertFarmer({
       id: farmerId,
-      phone_number: phoneNumber,
-      name: existing?.name || phoneNumber,
+      phone_number: identifier,
+      name: existing?.name || identifier,
       preferred_language: existing?.preferred_language || "en",
     });
 
@@ -72,7 +72,7 @@ export class AuthService {
 
     await authRepo.logEvent("otp_verified", {
       farmerId: farmer.id,
-      phoneNumber,
+      phoneNumber: identifier,
       ...meta,
     });
 
@@ -108,6 +108,69 @@ export class AuthService {
     });
 
     return tokens;
+  }
+
+  static async registerWithEmail(name, email, password, phoneNumber, meta = {}) {
+    const existingEmail = await farmerRepo.findFarmerByEmail(email);
+    if (existingEmail) {
+      throw new Error("An account with this email already exists");
+    }
+    
+    if (phoneNumber) {
+      const existingPhone = await farmerRepo.findFarmerByPhone(phoneNumber);
+      if (existingPhone) {
+        throw new Error("An account with this phone number already exists");
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const farmerId = crypto.randomUUID();
+
+    const farmer = await farmerRepo.createFarmerWithPassword({
+      id: farmerId,
+      name,
+      email,
+      phone_number: phoneNumber || null,
+      password_hash: passwordHash,
+      preferred_language: "en"
+    });
+
+    const tokens = await AuthService.issueTokens(farmer, meta);
+    
+    await authRepo.logEvent("otp_verified", {
+      farmerId: farmer.id,
+      email,
+      loginMethod: "register",
+      ...meta,
+    });
+
+    return tokens;
+  }
+
+  static async requestPasswordReset(email) {
+    const existing = await farmerRepo.findFarmerByEmail(email);
+    if (!existing) {
+      // Don't leak whether an email exists or not
+      return;
+    }
+    // Reuse OTP generation logic but pass the email as identifier
+    await AuthService.requestOtp(email);
+  }
+
+  static async resetPasswordWithOtp(email, code, newPassword, meta = {}) {
+    // Verify OTP
+    await authRepo.verifyOtp(email, code);
+
+    const farmer = await farmerRepo.findFarmerByEmail(email);
+    if (!farmer) {
+      throw new Error("Farmer account not found.");
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await farmerRepo.updatePassword(farmer.id, passwordHash);
+
+    // Optionally revoke all existing sessions to force re-login on all devices
+    await authRepo.revokeAllFarmerTokens(farmer.id);
   }
 
 

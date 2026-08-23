@@ -1,0 +1,9 @@
+-- AgriMesh Migration 030: Add additional field details
+
+ALTER TABLE fields
+ADD COLUMN IF NOT EXISTS soil_type VARCHAR(100),
+ADD COLUMN IF NOT EXISTS previous_crop VARCHAR(100),
+ADD COLUMN IF NOT EXISTS tillage_method VARCHAR(100),
+ADD COLUMN IF NOT EXISTS seed_rate VARCHAR(100),
+ADD COLUMN IF NOT EXISTS target_yield VARCHAR(100),
+ADD COLUMN IF NOT EXISTS description TEXT;

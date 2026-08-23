@@ -41,20 +41,21 @@
 .dashboard-sidebar-logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
 }
 
 .dashboard-sidebar-logo-img {
-  height: 32px;
+  height: 56px;
   width: auto;
   object-fit: contain;
+  margin-left: -8px; /* Offset potential built-in padding in the image */
 }
 
 .dashboard-sidebar-logo span {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.5px;
-  color: #111827;
+  color: #16A34A;
 }
 
 .dashboard-nav {

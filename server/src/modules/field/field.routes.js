@@ -1,6 +1,27 @@
 import { Router } from "express";
 import { layer1Service, STUB_FARMER_ID } from "./field.service.js";
 import { requireAuth, optionalAuth } from "../../middleware/auth.js";
+import { validate } from "../../middleware/validate.js";
+import { z } from "zod";
+
+const FieldSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  cropType: z.string().min(1, "Crop type is required"),
+  sowingDate: z.string().min(1, "Sowing date is required"),
+  cropVariety: z.string().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lng: z.number().optional().nullable(),
+  locationName: z.string().optional().nullable(),
+  areaHectares: z.number().optional().nullable(),
+  boundaryGeojson: z.any().optional().nullable(), // Allow JSON object
+  irrigationType: z.string().optional().nullable(),
+  soilType: z.string().optional().nullable(),
+  previousCrop: z.string().optional().nullable(),
+  tillageMethod: z.string().optional().nullable(),
+  seedRate: z.string().optional().nullable(),
+  targetYield: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+});
 
 const router = Router();
 
@@ -45,7 +66,7 @@ router.get("/:fieldId", async (req, res, next) => {
 });
 
 // POST /api/v1/fields — optionalAuth: creates under authenticated farmer if present
-router.post("/", optionalAuth, async (req, res, next) => {
+router.post("/", optionalAuth, validate({ body: FieldSchema }), async (req, res, next) => {
   try {
     // Scope to authenticated farmer when token present; fall back to stub for dev
     const farmerId = req.farmer?.sub || STUB_FARMER_ID;
@@ -61,12 +82,14 @@ router.post("/", optionalAuth, async (req, res, next) => {
       locationName,
       areaHectares,
       boundaryGeojson,
-      irrigationType,      // ← was previously dropped; now properly captured
+      irrigationType,
+      soilType,
+      previousCrop,
+      tillageMethod,
+      seedRate,
+      targetYield,
+      description,
     } = req.body;
-
-    if (!name || !cropType || !sowingDate) {
-      return res.status(400).json({ error: { message: "name, cropType, and sowingDate are required" } });
-    }
 
     const field = await layer1Service.registerField(
       farmerId,
@@ -80,6 +103,12 @@ router.post("/", optionalAuth, async (req, res, next) => {
       areaHectares,
       boundaryGeojson,
       irrigationType,
+      soilType,
+      previousCrop,
+      tillageMethod,
+      seedRate,
+      targetYield,
+      description,
     );
 
     // Kick off weather pre-fetch in background — do NOT await.
@@ -93,7 +122,7 @@ router.post("/", optionalAuth, async (req, res, next) => {
 });
 
 // PUT /api/v1/fields/:fieldId
-router.put("/:fieldId", requireAuth, async (req, res, next) => {
+router.put("/:fieldId", requireAuth, validate({ body: FieldSchema }), async (req, res, next) => {
   try {
     const { fieldId } = req.params;
     const existing = await layer1Service.getField(fieldId);
@@ -106,13 +135,19 @@ router.put("/:fieldId", requireAuth, async (req, res, next) => {
       return res.status(403).json({ error: { message: "Forbidden" } });
     }
 
-    const { name, cropType, cropVariety, sowingDate, irrigationType } = req.body;
+    const { name, cropType, cropVariety, sowingDate, irrigationType, soilType, previousCrop, tillageMethod, seedRate, targetYield, description } = req.body;
     const updated = await layer1Service.updateField(fieldId, {
       name,
       cropType,
       cropVariety,
       sowingDate,
       irrigationType,
+      soilType,
+      previousCrop,
+      tillageMethod,
+      seedRate,
+      targetYield,
+      description,
     });
 
     res.json(updated);

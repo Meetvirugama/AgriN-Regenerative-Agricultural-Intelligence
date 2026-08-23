@@ -20,4 +20,12 @@ export class PythonVoiceAdapter {
     // The Python service returns base64 encoded string, we convert back to Buffer
     return Buffer.from(result.audioContent, "base64");
   }
+
+  async chat(sessionId, message) {
+    console.log(
+      `[VoiceAdapter] Delegating Chat to Python service for session ${sessionId}`,
+    );
+    const result = await PythonClient.chatAgent(sessionId, message);
+    return result;
+  }
 }

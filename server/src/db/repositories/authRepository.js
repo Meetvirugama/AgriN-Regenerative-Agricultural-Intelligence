@@ -7,12 +7,12 @@ const MAX_OTP_ATTEMPTS = 5;
 export class AuthRepository {
   // ─── OTP ───────────────────────────────────────────────────────────────────
 
-  async createOtp(phoneNumber, code) {
+  async createOtp(identifier, code) {
     const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
     await execute(
-      `INSERT INTO otp_codes (phone_number, code, expires_at)
+      `INSERT INTO otp_codes (identifier, code, expires_at)
        VALUES ($1, $2, $3)`,
-      [phoneNumber, code, expiresAt.toISOString()],
+      [identifier, code, expiresAt.toISOString()],
     );
   }
 
@@ -20,16 +20,16 @@ export class AuthRepository {
    * Validates an OTP. Returns the OTP row id on success, throws on failure.
    * Side-effects: increments attempt counter, marks as used on success.
    */
-  async verifyOtp(phoneNumber, code) {
+  async verifyOtp(identifier, code) {
     const row = await queryOne(
       `SELECT id, attempts, used_at
        FROM otp_codes
-       WHERE phone_number = $1
+       WHERE identifier = $1
          AND used_at IS NULL
          AND expires_at > NOW()
        ORDER BY created_at DESC
        LIMIT 1`,
-      [phoneNumber],
+      [identifier],
     );
 
     if (!row)

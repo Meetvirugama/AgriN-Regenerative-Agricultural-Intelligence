@@ -32,6 +32,16 @@ import { startScheduler } from "./jobs/scheduler.js";
 
 dotenv.config();
 
+// ─── Environment Verification ────────────────────────────────────────────────
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
+  console.error("❌ CRITICAL ERROR: JWT_SECRET environment variable is missing in production!");
+  process.exit(1);
+}
+if (!process.env.PYTHON_SERVICE_URL && process.env.NODE_ENV === "production") {
+  console.error("❌ CRITICAL ERROR: PYTHON_SERVICE_URL environment variable is missing in production!");
+  process.exit(1);
+}
+
 const app = express();
 app.set("trust proxy", 1); // Trust first proxy (Render/Vercel)
 const PORT = parseInt(process.env.PORT || "8000", 10);
@@ -112,7 +122,7 @@ app.get("/health", async (_req, res) => {
 
 // Field-scoped routes
 app.use("/api/v1/fields", fieldRoutes);
-app.use("/api/v1/fields", cropRoutes);
+app.use("/api/v1/fields", requireAuth, cropRoutes);
 app.use("/api/v1/fields", requireAuth, weatherRoutes);
 app.use("/api/v1/fields", requireAuth, soilRoutes);
 app.use("/api/v1/fields", requireAuth, diagnosisRoutes);

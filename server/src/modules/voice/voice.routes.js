@@ -11,6 +11,14 @@ const voiceAdapter = new PythonVoiceAdapter();
 const audioUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
+  fileFilter: (req, file, cb) => {
+    // Only accept audio MIME types (e.g. audio/webm, audio/wav, audio/mpeg, video/webm fallback)
+    if (file.mimetype.startsWith("audio/") || file.mimetype === "video/webm") {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type: ${file.mimetype}. Only audio files are allowed.`));
+    }
+  },
 });
 
 /**
@@ -112,6 +120,26 @@ router.post("/voice/tts", optionalAuth, async (req, res, next) => {
     res.json({ audioContent: base64Audio, format: "audio/wav", language });
   } catch (error) {
     console.error("TTS Error:", error);
+    next(error);
+  }
+});
+
+/**
+ * POST /api/v1/voice/chat
+ * Chat endpoint for voice assistant logic.
+ * Accepts { session_id, message }
+ */
+router.post("/voice/chat", optionalAuth, async (req, res, next) => {
+  try {
+    const { session_id, message } = req.body;
+    if (!session_id || !message) {
+      return res.status(400).json({ error: "session_id and message are required" });
+    }
+
+    const result = await voiceAdapter.chat(session_id, message);
+    res.json(result);
+  } catch (error) {
+    console.error("Chat Error:", error);
     next(error);
   }
 });

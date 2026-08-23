@@ -24,10 +24,10 @@ async function apiFetch(path, options = {}) {
 }
 
 export const authApi = {
-  requestOtp: (phoneNumber) =>
+  requestOtp: (identifier) =>
     apiFetch("/auth/request-otp", {
       method: "POST",
-      body: JSON.stringify({ phone_number: phoneNumber }),
+      body: JSON.stringify({ identifier }),
     }),
 
   loginWithGoogle: (accessToken) =>
@@ -42,10 +42,28 @@ export const authApi = {
       body: JSON.stringify({ email, password }),
     }),
 
-  verifyOtp: (phoneNumber, code) =>
+  verifyOtp: (identifier, code) =>
     apiFetch("/auth/verify-otp", {
       method: "POST",
-      body: JSON.stringify({ phone_number: phoneNumber, code }),
+      body: JSON.stringify({ identifier, code }),
+    }),
+
+  register: (name, email, password, phone_number) =>
+    apiFetch("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ name, email, password, phone_number }),
+    }),
+
+  forgotPassword: (email) =>
+    apiFetch("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (email, code, new_password) =>
+    apiFetch("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ email, code, new_password }),
     }),
 
   refresh: (refreshToken) =>

@@ -97,7 +97,7 @@ export class WeatherRepository {
        FROM field_weather_snapshots
        WHERE field_id = $1
          AND is_forecast = FALSE
-         AND snapshot_date >= CURRENT_DATE - ($2 || ' days')::interval
+         AND snapshot_date >= CURRENT_DATE - make_interval(days => $2::int)
        ORDER BY snapshot_date ASC`,
       [fieldId, days],
     );

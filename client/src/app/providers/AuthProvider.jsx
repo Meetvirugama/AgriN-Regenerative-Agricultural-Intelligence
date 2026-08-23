@@ -14,6 +14,10 @@ const AuthContext = createContext({
   isAuthenticated: false,
   requestOtp: async () => {},
   verifyOtp: async () => {},
+  loginWithEmail: async () => {},
+  register: async () => {},
+  forgotPassword: async () => {},
+  resetPassword: async () => {},
   loginWithGoogle: async () => {},
   logout: async () => {},
 });
@@ -74,13 +78,13 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // ─── Request OTP ─────────────────────────────────────────────────────────
-  const requestOtp = useCallback(async (phoneNumber) => {
-    await authApi.requestOtp(phoneNumber);
+  const requestOtp = useCallback(async (identifier) => {
+    await authApi.requestOtp(identifier);
   }, []);
 
   // ─── Verify OTP and log in ────────────────────────────────────────────────
-  const verifyOtp = useCallback(async (phoneNumber, code) => {
-    const tokens = await authApi.verifyOtp(phoneNumber, code);
+  const verifyOtp = useCallback(async (identifier, code) => {
+    const tokens = await authApi.verifyOtp(identifier, code);
     const session = {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -89,6 +93,49 @@ export const AuthProvider = ({ children }) => {
     saveSession(session);
     setAccessToken(tokens.accessToken);
     setFarmer(tokens.farmer);
+  }, []);
+
+  // ─── Email Login / Registration ──────────────────────────────────────────
+  const loginWithEmail = useCallback(async (email, password) => {
+    const tokens = await authApi.login(email, password);
+    const session = {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      farmer: tokens.farmer,
+    };
+    saveSession(session);
+    setAccessToken(tokens.accessToken);
+    setFarmer(tokens.farmer);
+  }, []);
+
+  const register = useCallback(async (name, email, password, phoneNumber) => {
+    const tokens = await authApi.register(name, email, password, phoneNumber);
+    
+    // Set is_new_user flag if not present
+    sessionStorage.setItem("agri_is_new_user", "true");
+    
+    const farmerObj = {
+      ...tokens.farmer,
+      is_new_user: true,
+    };
+    
+    const session = {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      farmer: farmerObj,
+    };
+    
+    saveSession(session);
+    setAccessToken(session.accessToken);
+    setFarmer(farmerObj);
+  }, []);
+
+  const forgotPassword = useCallback(async (email) => {
+    await authApi.forgotPassword(email);
+  }, []);
+
+  const resetPassword = useCallback(async (email, code, newPassword) => {
+    await authApi.resetPassword(email, code, newPassword);
   }, []);
 
   const loginWithGoogle = useCallback(async (tokenResponse) => {
@@ -145,6 +192,10 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!farmer,
         requestOtp,
         verifyOtp,
+        loginWithEmail,
+        register,
+        forgotPassword,
+        resetPassword,
         loginWithGoogle,
         logout,
       }}
