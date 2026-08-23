@@ -248,6 +248,7 @@ export const FarmerShell = () => {
               { to: "/ask",      icon: MessageSquare,  label: "Ask" },
               { to: "/alerts",   icon: BellDot,        label: "Alerts" },
               { to: "/diagnosis",icon: ScanLine,       label: "Scan" },
+              { to: "/market-prices", icon: TrendingUp, label: "Market Prices" },
               { to: "/profile",  icon: UserLucide,     label: "Profile" },
               { to: "/settings", icon: SettingsLucide, label: "Settings" },
             ].map(({ to, icon: Icon, label }) => {

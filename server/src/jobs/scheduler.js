@@ -1,7 +1,6 @@
 import cron from "node-cron";
 import { runDailyWeatherIngestion } from "./ingestWeather.js";
 import { runNightlyStageRecompute } from "./recomputeStages.js";
-import { runMandiPriceIngestion } from "./mandiPriceJob.js";
 
 /**
  * AgriMesh Background Job Scheduler
@@ -68,30 +67,7 @@ let isWeatherRunning = false;
     { timezone: "UTC" },
   );
 
-  let isMandiRunning = false;
-  // ─── Mandi Price Ingestion ─────────────────────────────────────────────────
-  cron.schedule(
-    "30 4,12 * * *",
-    async () => {
-      const label = "[Job:MandiPrices]";
-      if (isMandiRunning) {
-        console.warn(`${label} Previous run still active. Skipping this tick to prevent overlap.`);
-        return;
-      }
-      isMandiRunning = true;
-      console.log(`${label} Mandi price ingestion triggered at ${new Date().toISOString()}`);
-      try {
-        await runMandiPriceIngestion();
-      } catch (err) {
-        console.error(`${label} Job crashed:`, err.message);
-      } finally {
-        isMandiRunning = false;
-      }
-    },
-    { timezone: "UTC" },
-  );
-
   console.log(
-    "[Scheduler] Registered 3 jobs: weather (hourly), stage-recompute (01:00 UTC daily), mandi-prices (10AM/6PM IST)",
+    "[Scheduler] Registered 2 jobs: weather (hourly), stage-recompute (01:00 UTC daily)",
   );
 }

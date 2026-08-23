@@ -162,3 +162,45 @@ If no recommendation is justified, return [].
     return [];
   }
 }
+
+export async function generateMarketInsight(commodity, currentPrice, bestMarket, msp) {
+  if (!GEMINI_API_KEY) {
+    return "Market insights are currently unavailable.";
+  }
+
+  const prompt = `
+Generate a very brief (2-3 sentences max) agricultural market insight and selling recommendation for a farmer.
+
+DATA:
+- Crop: ${commodity}
+- Current Local Price: ${currentPrice ? "₹" + currentPrice : "Unknown"}
+- MSP (Minimum Support Price): ${msp ? "₹" + msp : "Unknown"}
+- Best Alternative Market: ${bestMarket ? bestMarket.market + " at ₹" + bestMarket.modalPrice + " (Net price after transport: ₹" + bestMarket.netPrice + ", Distance: " + bestMarket.distance + "km)" : "None"}
+
+RULES:
+- Be direct and action-oriented.
+- Compare local price vs best alternative (factoring in transport cost) or MSP to give a concrete recommendation (e.g., "Selling locally is better due to high transport costs" or "Himatnagar offers a better net price even after transport").
+- Do NOT use formatting like markdown, bullet points, or bold text. Just plain text.
+- Maximum 3 sentences.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
+      ],
+      config: {
+        systemInstruction: "You are a concise agricultural market analyst helping Indian farmers make selling decisions. Provide direct, pragmatic advice in plain text.",
+      },
+    });
+
+    return response.text.trim();
+  } catch (error) {
+    console.error("[Intelligence AI] Market Insight Gemini failed:", error);
+    return "Market insights are currently unavailable due to an error.";
+  }
+}

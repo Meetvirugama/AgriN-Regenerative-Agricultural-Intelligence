@@ -6,7 +6,7 @@ import "./Combobox.css";
  * A custom select input that allows typing to filter.
  * Crucially, it sorts matching items to the top, but keeps non-matching items below them.
  */
-export function Combobox({ label, value, onChange, options, placeholder, disabled }) {
+export function Combobox({ label, value, onChange, options, placeholder, disabled, emptyText = "No options available" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value || "");
   const containerRef = useRef(null);
@@ -98,7 +98,7 @@ export function Combobox({ label, value, onChange, options, placeholder, disable
                 );
               })
             ) : (
-              <li className="combobox-empty">No options available</li>
+              <li className="combobox-empty">{emptyText}</li>
             )}
           </ul>
         )}

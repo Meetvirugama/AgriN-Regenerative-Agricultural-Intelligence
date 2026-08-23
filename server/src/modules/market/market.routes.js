@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as marketService from "./market.service.js";
+import { generateMarketInsight } from "../intelligence/intelligence.ai.js";
 
 const router = Router();
 
@@ -95,6 +96,29 @@ router.get("/market/my-crops", async (req, res, next) => {
     }
     const data = await marketService.getCropPricesForFarmer(farmerId);
     res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── AI Market Insight ───────────────────────────────────────────────────────
+// GET /api/v1/market/insight
+router.get("/market/insight", async (req, res, next) => {
+  try {
+    const { commodity, currentPrice, msp, marketName, modalPrice, netPrice, distance } = req.query;
+    
+    let bestMarket = null;
+    if (marketName && modalPrice) {
+      bestMarket = {
+        market: marketName,
+        modalPrice,
+        netPrice,
+        distance
+      };
+    }
+    
+    const insight = await generateMarketInsight(commodity, currentPrice, bestMarket, msp);
+    res.json({ insight });
   } catch (err) {
     next(err);
   }

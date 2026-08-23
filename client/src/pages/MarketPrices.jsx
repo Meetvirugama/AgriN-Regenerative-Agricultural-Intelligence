@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   TrendingUp,
   Search,
@@ -27,6 +28,7 @@ import "./MarketPrices.css";
  * 5. Nearby markets table
  */
 export function MarketPrices() {
+  const { t } = useTranslation();
   // ─── State ──────────────────────────────────────────────────────────────────
   const [commodities, setCommodities] = useState([]);
   const [states, setStates] = useState([]);
@@ -226,10 +228,10 @@ export function MarketPrices() {
       {/* Page Header */}
       <div className="market-prices-header">
         <h1>
-          <TrendingUp size={24} /> Market Prices
+          <TrendingUp size={24} /> {t("market.title")}
         </h1>
         <p className="market-prices-subtitle">
-          Check current mandi prices, trends, and nearby market comparisons
+          {t("market.subtitle")}
         </p>
       </div>
 
@@ -237,7 +239,7 @@ export function MarketPrices() {
       {!myCropsLoading && myCrops.length > 0 && (
         <div className="market-your-crops">
           <h3 className="market-your-crops-title">
-            <Sprout size={16} /> Your Crops
+            <Sprout size={16} /> {t("market.yourCrops")}
           </h3>
           <div className="market-your-crops-grid">
             {myCrops.map((crop, i) => (
@@ -263,19 +265,17 @@ export function MarketPrices() {
 
       {/* ─── Search Form ──────────────────────────────────────────────────── */}
       <div className="market-search-card">
-        <h3 className="market-search-card-title">Search Market Prices</h3>
+        <h3 className="market-search-card-title">{t("market.searchTitle")}</h3>
         <div className="market-search-form">
-          <Combobox
-            label="Crop"
-            placeholder="Search or select crop..."
+          <Combobox emptyText={t("market.noOptions")} label={t("market.crop")}
+            placeholder={t("market.cropPlaceholder")}
             value={selectedCommodity}
             onChange={(val) => setSelectedCommodity(val)}
             options={commodities.map((c) => c.name)}
           />
 
-          <Combobox
-            label="State"
-            placeholder="All states"
+          <Combobox emptyText={t("market.noOptions")} label={t("market.state")}
+            placeholder={t("market.statePlaceholder")}
             value={selectedState}
             onChange={(val) => {
               setSelectedState(val);
@@ -284,9 +284,8 @@ export function MarketPrices() {
             options={states}
           />
 
-          <Combobox
-            label="District"
-            placeholder="All districts"
+          <Combobox emptyText={t("market.noOptions")} label={t("market.district")}
+            placeholder={t("market.districtPlaceholder")}
             value={selectedDistrict}
             onChange={(val) => setSelectedDistrict(val)}
             options={districts}
@@ -299,7 +298,7 @@ export function MarketPrices() {
             disabled={!selectedCommodity || searchLoading}
           >
             <Search size={16} />
-            {searchLoading ? "Searching..." : "Search"}
+            {searchLoading ? t("market.searching") : t("market.search")}
           </button>
         </div>
       </div>
@@ -316,7 +315,7 @@ export function MarketPrices() {
       {searchLoading && (
         <div className="market-loading">
           <div className="market-loading-spinner" />
-          <span>Fetching prices...</span>
+          <span>{t("market.fetching")}</span>
         </div>
       )}
 
@@ -337,7 +336,7 @@ export function MarketPrices() {
             </div>
             {searchResult.latestDate && (
               <span className="market-results-updated">
-                <Clock size={13} /> Last updated: {formatDate(searchResult.latestDate)}
+                <Clock size={13} /> {t("market.lastUpdated")} {formatDate(searchResult.latestDate)}
               </span>
             )}
           </div>
@@ -346,19 +345,19 @@ export function MarketPrices() {
           {searchResult.prices?.length > 0 ? (
             <div className="market-price-cards">
               <div className="market-price-card">
-                <div className="market-price-card-label">Minimum Price</div>
+                <div className="market-price-card-label">{t("market.minPrice")}</div>
                 <div className="market-price-card-value">
                   {formatPrice(searchResult.prices[0].min_price)}
                 </div>
-                <div className="market-price-card-unit">per quintal</div>
+                <div className="market-price-card-unit">{t("market.perQuintalLabel")}</div>
               </div>
 
               <div className="market-price-card modal">
-                <div className="market-price-card-label">Modal Price</div>
+                <div className="market-price-card-label">{t("market.modalPrice")}</div>
                 <div className="market-price-card-value">
                   {formatPrice(searchResult.prices[0].modal_price)}
                 </div>
-                <div className="market-price-card-unit">per quintal</div>
+                <div className="market-price-card-unit">{t("market.perQuintalLabel")}</div>
                 {searchResult.change !== null && (
                   <div
                     className={`market-price-card-change ${
@@ -371,24 +370,24 @@ export function MarketPrices() {
                       <ArrowDownRight size={14} />
                     ) : null}
                     {searchResult.change > 0 ? "+" : ""}
-                    {searchResult.change}% from previous
+                    {searchResult.change}{t("market.fromPrevious")}
                   </div>
                 )}
               </div>
 
               <div className="market-price-card">
-                <div className="market-price-card-label">Maximum Price</div>
+                <div className="market-price-card-label">{t("market.maxPrice")}</div>
                 <div className="market-price-card-value">
                   {formatPrice(searchResult.prices[0].max_price)}
                 </div>
-                <div className="market-price-card-unit">per quintal</div>
+                <div className="market-price-card-unit">{t("market.perQuintalLabel")}</div>
               </div>
             </div>
           ) : (
             <div className="market-empty-state">
               <BarChart3 size={40} />
-              <h3>No price data found</h3>
-              <p>Try a different crop, state, or district combination</p>
+              <h3>{t("market.noData")}</h3>
+              <p>{t("market.noDataSub")}</p>
             </div>
           )}
 
@@ -403,7 +402,7 @@ export function MarketPrices() {
           {nearbyMarkets.length > 0 && (
             <div className="market-nearby">
               <h3 className="market-nearby-title">
-                <MapPin size={16} /> Nearby Markets
+                <MapPin size={16} /> {t("market.nearby")}
               </h3>
               <div className="market-nearby-list">
                 {nearbyMarkets.slice(0, 8).map((m, i) => (
@@ -429,10 +428,9 @@ export function MarketPrices() {
       {!searchResult && !searchLoading && !searchError && myCrops.length === 0 && !myCropsLoading && (
         <div className="market-empty-state">
           <TrendingUp size={48} />
-          <h3>Search for crop prices</h3>
+          <h3>{t("market.emptyTitle")}</h3>
           <p>
-            Select a crop from the dropdown above to see current mandi prices,
-            historical trends, and nearby market comparisons.
+            {t("market.emptySub")}
           </p>
         </div>
       )}

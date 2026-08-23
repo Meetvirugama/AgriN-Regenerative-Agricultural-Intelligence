@@ -72,4 +72,20 @@ export const marketApi = {
   getMyCropPrices: async () => {
     return request("/market/my-crops");
   },
+
+  /**
+   * Get AI Market Insight based on current data.
+   */
+  getMarketInsight: async (data) => {
+    const params = new URLSearchParams();
+    if (data.commodity) params.set("commodity", data.commodity);
+    if (data.currentPrice) params.set("currentPrice", data.currentPrice);
+    if (data.msp) params.set("msp", data.msp);
+    if (data.marketName) params.set("marketName", data.marketName);
+    if (data.modalPrice) params.set("modalPrice", data.modalPrice);
+    if (data.netPrice) params.set("netPrice", data.netPrice);
+    if (data.distance) params.set("distance", data.distance);
+    
+    return request(`/market/insight?${params.toString()}`);
+  }
 };
