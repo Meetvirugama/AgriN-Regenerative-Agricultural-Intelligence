@@ -84,7 +84,7 @@ const QuickActionBtn = ({ action }) => {
       className="home-quick-action"
       onClick={() => navigate(action.path)}
       style={{ "--qa-color": action.color, "--qa-bg": action.bg }}
-      whileHover={{ y: -3, scale: 1.02, transition: { duration: 0.2 } }}
+      whileHover={{ y: -3, transition: { duration: 0.2 } }}
       whileTap={{ scale: 0.97 }}
     >
       <div className="home-qa-icon-box">

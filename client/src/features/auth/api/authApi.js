@@ -1,13 +1,21 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api";
 
 async function apiFetch(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+  } catch (err) {
+    if (err.name === "TypeError" && err.message.toLowerCase().includes("fetch")) {
+      throw new Error("Unable to connect to backend server. Please verify the server is running on port 8000.");
+    }
+    throw err;
+  }
   
   const text = await res.text();
   let data;
